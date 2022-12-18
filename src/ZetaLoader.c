@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
     SetWinEventHook(EVENT_OBJECT_CREATE,
                     EVENT_OBJECT_CREATE, 0,
                     WinEventProc, 0, 0,
-                    WINEVENT_OUTOFCONTEXT | WINEVENT_SKIPOWNPROCESS);
+                    WINEVENT_OUTOFCONTEXT);
     while (GetMessage(&msg, NULL, 0, 0))
     {
         TranslateMessage(&msg);
