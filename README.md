@@ -2,7 +2,7 @@
 
 A utility to fix technical issues with Halo Infinite on PC.
 
-> **Notes**
+> **Notes**  
 >**Here are a few things you should note about ZetaLoader.**
 >
 >1. **Fixes specific techinical issues with the Halo Infinite.**
