@@ -79,7 +79,10 @@ void WndDMThreadProc(
 DWORD WndDMThread()
 {
     MSG msg;
-    SetWinEventHook(EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND, 0, WndDMThreadProc, 0, 0, WINEVENT_OUTOFCONTEXT);
+    SetWinEventHook(EVENT_SYSTEM_FOREGROUND,
+                    EVENT_SYSTEM_FOREGROUND, 0,
+                    WndDMThreadProc, 0, 0,
+                    WINEVENT_OUTOFCONTEXT);
     while (GetMessage(&msg, NULL, 0, 0))
     {
         TranslateMessage(&msg);
@@ -102,13 +105,19 @@ void SetWndPosThreadProc(
         SetWindowPos(wnd.hwnd, 0,
                      wnd.mi.rcMonitor.left, wnd.mi.rcMonitor.top,
                      wnd.cx, wnd.cy,
-                     SWP_NOACTIVATE | SWP_NOSENDCHANGING | SWP_NOOWNERZORDER | SWP_NOZORDER);
+                     SWP_NOACTIVATE |
+                         SWP_NOSENDCHANGING |
+                         SWP_NOOWNERZORDER |
+                         SWP_NOZORDER);
 }
 
 DWORD SetWndPosThread()
 {
     MSG msg;
-    SetWinEventHook(EVENT_OBJECT_LOCATIONCHANGE, EVENT_OBJECT_LOCATIONCHANGE, 0, SetWndPosThreadProc, 0, 0, WINEVENT_OUTOFCONTEXT);
+    SetWinEventHook(EVENT_OBJECT_LOCATIONCHANGE,
+                    EVENT_OBJECT_LOCATIONCHANGE, 0,
+                    SetWndPosThreadProc, 0, 0,
+                    WINEVENT_OUTOFCONTEXT);
     while (GetMessage(&msg, NULL, 0, 0))
     {
         TranslateMessage(&msg);
