@@ -124,7 +124,7 @@ DWORD Zeta()
     EnumWindows(EnumWindowsProc, 0);
     while (!IsWindowVisible(wnd.hwnd))
         ;
-    SetForegroundWindow(wnd.hwnd);
+    SwitchToThisWindow(wnd.hwnd, TRUE);
 
     // Setting up Custom Display Mode Support.
     hmon = MonitorFromWindow(wnd.hwnd, MONITOR_DEFAULTTONEAREST);
