@@ -63,9 +63,7 @@ void WndDMThreadProc(
             if (IsIconic(wnd.hwnd))
                 ShowWindow(wnd.hwnd, SW_RESTORE);
             if (!!wnd.dm.dmFields)
-            {
                 SetDM(&wnd.dm);
-            };
         }
         else if (!wnd.cds)
         {
@@ -73,9 +71,7 @@ void WndDMThreadProc(
             if (!IsIconic(wnd.hwnd))
                 ShowWindow(wnd.hwnd, SW_MINIMIZE);
             if (!!wnd.dm.dmFields)
-            {
                 SetDM(0);
-            };
         };
     };
 };
