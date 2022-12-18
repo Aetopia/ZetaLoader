@@ -69,7 +69,7 @@ void WndDMThreadProc(
         {
             wnd.cds = TRUE;
             if (!IsIconic(wnd.hwnd))
-                ShowWindow(wnd.hwnd, SW_MINIMIZE);
+                ShowWindow(wnd.hwnd, SW_FORCEMINIMIZE);
             if (!!wnd.dm.dmFields)
                 SetDM(0);
         };
