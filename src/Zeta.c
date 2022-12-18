@@ -3,10 +3,6 @@
 #include <stdio.h>
 
 // Structure relating to information of a process' window.
-struct CURSOR
-{
-    int x, y, dx, dy;
-};
 struct WINDOW
 {
     HWND hwnd;
@@ -15,7 +11,6 @@ struct WINDOW
     MONITORINFOEX mi;
     BOOL cds;
     int cx, cy;
-    struct CURSOR cur;
 };
 struct WINDOW wnd = {.mi.cbSize = sizeof(wnd.mi),
                      .dm.dmSize = sizeof(wnd.dm),
@@ -51,20 +46,56 @@ void SetDM(DEVMODE *dm)
     ChangeDisplaySettingsEx(wnd.mi.szDevice, dm, NULL, CDS_FULLSCREEN, NULL);
 }
 
-void CenterCursor(int x, int y)
-{
-    POINT pt;
-    do
-    {
-        SetCursorPos(x, y);
-        GetCursorPos(&pt);
-    } while (pt.x != x && pt.y != y);
-}
-
-void WinEventProc(
+void WndDMThreadProc(
     __attribute__((unused)) HWINEVENTHOOK hWinEventHook,
     DWORD event,
     HWND hwnd,
+    __attribute__((unused)) LONG idObject,
+    __attribute__((unused)) LONG idChild,
+    __attribute__((unused)) DWORD idEventThread,
+    __attribute__((unused)) DWORD dwmsEventTime)
+{
+    if (event == EVENT_SYSTEM_FOREGROUND)
+    {
+        if (IsProcWnd(hwnd) && wnd.cds)
+        {
+            wnd.cds = FALSE;
+            if (IsIconic(wnd.hwnd))
+                ShowWindow(wnd.hwnd, SW_RESTORE);
+            if (!!wnd.dm.dmFields)
+            {
+                SetDM(&wnd.dm);
+            };
+        }
+        else if (!wnd.cds)
+        {
+            wnd.cds = TRUE;
+            if (!IsIconic(wnd.hwnd))
+                ShowWindow(wnd.hwnd, SW_MINIMIZE);
+            if (!!wnd.dm.dmFields)
+            {
+                SetDM(0);
+            };
+        };
+    };
+};
+
+DWORD WndDMThread()
+{
+    MSG msg;
+    SetWinEventHook(EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND, 0, WndDMThreadProc, 0, 0, WINEVENT_OUTOFCONTEXT);
+    while (GetMessage(&msg, NULL, 0, 0))
+    {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    };
+    return 0;
+}
+
+void SetWndPosThreadProc(
+    __attribute__((unused)) HWINEVENTHOOK hWinEventHook,
+    DWORD event,
+    __attribute__((unused)) HWND hwnd,
     __attribute__((unused)) LONG idObject,
     __attribute__((unused)) LONG idChild,
     __attribute__((unused)) DWORD idEventThread,
@@ -76,39 +107,12 @@ void WinEventProc(
                      wnd.mi.rcMonitor.left, wnd.mi.rcMonitor.top,
                      wnd.cx, wnd.cy,
                      SWP_NOACTIVATE | SWP_NOSENDCHANGING | SWP_NOOWNERZORDER | SWP_NOZORDER);
+}
 
-    if (event == EVENT_SYSTEM_FOREGROUND)
-    {
-        if (IsProcWnd(hwnd) && wnd.cds)
-        {
-            wnd.cds = FALSE;
-            if (IsIconic(wnd.hwnd))
-                ShowWindow(wnd.hwnd, SW_RESTORE);
-            if (!!wnd.dm.dmFields)
-            {
-                SetDM(&wnd.dm);
-                CenterCursor(wnd.cur.dx, wnd.cur.dy);
-            };
-            return;
-        }
-        if (!wnd.cds)
-        {
-            wnd.cds = TRUE;
-            if (!IsIconic(wnd.hwnd))
-                ShowWindow(wnd.hwnd, SW_MINIMIZE);
-            if (!!wnd.dm.dmFields)
-            {
-                SetDM(0);
-                CenterCursor(wnd.cur.x, wnd.cur.y);
-            };
-        }
-    }
-};
-
-DWORD WinEvent()
+DWORD SetWndPosThread()
 {
     MSG msg;
-    SetWinEventHook(EVENT_SYSTEM_FOREGROUND, EVENT_OBJECT_LOCATIONCHANGE, 0, WinEventProc, 0, 0, WINEVENT_OUTOFCONTEXT);
+    SetWinEventHook(EVENT_OBJECT_LOCATIONCHANGE, EVENT_OBJECT_LOCATIONCHANGE, 0, SetWndPosThreadProc, 0, 0, WINEVENT_OUTOFCONTEXT);
     while (GetMessage(&msg, NULL, 0, 0))
     {
         TranslateMessage(&msg);
@@ -117,10 +121,7 @@ DWORD WinEvent()
     return 0;
 }
 
-BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam)
-{
-    return !IsProcWnd(hwnd);
-}
+BOOL CALLBACK EnumWindowsProc(HWND hwnd, __attribute__((unused)) LPARAM lParam) { return !IsProcWnd(hwnd); }
 
 DWORD Zeta()
 {
@@ -142,8 +143,6 @@ DWORD Zeta()
     // Setting up Custom Display Mode Support.
     hmon = MonitorFromWindow(wnd.hwnd, MONITOR_DEFAULTTONEAREST);
     GetMonitorInfo(hmon, (MONITORINFO *)&wnd.mi);
-    wnd.cur.x = (wnd.mi.rcMonitor.right - wnd.mi.rcMonitor.left) / 2;
-    wnd.cur.y = (wnd.mi.rcMonitor.bottom - wnd.mi.rcMonitor.top) / 2;
     EnumDisplaySettings(wnd.mi.szDevice, ENUM_CURRENT_SETTINGS, &dm);
 
     if (GetFileAttributes("Zeta.txt") == INVALID_FILE_ATTRIBUTES)
@@ -186,11 +185,9 @@ DWORD Zeta()
     scale = dpi / 96;
     wnd.cx = wnd.dm.dmPelsWidth * scale;
     wnd.cy = wnd.dm.dmPelsHeight * scale;
-    wnd.cur.dx = wnd.cx / 2;
-    wnd.cur.dy = wnd.cy / 2;
-    CenterCursor(wnd.cur.dx, wnd.cur.dy);
 
-    CreateThread(0, 0, WinEvent, NULL, 0, 0);
+    CreateThread(0, 0, SetWndPosThread, NULL, 0, 0);
+    CreateThread(0, 0, WndDMThread, NULL, 0, 0);
     return TRUE;
 }
 
