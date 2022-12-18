@@ -91,17 +91,10 @@ DWORD WndDMThread()
     return 0;
 }
 
-void SetWndPosThreadProc(
-    __attribute__((unused)) HWINEVENTHOOK hWinEventHook,
-    DWORD event,
-    __attribute__((unused)) HWND hwnd,
-    __attribute__((unused)) LONG idObject,
-    __attribute__((unused)) LONG idChild,
-    __attribute__((unused)) DWORD idEventThread,
-    __attribute__((unused)) DWORD dwmsEventTime)
+DWORD SetWndPosThread()
 {
-    // Reposition the window, whenever EVENT_OBJECT_LOCATIONCHANGE occurs.
-    if (event == EVENT_OBJECT_LOCATIONCHANGE)
+    do
+    {
         SetWindowPos(wnd.hwnd, 0,
                      wnd.mi.rcMonitor.left, wnd.mi.rcMonitor.top,
                      wnd.cx, wnd.cy,
@@ -109,20 +102,7 @@ void SetWndPosThreadProc(
                          SWP_NOSENDCHANGING |
                          SWP_NOOWNERZORDER |
                          SWP_NOZORDER);
-}
-
-DWORD SetWndPosThread()
-{
-    MSG msg;
-    SetWinEventHook(EVENT_OBJECT_LOCATIONCHANGE,
-                    EVENT_OBJECT_LOCATIONCHANGE, 0,
-                    SetWndPosThreadProc, 0, 0,
-                    WINEVENT_OUTOFCONTEXT);
-    while (GetMessage(&msg, NULL, 0, 0))
-    {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
-    };
+    } while (!SleepEx(1, TRUE));
     return 0;
 }
 
