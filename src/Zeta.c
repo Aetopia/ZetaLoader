@@ -126,6 +126,10 @@ DWORD Zeta()
         ;
     SetForegroundWindow(wnd.hwnd);
     ShowWindow(wnd.hwnd, SW_RESTORE);
+    
+    // Reference: https://github.com/SpecialKO/SpecialK/blob/ad3503d5a10e2909ae5ed20fae2393b0c09268bc/src/window.cpp#L38-L40
+    SetWindowLongPtr(wnd.hwnd, GWL_STYLE, WS_VISIBLE | WS_POPUP | WS_MINIMIZEBOX | WS_SYSMENU | WS_CLIPCHILDREN | WS_CLIPSIBLINGS);
+    SetWindowLongPtr(wnd.hwnd, GWL_EXSTYLE, WS_EX_APPWINDOW);
 
     // Setting up Custom Display Mode Support.
     hmon = MonitorFromWindow(wnd.hwnd, MONITOR_DEFAULTTONEAREST);
@@ -175,10 +179,6 @@ DWORD Zeta()
     scale = dpi / 96;
     wnd.cx = wnd.dm.dmPelsWidth * scale;
     wnd.cy = wnd.dm.dmPelsHeight * scale;
-
-    // Reference: https://github.com/SpecialKO/SpecialK/blob/ad3503d5a10e2909ae5ed20fae2393b0c09268bc/src/window.cpp#L38-L40
-    SetWindowLongPtr(wnd.hwnd, GWL_STYLE, WS_VISIBLE | WS_POPUP | WS_MINIMIZEBOX | WS_SYSMENU | WS_CLIPCHILDREN | WS_CLIPSIBLINGS);
-    SetWindowLongPtr(wnd.hwnd, GWL_EXSTYLE, WS_EX_APPWINDOW);
 
     CreateThread(0, 0, SetWndPosThread, NULL, 0, 0);
     CreateThread(0, 0, WndDMThread, NULL, 0, 0);
