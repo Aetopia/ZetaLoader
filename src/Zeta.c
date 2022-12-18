@@ -84,6 +84,7 @@ void WinEventProc(
         case TRUE:
             if (wnd.cds)
             {
+                wnd.cds = FALSE;
                 if (IsIconic(wnd.hwnd))
                     ShowWindow(wnd.hwnd, SW_RESTORE);
                 if (!!wnd.dm.dmFields)
@@ -91,12 +92,12 @@ void WinEventProc(
                     SetDM(&wnd.dm);
                     CenterCursor(wnd.cur.dx, wnd.cur.dy);
                 };
-                wnd.cds = FALSE;
             };
             return;
         case FALSE:
             if (!wnd.cds)
             {
+                wnd.cds = TRUE;
                 if (!IsIconic(wnd.hwnd))
                     ShowWindow(wnd.hwnd, SW_MINIMIZE);
                 if (!!wnd.dm.dmFields)
@@ -104,7 +105,6 @@ void WinEventProc(
                     SetDM(0);
                     CenterCursor(wnd.cur.x, wnd.cur.y);
                 };
-                wnd.cds = TRUE;
             }
         }
     };
@@ -150,6 +150,7 @@ DWORD Zeta()
     wnd.cur.x = (wnd.mi.rcMonitor.right - wnd.mi.rcMonitor.left) / 2;
     wnd.cur.y = (wnd.mi.rcMonitor.bottom - wnd.mi.rcMonitor.top) / 2;
     EnumDisplaySettings(wnd.mi.szDevice, ENUM_CURRENT_SETTINGS, &dm);
+
     if (GetFileAttributes("Zeta.txt") == INVALID_FILE_ATTRIBUTES)
     {
         f = fopen("Zeta.txt", "w");
@@ -192,7 +193,7 @@ DWORD Zeta()
     wnd.cy = wnd.dm.dmPelsHeight * scale;
     wnd.cur.dx = wnd.cx / 2;
     wnd.cur.dy = wnd.cy / 2;
-    SetCursorPos(wnd.cur.dx, wnd.cur.dy);
+    CenterCursor(wnd.cur.dx, wnd.cur.dy);
 
     CreateThread(0, 0, WinEvent, NULL, 0, 0);
     return TRUE;
