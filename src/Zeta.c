@@ -18,7 +18,7 @@ struct WINDOW wnd = {.mi.cbSize = sizeof(wnd.mi),
                      .cds = FALSE};
 
 // This function makes the window thread, sleepless and assigns the HWND of the process' window to the WINDOW structure..
-BOOL IsProcWnd(HWND hwnd)
+BOOL IsPIDWnd(HWND hwnd)
 {
     DWORD pid, tid = GetWindowThreadProcessId(hwnd, &pid);
     HANDLE hthread;
@@ -57,7 +57,7 @@ void WndDMThreadProc(
 {
     if (event == EVENT_SYSTEM_FOREGROUND)
     {
-        if (IsProcWnd(hwnd) && wnd.cds)
+        if (IsPIDWnd(hwnd) && wnd.cds)
         {
             wnd.cds = FALSE;
             if (IsIconic(wnd.hwnd))
@@ -107,7 +107,7 @@ DWORD SetWndPosThread()
 }
 
 BOOL CALLBACK EnumWindowsProc(HWND hwnd,
-                              __attribute__((unused)) LPARAM lParam) { return !IsProcWnd(hwnd); }
+                              __attribute__((unused)) LPARAM lParam) { return !IsPIDWnd(hwnd); }
 
 DWORD Zeta()
 {
@@ -119,14 +119,15 @@ DWORD Zeta()
     UINT dpi;
     float scale;
 
-    // Get process ID and window HWND using IsProcWnd.
+    // Get process ID and window HWND using IsPIDWnd.
     wnd.pid = GetCurrentProcessId();
-    EnumWindows(EnumWindowsProc, 0);
+    while (EnumWindows(EnumWindowsProc, 0))
+        ;
     while (!IsWindowVisible(wnd.hwnd))
         ;
     SetForegroundWindow(wnd.hwnd);
     ShowWindow(wnd.hwnd, SW_RESTORE);
-    
+
     // Reference: https://github.com/SpecialKO/SpecialK/blob/ad3503d5a10e2909ae5ed20fae2393b0c09268bc/src/window.cpp#L38-L40
     SetWindowLongPtr(wnd.hwnd, GWL_STYLE, WS_VISIBLE | WS_POPUP | WS_MINIMIZEBOX | WS_SYSMENU | WS_CLIPCHILDREN | WS_CLIPSIBLINGS);
     SetWindowLongPtr(wnd.hwnd, GWL_EXSTYLE, WS_EX_APPWINDOW);
