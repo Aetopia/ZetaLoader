@@ -61,7 +61,7 @@ void WndDMThreadProc(
         {
             wnd.cds = FALSE;
             if (IsIconic(wnd.hwnd))
-                ShowWindow(wnd.hwnd, SW_RESTORE);
+                SwitchToThisWindow(wnd.hwnd, TRUE);
             if (!!wnd.dm.dmFields)
                 SetDM(&wnd.dm);
         }
@@ -106,7 +106,8 @@ DWORD SetWndPosThread()
     return 0;
 }
 
-BOOL CALLBACK EnumWindowsProc(HWND hwnd, __attribute__((unused)) LPARAM lParam) { return !IsProcWnd(hwnd); }
+BOOL CALLBACK EnumWindowsProc(HWND hwnd,
+                              __attribute__((unused)) LPARAM lParam) { return !IsProcWnd(hwnd); }
 
 DWORD Zeta()
 {

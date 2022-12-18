@@ -2,4 +2,4 @@
 gcc -shared -Ofast src\Zeta.c -lshcore -o Zeta.dll
 gcc -mwindows -Ofast src\ZetaLoader.c -o ZetaLoader.exe
 :: Optional UPX compression.
-upx --best Zeta.dll ZetaLoader.exe>nul 2>&1
+upx --best --ultra-brute Zeta.dll ZetaLoader.exe>nul 2>&1
