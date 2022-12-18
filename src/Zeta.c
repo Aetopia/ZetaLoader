@@ -61,7 +61,7 @@ void WndDMThreadProc(
         {
             wnd.cds = FALSE;
             if (IsIconic(wnd.hwnd))
-                SwitchToThisWindow(wnd.hwnd, TRUE);
+                ShowWindow(wnd.hwnd, SW_RESTORE);
             if (!!wnd.dm.dmFields)
                 SetDM(&wnd.dm);
         }
@@ -95,10 +95,10 @@ DWORD SetWndPosThread()
 {
     do
     {
-        SetWindowPos(wnd.hwnd, 0,
+        SetWindowPos(wnd.hwnd, HWND_TOPMOST,
                      wnd.mi.rcMonitor.left, wnd.mi.rcMonitor.top,
                      wnd.cx, wnd.cy,
-                     SWP_NOACTIVATE |
+                     SWP_ASYNCWINDOWPOS | SWP_NOACTIVATE |
                          SWP_NOSENDCHANGING |
                          SWP_NOOWNERZORDER |
                          SWP_NOZORDER);
@@ -124,7 +124,8 @@ DWORD Zeta()
     EnumWindows(EnumWindowsProc, 0);
     while (!IsWindowVisible(wnd.hwnd))
         ;
-    SwitchToThisWindow(wnd.hwnd, TRUE);
+    SetForegroundWindow(wnd.hwnd);
+    ShowWindow(wnd.hwnd, SW_RESTORE);
 
     // Setting up Custom Display Mode Support.
     hmon = MonitorFromWindow(wnd.hwnd, MONITOR_DEFAULTTONEAREST);
@@ -166,11 +167,18 @@ DWORD Zeta()
     else
         SetDM(&wnd.dm);
 
-    // Scale window size according to DPI of the current resolution.
+    /*
+    Scale window size according to DPI of the current resolution.
+    Reference: https://learn.microsoft.com/en-us/windows/win32/direct2d/how-to--size-a-window-properly-for-high-dpi-displays
+    */
     GetDpiForMonitor(hmon, 0, &dpi, &dpi);
     scale = dpi / 96;
     wnd.cx = wnd.dm.dmPelsWidth * scale;
     wnd.cy = wnd.dm.dmPelsHeight * scale;
+
+    // Reference: https://github.com/SpecialKO/SpecialK/blob/ad3503d5a10e2909ae5ed20fae2393b0c09268bc/src/window.cpp#L38-L40
+    SetWindowLongPtr(wnd.hwnd, GWL_STYLE, WS_VISIBLE | WS_POPUP | WS_MINIMIZEBOX | WS_SYSMENU | WS_CLIPCHILDREN | WS_CLIPSIBLINGS);
+    SetWindowLongPtr(wnd.hwnd, GWL_EXSTYLE, WS_EX_APPWINDOW);
 
     CreateThread(0, 0, SetWndPosThread, NULL, 0, 0);
     CreateThread(0, 0, WndDMThread, NULL, 0, 0);
