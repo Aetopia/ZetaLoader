@@ -1,2 +1,2 @@
 # ZetaLoader
- A tool to fix issues with Halo Infinite.
+ A tool to fix technical issues with Halo Infinite.
