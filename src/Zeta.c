@@ -79,36 +79,31 @@ void WinEventProc(
 
     if (event == EVENT_SYSTEM_FOREGROUND)
     {
-        switch (IsProcWnd(hwnd))
+        if (IsProcWnd(hwnd) && wnd.cds)
         {
-        case TRUE:
-            if (wnd.cds)
+            wnd.cds = FALSE;
+            if (IsIconic(wnd.hwnd))
+                ShowWindow(wnd.hwnd, SW_RESTORE);
+            if (!!wnd.dm.dmFields)
             {
-                wnd.cds = FALSE;
-                if (IsIconic(wnd.hwnd))
-                    ShowWindow(wnd.hwnd, SW_RESTORE);
-                if (!!wnd.dm.dmFields)
-                {
-                    SetDM(&wnd.dm);
-                    CenterCursor(wnd.cur.dx, wnd.cur.dy);
-                };
+                SetDM(&wnd.dm);
+                CenterCursor(wnd.cur.dx, wnd.cur.dy);
             };
             return;
-        case FALSE:
-            if (!wnd.cds)
-            {
-                wnd.cds = TRUE;
-                if (!IsIconic(wnd.hwnd))
-                    ShowWindow(wnd.hwnd, SW_MINIMIZE);
-                if (!!wnd.dm.dmFields)
-                {
-                    SetDM(0);
-                    CenterCursor(wnd.cur.x, wnd.cur.y);
-                };
-            }
         }
-    };
-}
+        if (!wnd.cds)
+        {
+            wnd.cds = TRUE;
+            if (!IsIconic(wnd.hwnd))
+                ShowWindow(wnd.hwnd, SW_MINIMIZE);
+            if (!!wnd.dm.dmFields)
+            {
+                SetDM(0);
+                CenterCursor(wnd.cur.x, wnd.cur.y);
+            };
+        }
+    }
+};
 
 DWORD WinEvent()
 {
