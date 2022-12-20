@@ -192,9 +192,7 @@ DWORD Zeta()
     SetWindowPos(wnd.hwnd, 0,
                  wnd.mi.rcMonitor.left, wnd.mi.rcMonitor.top,
                  wnd.cx, wnd.cy,
-                 SWP_NOACTIVATE |
-                     SWP_NOSENDCHANGING |
-                     SWP_NOZORDER);
+                 SWP_NOACTIVATE | SWP_NOSENDCHANGING);
 
     if (strcmp(pri, wnd.mi.szDevice) == 0)
         CreateThread(0, 0, WndDMThread, NULL, 0, 0);
