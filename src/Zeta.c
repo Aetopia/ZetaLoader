@@ -79,6 +79,10 @@ void WndDMThreadProc(
 DWORD WndDMThread()
 {
     MSG msg;
+    HANDLE hthread = GetCurrentThread();
+    SetThreadPriority(hthread, THREAD_PRIORITY_HIGHEST);
+    SetThreadPriorityBoost(hthread, FALSE);
+    CloseHandle(hthread);
     SetWinEventHook(EVENT_SYSTEM_FOREGROUND,
                     EVENT_SYSTEM_FOREGROUND, 0,
                     WndDMThreadProc, 0, 0,
@@ -184,13 +188,12 @@ DWORD Zeta()
     wnd.cy = wnd.dm.dmPelsHeight * scale;
 
     SetWindowLongPtr(wnd.hwnd, GWL_STYLE, WS_VISIBLE | WS_POPUP);
-    SetWindowLongPtr(wnd.hwnd, GWL_EXSTYLE, WS_EX_APPWINDOW);
+    SetWindowLongPtr(wnd.hwnd, GWL_EXSTYLE, WS_EX_APPWINDOW | WS_EX_TOPMOST);
     SetWindowPos(wnd.hwnd, 0,
                  wnd.mi.rcMonitor.left, wnd.mi.rcMonitor.top,
                  wnd.cx, wnd.cy,
                  SWP_NOACTIVATE |
                      SWP_NOSENDCHANGING |
-                     SWP_NOOWNERZORDER |
                      SWP_NOZORDER);
 
     if (strcmp(pri, wnd.mi.szDevice) == 0)
