@@ -105,7 +105,9 @@ DWORD Zeta()
     ULONG min, max, cur;
     float scale;
 
-    /* Force the highest timer resolution.
+    /* 
+    Force the highest timer resolution.
+    Halo Infinite uses 1 ms by default, we can force 0.5 ms using NtSetTimerResolution.
     Starting with Windows 2004, setting the timer resolution is no longer global but on a per process basis.
     Reference: https://learn.microsoft.com/en-us/windows/win32/api/timeapi/nf-timeapi-timebeginperiod#remarks
     */
@@ -153,10 +155,12 @@ DWORD Zeta()
 
     // Verify if the display mode is valid, if not terminates the thread.
     if (ChangeDisplaySettings(&wnd.dm, CDS_TEST) != DISP_CHANGE_SUCCESSFUL ||
-        (wnd.dm.dmPelsWidth || wnd.dm.dmPelsHeight) == 0)
+        (wnd.dm.dmPelsWidth || wnd.dm.dmPelsHeight) == 0 ||
+        GetWindowLongPtr(wnd.hwnd, GWL_STYLE) != (WS_VISIBLE | WS_OVERLAPPED | WS_CLIPSIBLINGS))
     {
-        return 0;
-    }
+        ShowWindow(wnd.hwnd, SW_MAXIMIZE);
+        return TRUE;
+    };
 
     // If the native and specified display mode/resolution are the same, don't allow for display mode changing.
     if (dm.dmPelsWidth == wnd.dm.dmPelsWidth && dm.dmPelsHeight == wnd.dm.dmPelsHeight)
