@@ -105,7 +105,7 @@ DWORD Zeta()
     ULONG min, max, cur;
     float scale;
 
-    /* 
+    /*
     Force the highest timer resolution.
     Halo Infinite uses 1 ms by default, we can force 0.5 ms using NtSetTimerResolution.
     Starting with Windows 2004, setting the timer resolution is no longer global but on a per process basis.
@@ -153,7 +153,11 @@ DWORD Zeta()
         free(c);
     };
 
-    // Verify if the display mode is valid, if not terminates the thread.
+    /*
+    1. Verify if the display mode is valid.
+    2. Only allow for display mode changing and borderless fullscreen fix, if the window style matches.
+    If these requirements aren't fulfilled then simply maximize the window and terminate the thread.
+    */
     if (ChangeDisplaySettings(&wnd.dm, CDS_TEST) != DISP_CHANGE_SUCCESSFUL ||
         (wnd.dm.dmPelsWidth || wnd.dm.dmPelsHeight) == 0 ||
         GetWindowLongPtr(wnd.hwnd, GWL_STYLE) != (WS_VISIBLE | WS_OVERLAPPED | WS_CLIPSIBLINGS))
@@ -170,8 +174,8 @@ DWORD Zeta()
 
     /*
     1. Scale window size according to DPI of the current resolution.
-    2. Override Halo Infinite's Borderless Window/Fullscreen style.
-    3. Size the Window.
+    2. Override the Borderless Window/Fullscreen style set by the program.
+    3. Size the window.
     Reference: https://learn.microsoft.com/en-us/windows/win32/direct2d/how-to--size-a-window-properly-for-high-dpi-displays
     */
     GetDpiForMonitor(hmon, 0, &dpi, &dpi);
