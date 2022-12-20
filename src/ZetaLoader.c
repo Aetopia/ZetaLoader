@@ -3,7 +3,7 @@
 
 int main(__attribute__((unused)) int argc, char *argv[])
 {
-    static char *proc = "haloinfinite.exe";
+    static char *proc = "HaloInfinite.exe";
     LPVOID mem;
     char dll[MAX_PATH];
     STARTUPINFO si = {.cb = sizeof(si)};
