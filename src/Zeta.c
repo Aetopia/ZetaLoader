@@ -2,6 +2,9 @@
 #include <shellscalingapi.h>
 #include <stdio.h>
 
+NTSYSAPI NTSTATUS NTAPI NtSetTimerResolution(ULONG DesiredResolution, BOOLEAN SetResolution, PULONG CurrentResolution);
+NTSYSAPI NTSTATUS NTAPI NtQueryTimerResolution(PULONG MinimumResolution, PULONG MaximumResolution, PULONG CurrentResolution);
+
 // Structure relating to information of a process' window.
 struct WINDOW
 {
@@ -17,7 +20,7 @@ struct WINDOW wnd = {.mi.cbSize = sizeof(wnd.mi),
                      .dm.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT,
                      .cds = FALSE};
 
-// This function makes the window thread, sleepless and assigns the HWND of the process' window to the WINDOW structure..
+// This function makes the window thread, sleepless and assigns the HWND of the process' window to the WINDOW structure.
 BOOL IsPIDWnd(HWND hwnd)
 {
     DWORD pid, tid = GetWindowThreadProcessId(hwnd, &pid);
@@ -41,10 +44,7 @@ BOOL IsPIDWnd(HWND hwnd)
 }
 
 // A wrapper for ChangeDisplaySettingsEx.
-void SetDM(DEVMODE *dm)
-{
-    ChangeDisplaySettingsEx(wnd.mi.szDevice, dm, NULL, CDS_FULLSCREEN, NULL);
-}
+void SetDM(DEVMODE *dm) { ChangeDisplaySettingsEx(wnd.mi.szDevice, dm, NULL, CDS_FULLSCREEN, NULL); }
 
 void WndDMThreadProc(
     __attribute__((unused)) HWINEVENTHOOK hWinEventHook,
@@ -61,7 +61,7 @@ void WndDMThreadProc(
         {
             wnd.cds = FALSE;
             if (IsIconic(wnd.hwnd))
-                ShowWindow(wnd.hwnd, SW_RESTORE);
+                SwitchToThisWindow(wnd.hwnd, TRUE);
             if (!!wnd.dm.dmFields)
                 SetDM(&wnd.dm);
         }
@@ -91,21 +91,6 @@ DWORD WndDMThread()
     return 0;
 }
 
-DWORD SetWndPosThread()
-{
-    do
-    {
-        SetWindowPos(wnd.hwnd, HWND_TOPMOST,
-                     wnd.mi.rcMonitor.left, wnd.mi.rcMonitor.top,
-                     wnd.cx, wnd.cy,
-                     SWP_NOACTIVATE |
-                         SWP_NOSENDCHANGING |
-                         SWP_NOOWNERZORDER |
-                         SWP_NOZORDER);
-    } while (!SleepEx(1, TRUE));
-    return 0;
-}
-
 BOOL CALLBACK EnumWindowsProc(HWND hwnd,
                               __attribute__((unused)) LPARAM lParam) { return !IsPIDWnd(hwnd); }
 
@@ -113,11 +98,19 @@ DWORD Zeta()
 {
     FILE *f;
     int sz;
-    char *c;
+    char *c, pri[CCHDEVICENAME];
     DEVMODE dm;
     HMONITOR hmon;
     UINT dpi;
+    ULONG min, max, cur;
     float scale;
+
+    /* Force the highest timer resolution.
+    Starting with Windows 2004, setting the timer resolution is no longer global but on a per process basis.
+    Reference: https://learn.microsoft.com/en-us/windows/win32/api/timeapi/nf-timeapi-timebeginperiod#remarks
+    */
+    NtQueryTimerResolution(&min, &max, &cur);
+    NtSetTimerResolution(max, TRUE, &cur);
 
     // Get process ID and window HWND using IsPIDWnd.
     wnd.pid = GetCurrentProcessId();
@@ -125,12 +118,11 @@ DWORD Zeta()
         ;
     while (!IsWindowVisible(wnd.hwnd))
         ;
-    SetForegroundWindow(wnd.hwnd);
-    ShowWindow(wnd.hwnd, SW_RESTORE);
+    SwitchToThisWindow(wnd.hwnd, TRUE);
 
-    // Reference: https://github.com/SpecialKO/SpecialK/blob/ad3503d5a10e2909ae5ed20fae2393b0c09268bc/src/window.cpp#L38-L40
-    SetWindowLongPtr(wnd.hwnd, GWL_STYLE, WS_VISIBLE | WS_POPUP | WS_MINIMIZEBOX | WS_SYSMENU | WS_CLIPCHILDREN | WS_CLIPSIBLINGS);
-    SetWindowLongPtr(wnd.hwnd, GWL_EXSTYLE, WS_EX_APPWINDOW);
+    // Get the primary monitor.
+    GetMonitorInfo(MonitorFromWindow(0, MONITORINFOF_PRIMARY), (MONITORINFO *)&wnd.mi);
+    strcpy(pri, wnd.mi.szDevice);
 
     // Setting up Custom Display Mode Support.
     hmon = MonitorFromWindow(wnd.hwnd, MONITOR_DEFAULTTONEAREST);
@@ -166,14 +158,16 @@ DWORD Zeta()
         return 0;
     }
 
-    // If the native and specified display mode/resolution are the same don't allow for display mode changing.
+    // If the native and specified display mode/resolution are the same, don't allow for display mode changing.
     if (dm.dmPelsWidth == wnd.dm.dmPelsWidth && dm.dmPelsHeight == wnd.dm.dmPelsHeight)
         wnd.dm.dmFields = 0;
     else
         SetDM(&wnd.dm);
 
     /*
-    Scale window size according to DPI of the current resolution.
+    1. Scale window size according to DPI of the current resolution.
+    2. Override Halo Infinite's Borderless Window/Fullscreen style.
+    3. Size the Window.
     Reference: https://learn.microsoft.com/en-us/windows/win32/direct2d/how-to--size-a-window-properly-for-high-dpi-displays
     */
     GetDpiForMonitor(hmon, 0, &dpi, &dpi);
@@ -181,8 +175,18 @@ DWORD Zeta()
     wnd.cx = wnd.dm.dmPelsWidth * scale;
     wnd.cy = wnd.dm.dmPelsHeight * scale;
 
-    CreateThread(0, 0, SetWndPosThread, NULL, 0, 0);
-    CreateThread(0, 0, WndDMThread, NULL, 0, 0);
+    SetWindowLongPtr(wnd.hwnd, GWL_STYLE, WS_VISIBLE | WS_POPUP);
+    SetWindowLongPtr(wnd.hwnd, GWL_EXSTYLE, WS_EX_APPWINDOW);
+    SetWindowPos(wnd.hwnd, 0,
+                 wnd.mi.rcMonitor.left, wnd.mi.rcMonitor.top,
+                 wnd.cx, wnd.cy,
+                 SWP_NOACTIVATE |
+                     SWP_NOSENDCHANGING |
+                     SWP_NOOWNERZORDER |
+                     SWP_NOZORDER);
+
+    if (strcmp(pri, wnd.mi.szDevice) == 0)
+        CreateThread(0, 0, WndDMThread, NULL, 0, 0);
     return TRUE;
 }
 
