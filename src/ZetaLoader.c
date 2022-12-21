@@ -3,12 +3,12 @@
 
 int main(__attribute__((unused)) int argc, char *argv[])
 {
+    SetCurrentDirectory(dirname(argv[0]));
     static char *proc = "HaloInfinite.exe";
     LPVOID mem;
     char dll[MAX_PATH];
     STARTUPINFO si = {.cb = sizeof(si)};
     PROCESS_INFORMATION pi;
-    SetCurrentDirectory(dirname(argv[0]));
 
     // Verify if Zeta.dll and HaloInfinite.exe exist or not.
     GetFullPathName("Zeta.dll", MAX_PATH, dll, NULL);
