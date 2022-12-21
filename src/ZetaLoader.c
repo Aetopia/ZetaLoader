@@ -17,7 +17,8 @@ int main(__attribute__((unused)) int argc, char *argv[])
     if (GetFileAttributes(dll) == INVALID_FILE_ATTRIBUTES ||
         GetFileAttributes("HaloInfinite.exe") == INVALID_FILE_ATTRIBUTES)
         return 0;
-    ShellExecuteEx(&ei);
+    if (!ShellExecuteEx(&ei))
+        return 0;
 
     // Inject Zeta.dll into Halo Infinite.
     mem = VirtualAllocEx(ei.hProcess, NULL, MAX_PATH, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
