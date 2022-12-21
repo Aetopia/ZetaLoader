@@ -1,30 +1,64 @@
 #include <windows.h>
+#include <psapi.h>
 #include <libgen.h>
+
+static char *proc = "haloinfinite.exe";
+DWORD pid;
+
+void WinEventProc(
+    __attribute__((unused)) HWINEVENTHOOK hWinEventHook,
+    DWORD event,
+    HWND hwnd,
+    __attribute__((unused)) LONG idObject,
+    __attribute__((unused)) LONG idChild,
+    __attribute__((unused)) DWORD idEventThread,
+    __attribute__((unused)) DWORD dwmsEventTime)
+{
+    if (event == EVENT_OBJECT_CREATE)
+    {
+        if (!IsWindow(hwnd))
+            return;
+        char file[MAX_PATH];
+        HANDLE hproc;
+        GetWindowThreadProcessId(hwnd, &pid);
+        hproc = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
+        GetModuleFileNameEx(hproc, NULL, file, MAX_PATH);
+        CloseHandle(hproc);
+        if (strcmp(strlwr(basename(file)), proc) == 0)
+            PostQuitMessage(0);
+    };
+}
 
 int main(__attribute__((unused)) int argc, char *argv[])
 {
     SetCurrentDirectory(dirname(argv[0]));
-    static char *proc = "HaloInfinite.exe";
+    HANDLE hproc;
     LPVOID mem;
     char dll[MAX_PATH];
-    STARTUPINFO si = {.cb = sizeof(si)};
-    PROCESS_INFORMATION pi;
+    MSG msg;
 
-    // Verify if Zeta.dll and HaloInfinite.exe exist or not.
     GetFullPathName("Zeta.dll", MAX_PATH, dll, NULL);
     if (GetFileAttributes(dll) == INVALID_FILE_ATTRIBUTES || GetFileAttributes(proc) == INVALID_FILE_ATTRIBUTES)
         return 0;
-    CreateProcess(proc, NULL, NULL, NULL, FALSE, CREATE_SUSPENDED, NULL, NULL, &si, &pi);
+    ShellExecute(0, "open", proc, NULL, ".", 5);
+
+    SetWinEventHook(EVENT_OBJECT_CREATE,
+                    EVENT_OBJECT_CREATE, 0,
+                    WinEventProc, 0, 0,
+                    WINEVENT_OUTOFCONTEXT);
+    while (GetMessage(&msg, NULL, 0, 0))
+    {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    };
 
     // Inject Zeta.dll into Halo Infinite.
-    mem = VirtualAllocEx(pi.hProcess, NULL, MAX_PATH, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
-    WriteProcessMemory(pi.hProcess, mem, (LPCVOID)dll, MAX_PATH, NULL);
+    hproc = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
+    mem = VirtualAllocEx(hproc, NULL, MAX_PATH, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+    WriteProcessMemory(hproc, mem, (LPCVOID)dll, MAX_PATH, NULL);
 #pragma GCC diagnostic ignored "-Wcast-function-type"
-    WaitForSingleObject(CreateRemoteThread(pi.hProcess, NULL, 0, (LPTHREAD_START_ROUTINE)LoadLibrary, mem, 0, NULL), INFINITE);
+    WaitForSingleObject(CreateRemoteThread(hproc, 0, 0, (LPTHREAD_START_ROUTINE)LoadLibrary, mem, 0, 0), INFINITE);
 #pragma GCC diagnostic pop
-    VirtualFreeEx(pi.hProcess, mem, MAX_PATH, MEM_RELEASE);
-
-    // Resume Halo Infinite.
-    ResumeThread(pi.hThread);
+    VirtualFreeEx(hproc, mem, MAX_PATH, MEM_RELEASE);
     return 0;
 }
