@@ -11,7 +11,7 @@ int main(__attribute__((unused)) int argc, char *argv[])
                            .lpFile = "HaloInfinite.exe",
                            .lpVerb = "open",
                            .nShow = 5,
-                           .fMask = SEE_MASK_NOCLOSEPROCESS};
+                           .fMask = SEE_MASK_NOCLOSEPROCESS | SEE_MASK_NOASYNC};
 
     GetFullPathName("Zeta.dll", MAX_PATH, dll, NULL);
     if (GetFileAttributes(dll) == INVALID_FILE_ATTRIBUTES ||
