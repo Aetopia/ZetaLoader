@@ -2,6 +2,7 @@
 #include <shellscalingapi.h>
 #include <stdio.h>
 
+// Timer resolution related functions.
 NTSYSAPI NTSTATUS NTAPI NtSetTimerResolution(ULONG DesiredResolution, BOOLEAN SetResolution, PULONG CurrentResolution);
 NTSYSAPI NTSTATUS NTAPI NtQueryTimerResolution(PULONG MinimumResolution, PULONG MaximumResolution, PULONG CurrentResolution);
 
@@ -25,22 +26,18 @@ BOOL IsPIDWnd(HWND hwnd)
 {
     DWORD pid, tid = GetWindowThreadProcessId(hwnd, &pid);
     HANDLE hthread;
-    if (wnd.pid == pid)
-    {
-        // Values are reassigned when needed.
-        if (wnd.hwnd != hwnd)
-        {
-            wnd.hwnd = hwnd;
-
-            // Sets the window thread priority to highest and ensures thread priority boost is enabled.
-            hthread = OpenThread(THREAD_ALL_ACCESS, FALSE, tid);
-            SetThreadPriority(hthread, THREAD_PRIORITY_HIGHEST);
-            SetThreadPriorityBoost(hthread, FALSE);
-            CloseHandle(hthread);
-        };
+    if (wnd.pid != pid)
+        return FALSE;
+    if (wnd.hwnd == hwnd)
         return TRUE;
-    };
-    return FALSE;
+
+    wnd.hwnd = hwnd;
+    // Sets the window thread priority to highest and ensures thread priority boost is enabled.
+    hthread = OpenThread(THREAD_ALL_ACCESS, FALSE, tid);
+    SetThreadPriority(hthread, THREAD_PRIORITY_HIGHEST);
+    SetThreadPriorityBoost(hthread, FALSE);
+    CloseHandle(hthread);
+    return TRUE;
 }
 
 // A wrapper for ChangeDisplaySettingsEx.
@@ -97,6 +94,19 @@ DWORD WndDMThread()
 BOOL CALLBACK EnumWindowsProc(HWND hwnd,
                               __attribute__((unused)) LPARAM lParam) { return !IsPIDWnd(hwnd); }
 
+// This thread constantly checks if the process' window is hung or not.
+DWORD IsHungAppWindowThread()
+{
+    while (!IsHungAppWindow(wnd.hwnd))
+        Sleep(1);
+    ShowWindow(wnd.hwnd, SW_FORCEMINIMIZE);
+    if (!!wnd.dm.dmFields)
+        SetDM(0);
+    MessageBox(wnd.hwnd, "Looks like Halo Infinite has crashed!", "Halo Infinite - Crashed", MB_ICONINFORMATION);
+    TerminateProcess(GetCurrentProcess(), 0);
+    return TRUE;
+}
+
 DWORD Zeta()
 {
     FILE *f;
@@ -124,6 +134,7 @@ DWORD Zeta()
     while (!IsWindowVisible(wnd.hwnd))
         ;
     SwitchToThisWindow(wnd.hwnd, TRUE);
+    CreateThread(0, 0, IsHungAppWindowThread, NULL, 0, 0);
 
     // Get the primary monitor.
     GetMonitorInfo(MonitorFromWindow(0, MONITORINFOF_PRIMARY), (MONITORINFO *)&wnd.mi);

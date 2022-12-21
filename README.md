@@ -2,6 +2,10 @@
 
 A utility to fix technical issues with Halo Infinite on PC.
 
+## Resolved Issues
+
+1. Screen Tearing
+
 ## Limitations
 
 **Here are a few things you should note about ZetaLoader.**
