@@ -2,63 +2,30 @@
 #include <psapi.h>
 #include <libgen.h>
 
-const char *proc = "haloinfinite.exe";
-DWORD pid;
-
-void WinEventProc(
-    __attribute__((unused)) HWINEVENTHOOK hWinEventHook,
-    DWORD event,
-    HWND hwnd,
-    __attribute__((unused)) LONG idObject,
-    __attribute__((unused)) LONG idChild,
-    __attribute__((unused)) DWORD idEventThread,
-    __attribute__((unused)) DWORD dwmsEventTime)
-{
-    if (event == EVENT_OBJECT_CREATE)
-    {
-        char file[MAX_PATH];
-        HANDLE hproc;
-        GetWindowThreadProcessId(hwnd, &pid);
-        hproc = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
-        GetModuleFileNameEx(hproc, NULL, file, MAX_PATH);
-        CloseHandle(hproc);
-        if (strcmp(strlwr(basename(file)), proc) == 0)
-            PostQuitMessage(0);
-    };
-}
-
 int main(__attribute__((unused)) int argc, char *argv[])
 {
     SetCurrentDirectory(dirname(argv[0]));
-    HANDLE hproc;
     LPVOID mem;
     char dll[MAX_PATH];
-    MSG msg;
+    SHELLEXECUTEINFO ei = {.cbSize = sizeof(ei),
+                           .lpFile = "HaloInfinite.exe",
+                           .lpVerb = "open",
+                           .nShow = 5,
+                           .fMask = SEE_MASK_NOCLOSEPROCESS | SEE_MASK_NOASYNC};
 
-    // Verify if Zeta.dll and HaloInfinite.exe exist or not.
     GetFullPathName("Zeta.dll", MAX_PATH, dll, NULL);
-    if (GetFileAttributes(dll) == INVALID_FILE_ATTRIBUTES || GetFileAttributes(proc) == INVALID_FILE_ATTRIBUTES)
+    if (GetFileAttributes(dll) == INVALID_FILE_ATTRIBUTES ||
+        GetFileAttributes("HaloInfinite.exe") == INVALID_FILE_ATTRIBUTES)
         return 0;
-    ShellExecute(0, "open", proc, NULL, ".", 5);
-
-    // Listen for events when a window is in the foreground.
-    SetWinEventHook(EVENT_OBJECT_CREATE,
-                    EVENT_OBJECT_CREATE, 0,
-                    WinEventProc, 0, 0,
-                    WINEVENT_OUTOFCONTEXT);
-    while (GetMessage(&msg, NULL, 0, 0))
-    {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
-    };
+    if (!ShellExecuteEx(&ei))
+        return 0;
 
     // Inject Zeta.dll into Halo Infinite.
-    hproc = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
-    mem = VirtualAllocEx(hproc, NULL, MAX_PATH, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
-    WriteProcessMemory(hproc, mem, (LPCVOID)dll, MAX_PATH, NULL);
+    mem = VirtualAllocEx(ei.hProcess, NULL, MAX_PATH, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+    WriteProcessMemory(ei.hProcess, mem, (LPCVOID)dll, MAX_PATH, NULL);
 #pragma GCC diagnostic ignored "-Wcast-function-type"
-    WaitForSingleObject(CreateRemoteThread(hproc, 0, 0, (LPTHREAD_START_ROUTINE)LoadLibrary, mem, 0, 0), INFINITE);
+    WaitForSingleObject(CreateRemoteThread(ei.hProcess, 0, 0, (LPTHREAD_START_ROUTINE)LoadLibrary, mem, 0, 0), INFINITE);
 #pragma GCC diagnostic pop
-    VirtualFreeEx(hproc, mem, MAX_PATH, MEM_RELEASE);
+    VirtualFreeEx(ei.hProcess, mem, MAX_PATH, MEM_RELEASE);
     return 0;
 }
