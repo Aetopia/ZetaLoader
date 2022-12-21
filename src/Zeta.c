@@ -190,18 +190,16 @@ DWORD Zeta()
         return TRUE;
     };
 
-    // If the native and specified display mode/resolution are the same, don't allow for display mode changing.
-    if (dm.dmPelsWidth == wnd.dm.dmPelsWidth && dm.dmPelsHeight == wnd.dm.dmPelsHeight)
-        wnd.dm.dmFields = 0;
-    else
-        SetDM(&wnd.dm);
-
     /*
-    1. Scale window size according to DPI of the current resolution.
-    2. Override the Borderless Window/Fullscreen style set by the program.
-    3. Size the window.
+    1. Check if the native and specified display mode/resolution are the same, if yes then don't allow for display mode changing.
+    2. Scale window size according to DPI of the current resolution.
+    3. Override the Borderless Window/Fullscreen style set by the program.
+    4. Size the window.
     Reference: https://learn.microsoft.com/en-us/windows/win32/direct2d/how-to--size-a-window-properly-for-high-dpi-displays
     */
+    if (dm.dmPelsWidth == wnd.dm.dmPelsWidth && dm.dmPelsHeight == wnd.dm.dmPelsHeight)
+        wnd.dm.dmFields = 0;
+    SetDM(&wnd.dm);
     GetDpiForMonitor(hmon, 0, &dpi, &dpi);
     scale = dpi / 96;
     wnd.cx = wnd.dm.dmPelsWidth * scale;
