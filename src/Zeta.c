@@ -74,6 +74,10 @@ void WndDMThreadProc(
 
 DWORD WndDMThread()
 {
+    /*
+    This thread also controls the window's visibility state and desired display mode/resolution.
+    It is given the highest priority to prevent it from going to "sleep".
+    */
     MSG msg;
     HANDLE hthread = GetCurrentThread();
     SetThreadPriority(hthread, THREAD_PRIORITY_HIGHEST);
