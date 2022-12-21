@@ -44,7 +44,11 @@ BOOL IsPIDWnd(HWND hwnd)
 }
 
 // A wrapper for ChangeDisplaySettingsEx.
-void SetDM(DEVMODE *dm) { ChangeDisplaySettingsEx(wnd.mi.szDevice, dm, NULL, CDS_FULLSCREEN, NULL); }
+void SetDM(DEVMODE *dm)
+{
+    if (!!wnd.dm.dmFields)
+        ChangeDisplaySettingsEx(wnd.mi.szDevice, dm, NULL, CDS_FULLSCREEN, NULL);
+}
 
 void WndDMThreadProc(
     __attribute__((unused)) HWINEVENTHOOK hWinEventHook,
@@ -62,16 +66,14 @@ void WndDMThreadProc(
         wnd.cds = FALSE;
         if (IsIconic(wnd.hwnd))
             SwitchToThisWindow(wnd.hwnd, TRUE);
-        if (!!wnd.dm.dmFields)
-            SetDM(&wnd.dm);
+        SetDM(&wnd.dm);
     }
     else if (!wnd.cds)
     {
         wnd.cds = TRUE;
         if (!IsIconic(wnd.hwnd))
             ShowWindow(wnd.hwnd, SW_MINIMIZE);
-        if (!!wnd.dm.dmFields)
-            SetDM(0);
+        SetDM(0);
     };
 };
 
