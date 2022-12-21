@@ -1,5 +1,4 @@
 #include <windows.h>
-#include <psapi.h>
 #include <libgen.h>
 
 int main(__attribute__((unused)) int argc, char *argv[])
