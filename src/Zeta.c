@@ -32,7 +32,10 @@ BOOL IsPIDWnd(HWND hwnd)
         return TRUE;
 
     wnd.hwnd = hwnd;
-    // Sets the window thread priority to highest and ensures thread priority boost is enabled.
+    /* 
+    Sets the window thread priority to highest and ensures thread priority boost is enabled.
+    This oddly fixes Screen Tearing issues, likely meaning the window thread goes to "sleep" when the thread priority is lower.
+    */
     hthread = OpenThread(THREAD_ALL_ACCESS, FALSE, tid);
     SetThreadPriority(hthread, THREAD_PRIORITY_HIGHEST);
     SetThreadPriorityBoost(hthread, FALSE);
@@ -77,6 +80,7 @@ DWORD WndDMThread()
     /*
     This thread also controls the window's visibility state and desired display mode/resolution.
     It is given the highest priority to prevent it from going to "sleep".
+    This will not affect performance considering window visibility state & display mode/resolution related functions are only called when EVENT_SYSTEM_FOREGROUND occurs.
     */
     MSG msg;
     HANDLE hthread = GetCurrentThread();
