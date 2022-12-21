@@ -115,6 +115,108 @@ DWORD IsHungAppWindowThread()
     return TRUE;
 }
 
+DWORD Zeta()
+{
+    FILE *f;
+    int sz;
+    char *c, pri[CCHDEVICENAME];
+    DEVMODE dm;
+    HMONITOR hmon;
+    UINT dpi;
+    ULONG min, max, cur;
+    float scale;
+
+    /*
+    Force the highest timer resolution.
+    Halo Infinite uses 1 ms by default, we can force 0.5 ms using NtSetTimerResolution.
+    Starting with Windows 2004, setting the timer resolution is no longer global but on a per process basis.
+    Reference: https://learn.microsoft.com/en-us/windows/win32/api/timeapi/nf-timeapi-timebeginperiod#remarks
+    */
+    NtQueryTimerResolution(&min, &max, &cur);
+    NtSetTimerResolution(max, TRUE, &cur);
+
+    // Get process ID and window HWND using IsPIDWnd.
+    wnd.pid = GetCurrentProcessId();
+    while (EnumWindows(EnumWindowsProc, 0))
+        ;
+    while (!IsWindowVisible(wnd.hwnd))
+        ;
+    SwitchToThisWindow(wnd.hwnd, TRUE);
+    CreateThread(0, 0, IsHungAppWindowThread, NULL, 0, 0);
+
+    // Get the primary monitor.
+    GetMonitorInfo(MonitorFromWindow(0, MONITORINFOF_PRIMARY), (MONITORINFO *)&wnd.mi);
+    strcpy(pri, wnd.mi.szDevice);
+
+    // Setting up Custom Display Mode Support.
+    hmon = MonitorFromWindow(wnd.hwnd, MONITOR_DEFAULTTONEAREST);
+    GetMonitorInfo(hmon, (MONITORINFO *)&wnd.mi);
+    EnumDisplaySettings(wnd.mi.szDevice, ENUM_CURRENT_SETTINGS, &dm);
+
+    if (GetFileAttributes("Zeta.txt") == INVALID_FILE_ATTRIBUTES)
+    {
+        f = fopen("Zeta.txt", "w");
+        fprintf(f, "%ld\n%ld", dm.dmPelsWidth, dm.dmPelsHeight);
+        fclose(f);
+        wnd.dm.dmPelsWidth = dm.dmPelsWidth;
+        wnd.dm.dmPelsHeight = dm.dmPelsHeight;
+    }
+    else
+    {
+        f = fopen("Zeta.txt", "r");
+        fseek(f, 0, SEEK_END);
+        sz = ftell(f);
+        fseek(f, 0, SEEK_SET);
+        c = malloc(sz);
+        fread(c, 1, sz, f);
+        fclose(f);
+        wnd.dm.dmPelsWidth = atoi(strtok(c, "\n"));
+        wnd.dm.dmPelsHeight = atoi(strtok(NULL, "\n"));
+        free(c);
+    };
+
+    /*
+    1. Verify if the display mode is valid.
+    2. Only allow for display mode changing and borderless fullscreen fix, if the window style matches.
+    If these requirements aren't fulfilled then simply maximize the window and terminate the thread.
+    */
+    if (ChangeDisplaySettings(&wnd.dm, CDS_TEST) != DISP_CHANGE_SUCCESSFUL ||
+        (wnd.dm.dmPelsWidth || wnd.dm.dmPelsHeight) == 0 ||
+        GetWindowLongPtr(wnd.hwnd, GWL_STYLE) != (WS_VISIBLE | WS_OVERLAPPED | WS_CLIPSIBLINGS))
+    {
+        ShowWindow(wnd.hwnd, SW_MAXIMIZE);
+        return TRUE;
+    };
+
+    // If the native and specified display mode/resolution are the same, don't allow for display mode changing.
+    if (dm.dmPelsWidth == wnd.dm.dmPelsWidth && dm.dmPelsHeight == wnd.dm.dmPelsHeight)
+        wnd.dm.dmFields = 0;
+    else
+        SetDM(&wnd.dm);
+
+    /*
+    1. Scale window size according to DPI of the current resolution.
+    2. Override the Borderless Window/Fullscreen style set by the program.
+    3. Size the window.
+    Reference: https://learn.microsoft.com/en-us/windows/win32/direct2d/how-to--size-a-window-properly-for-high-dpi-displays
+    */
+    GetDpiForMonitor(hmon, 0, &dpi, &dpi);
+    scale = dpi / 96;
+    wnd.cx = wnd.dm.dmPelsWidth * scale;
+    wnd.cy = wnd.dm.dmPelsHeight * scale;
+
+    SetWindowLongPtr(wnd.hwnd, GWL_STYLE, WS_VISIBLE | WS_POPUP);
+    SetWindowLongPtr(wnd.hwnd, GWL_EXSTYLE, WS_EX_APPWINDOW | WS_EX_TOPMOST);
+    SetWindowPos(wnd.hwnd, 0,
+                 wnd.mi.rcMonitor.left, wnd.mi.rcMonitor.top,
+                 wnd.cx, wnd.cy,
+                 SWP_NOACTIVATE | SWP_NOSENDCHANGING);
+
+    if (strcmp(pri, wnd.mi.szDevice) == 0)
+        CreateThread(0, 0, WndDMThread, NULL, 0, 0);
+    return TRUE;
+}
+
 BOOL WINAPI DllMain(__attribute__((unused)) HINSTANCE hInstDll,
                     DWORD fwdreason,
                     __attribute__((unused)) LPVOID lpReserved)
