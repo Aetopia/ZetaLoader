@@ -55,24 +55,23 @@ void WndDMThreadProc(
     __attribute__((unused)) DWORD idEventThread,
     __attribute__((unused)) DWORD dwmsEventTime)
 {
-    if (event == EVENT_SYSTEM_FOREGROUND)
+    if (event != EVENT_SYSTEM_FOREGROUND)
+        return;
+    if (IsPIDWnd(hwnd) && wnd.cds)
     {
-        if (IsPIDWnd(hwnd) && wnd.cds)
-        {
-            wnd.cds = FALSE;
-            if (IsIconic(wnd.hwnd))
-                SwitchToThisWindow(wnd.hwnd, TRUE);
-            if (!!wnd.dm.dmFields)
-                SetDM(&wnd.dm);
-        }
-        else if (!wnd.cds)
-        {
-            wnd.cds = TRUE;
-            if (!IsIconic(wnd.hwnd))
-                ShowWindow(wnd.hwnd, SW_MINIMIZE);
-            if (!!wnd.dm.dmFields)
-                SetDM(0);
-        };
+        wnd.cds = FALSE;
+        if (IsIconic(wnd.hwnd))
+            SwitchToThisWindow(wnd.hwnd, TRUE);
+        if (!!wnd.dm.dmFields)
+            SetDM(&wnd.dm);
+    }
+    else if (!wnd.cds)
+    {
+        wnd.cds = TRUE;
+        if (!IsIconic(wnd.hwnd))
+            ShowWindow(wnd.hwnd, SW_MINIMIZE);
+        if (!!wnd.dm.dmFields)
+            SetDM(0);
     };
 };
 
