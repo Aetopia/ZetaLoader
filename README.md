@@ -2,12 +2,6 @@
 
 A utility to fix technical issues with Halo Infinite on PC.
 
-## What is fixed?
-
-1. Mouse Stuttering/Jittering
-    - Why does this happen?
-    - It seems Halo Infinite, give a lower priority to its Window Thread 
-
 ## Limitations
 
 **Here are a few things you should note about ZetaLoader.**
