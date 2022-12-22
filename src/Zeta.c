@@ -33,11 +33,13 @@ BOOL IsPIDWnd(HWND hwnd)
 
     /*
     Sets the window thread priority to highest and ensures thread priority boost is enabled.
-    This oddly fixes Screen Tearing issues, likely meaning the window thread goes to "sleep" when the thread priority is lower.
+    Reference: https://learn.microsoft.com/en-us/windows/win32/procthread/scheduling-priorities#priority-class
+    Microsoft recommends for any thread that handles input should use THREAD_PRIORITY_HIGHEST.
+    In the case of Halo Infinite, its window thread also handles input.
     */
     wnd.hwnd = hwnd;
     hthread = OpenThread(THREAD_ALL_ACCESS, FALSE, tid);
-    SetThreadPriority(hthread, THREAD_PRIORITY_HIGHEST);
+    SetThreadPriority(hthread, THREAD_PRIORITY_TIME_CRITICAL);
     SetThreadPriorityBoost(hthread, FALSE);
     CloseHandle(hthread);
     return TRUE;
