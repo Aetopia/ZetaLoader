@@ -104,19 +104,6 @@ DWORD WndDMThread()
 BOOL CALLBACK EnumWindowsProc(HWND hwnd,
                               __attribute__((unused)) LPARAM lParam) { return !IsPIDWnd(hwnd); }
 
-// This thread constantly checks if the process' window is hung or not.
-DWORD IsHungAppWindowThread()
-{
-    while (!IsHungAppWindow(wnd.hwnd))
-        Sleep(1);
-    ShowWindow(wnd.hwnd, SW_FORCEMINIMIZE);
-    if (!!wnd.dm.dmFields)
-        SetDM(0);
-    MessageBox(wnd.hwnd, "Looks like Halo Infinite has crashed!", "Halo Infinite - Crashed", MB_ICONINFORMATION);
-    TerminateProcess(GetCurrentProcess(), 0);
-    return TRUE;
-}
-
 DWORD Zeta()
 {
     FILE *f;
@@ -144,7 +131,6 @@ DWORD Zeta()
     while (!IsWindowVisible(wnd.hwnd))
         ;
     SwitchToThisWindow(wnd.hwnd, TRUE);
-    CreateThread(0, 0, IsHungAppWindowThread, NULL, 0, 0);
 
     // Get the primary monitor.
     GetMonitorInfo(MonitorFromWindow(0, MONITORINFOF_PRIMARY), (MONITORINFO *)&wnd.mi);
