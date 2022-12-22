@@ -79,16 +79,7 @@ void WndDMThreadProc(
 
 DWORD WndDMThread()
 {
-    /*
-    This thread also controls the window's visibility state and desired display mode/resolution.
-    It is given the highest priority to prevent it from going to "sleep".
-    This will not affect performance considering window visibility state & display mode/resolution related functions are only called when EVENT_SYSTEM_FOREGROUND occurs.
-    */
     MSG msg;
-    HANDLE hthread = GetCurrentThread();
-    SetThreadPriority(hthread, THREAD_PRIORITY_HIGHEST);
-    SetThreadPriorityBoost(hthread, FALSE);
-    CloseHandle(hthread);
     SetWinEventHook(EVENT_SYSTEM_FOREGROUND,
                     EVENT_SYSTEM_FOREGROUND, 0,
                     WndDMThreadProc, 0, 0,
