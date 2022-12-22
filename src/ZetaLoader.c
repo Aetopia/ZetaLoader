@@ -4,6 +4,7 @@
 int main(__attribute__((unused)) int argc, char *argv[])
 {
     SetCurrentDirectory(dirname(argv[0]));
+    LPVOID mem;
     char dll[MAX_PATH];
     STARTUPINFO si = {.cb = sizeof(si)};
     PROCESS_INFORMATION pi;
@@ -15,9 +16,13 @@ int main(__attribute__((unused)) int argc, char *argv[])
     if (!CreateProcess("HaloInfinite.exe", NULL, NULL, NULL, FALSE, CREATE_SUSPENDED, NULL, NULL, &si, &pi))
         return 0;
 
+    // Inject Zeta.dll into Halo Infinite.
+    mem = VirtualAllocEx(pi.hProcess, NULL, MAX_PATH, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+    WriteProcessMemory(pi.hProcess, mem, (LPCVOID)dll, MAX_PATH, NULL);
 #pragma GCC diagnostic ignored "-Wcast-function-type"
-    WaitForSingleObject(CreateRemoteThread(pi.hProcess, 0, 0, (LPTHREAD_START_ROUTINE)LoadLibrary, (LPVOID)dll, 0, 0), INFINITE);
+    WaitForSingleObject(CreateRemoteThread(pi.hProcess, 0, 0, (LPTHREAD_START_ROUTINE)LoadLibrary, mem, 0, 0), INFINITE);
 #pragma GCC diagnostic pop
+    VirtualFreeEx(pi.hProcess, mem, MAX_PATH, MEM_RELEASE);
     ResumeThread(pi.hThread);
     return 0;
 }
