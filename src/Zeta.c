@@ -31,11 +31,11 @@ BOOL IsPIDWnd(HWND hwnd)
     if (wnd.hwnd == hwnd)
         return TRUE;
 
-    wnd.hwnd = hwnd;
     /*
     Sets the window thread priority to highest and ensures thread priority boost is enabled.
     This oddly fixes Screen Tearing issues, likely meaning the window thread goes to "sleep" when the thread priority is lower.
     */
+    wnd.hwnd = hwnd;
     hthread = OpenThread(THREAD_ALL_ACCESS, FALSE, tid);
     SetThreadPriority(hthread, THREAD_PRIORITY_HIGHEST);
     SetThreadPriorityBoost(hthread, FALSE);
@@ -118,9 +118,9 @@ DWORD Zeta()
     // Get process ID and window HWND using IsPIDWnd.
     wnd.pid = GetCurrentProcessId();
     while (EnumWindows(EnumWindowsProc, 0))
-        ;
+        Sleep(1);
     while (!IsWindowVisible(wnd.hwnd))
-        ;
+        Sleep(1);
     SwitchToThisWindow(wnd.hwnd, TRUE);
 
     // Get the primary monitor.

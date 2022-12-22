@@ -2,9 +2,9 @@
 
 A utility to fix technical issues with Halo Infinite on PC.
 
-## Resolved Issues
+## Fixes
 
-1. Screen Tearing
+1. Highest Priority Window Thread
 
 ## Limitations
 
