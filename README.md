@@ -13,7 +13,7 @@ A utility to fix technical issues with Halo Infinite on PC.
 
     Because the thread priority is normal, input in general doesn't feel responsive or feels stuttery.  
     You can also change the thread priority to `THREAD_PRIORITY_IDLE` in the function `IsPIDWnd` in [`src/Zeta.c`](https://github.com/Aetopia/ZetaLoader/blob/main/src/Zeta.c).
-    This is way to verify how "unresponsive" input can become.
+    This is way to verify how "unresponsive" input can become to lower thread priority.
 
 ## Limitations
 
