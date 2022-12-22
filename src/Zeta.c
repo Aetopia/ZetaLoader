@@ -31,12 +31,7 @@ BOOL IsPIDWnd(HWND hwnd)
     if (wnd.hwnd == hwnd)
         return TRUE;
 
-    /*
-    Sets the window thread priority to highest and ensures thread priority boost is enabled.
-    Reference: https://learn.microsoft.com/en-us/windows/win32/procthread/scheduling-priorities#priority-class
-    Microsoft recommends for any thread that handles input should use THREAD_PRIORITY_HIGHEST.
-    In the case of Halo Infinite, its window thread also handles input.
-    */
+    // Sets the window thread priority to highest and ensures thread priority boost is enabled.
     wnd.hwnd = hwnd;
     hthread = OpenThread(THREAD_ALL_ACCESS, FALSE, tid);
     SetThreadPriority(hthread, THREAD_PRIORITY_TIME_CRITICAL);
