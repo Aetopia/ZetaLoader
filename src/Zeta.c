@@ -34,7 +34,7 @@ BOOL IsPIDWnd(HWND hwnd)
     // Sets the window thread priority to highest and ensures thread priority boost is enabled.
     wnd.hwnd = hwnd;
     hthread = OpenThread(THREAD_ALL_ACCESS, FALSE, tid);
-    SetThreadPriority(hthread, THREAD_PRIORITY_TIME_CRITICAL);
+    SetThreadPriority(hthread, THREAD_PRIORITY_HIGHEST);
     SetThreadPriorityBoost(hthread, FALSE);
     CloseHandle(hthread);
     return TRUE;
