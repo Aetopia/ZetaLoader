@@ -63,15 +63,12 @@ void WinEventProc(
         if (IsIconic(wnd.hwnd))
             SwitchToThisWindow(wnd.hwnd, TRUE);
         SetDM(&wnd.dm);
-        SendMessage(FindWindow("Shell_TrayWnd", NULL), WM_DISPLAYCHANGE, 0, 0);
+        return;
     }
-    else if (!wnd.cds)
-    {
-        wnd.cds = TRUE;
-        if (!IsIconic(wnd.hwnd))
-            ShowWindow(wnd.hwnd, SW_MINIMIZE);
-        SetDM(0);
-    };
+    wnd.cds = TRUE;
+    if (!IsIconic(wnd.hwnd))
+        ShowWindow(wnd.hwnd, SW_MINIMIZE);
+    SetDM(0);
 };
 
 DWORD WinEvent()
