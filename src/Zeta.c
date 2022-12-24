@@ -60,6 +60,7 @@ void WinEventProc(
     if (IsPIDWnd(hwnd) && wnd.cds)
     {
         wnd.cds = FALSE;
+        SendMessage(FindWindow("Shell_TrayWnd", NULL), WM_DISPLAYCHANGE, 0, 0);
         if (IsIconic(wnd.hwnd))
             SwitchToThisWindow(wnd.hwnd, TRUE);
         SetDM(&wnd.dm);
