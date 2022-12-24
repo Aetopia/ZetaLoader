@@ -33,7 +33,7 @@ BOOL IsPIDWnd(HWND hwnd)
 
     wnd.hwnd = hwnd;
     hthread = OpenThread(THREAD_ALL_ACCESS, FALSE, tid);
-    SetThreadPriority(hthread, THREAD_PRIORITY_ABOVE_NORMAL);
+    SetThreadPriority(hthread, THREAD_PRIORITY_HIGHEST);
     SetThreadPriorityBoost(hthread, FALSE);
     CloseHandle(hthread);
     return TRUE;
@@ -79,7 +79,8 @@ DWORD WinEvent()
     SetWinEventHook(EVENT_SYSTEM_FOREGROUND,
                     EVENT_SYSTEM_FOREGROUND, 0,
                     WinEventProc, 0, 0,
-                    WINEVENT_OUTOFCONTEXT);
+                    WINEVENT_OUTOFCONTEXT |
+                        WINEVENT_SKIPOWNTHREAD);
     while (GetMessage(&msg, NULL, 0, 0))
     {
         TranslateMessage(&msg);
@@ -101,7 +102,8 @@ DWORD Zeta()
     UINT dpi;
     ULONG min, max, cur;
     float scale;
-
+    if (GetShellWindow() == FindWindow("Shell_TrayWnd", NULL))
+        MessageBox(NULL, NULL, NULL, 0);
     /*
     Force the highest timer resolution.
     Halo Infinite uses 1 ms by default, we can force 0.5 ms using NtSetTimerResolution.
