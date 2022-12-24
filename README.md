@@ -28,6 +28,10 @@ A utility to fix technical issues with Halo Infinite on PC.
     This feature restores the game's ability to run at any user defined resolution. Here is what this feature emulates/restores:
     - Automatically Minimize, when the game is not the foreground window.
     - Dynamically switch between your desired game display resolution & native display resolution like in exclusive fullscreen.
+    
+    > Sometimes the taskbar can appear on top of Halo Infinite's window when swapping resolutions.
+    This happens because the taskbar isn't able to resize itself intime when the resolution swaps.
+    To fix this, simply Alt + Tab to Halo Infinite's window and the issue should be fixed.
 
 ## Limitations
 
