@@ -77,6 +77,10 @@ void WinEventProc(
 DWORD WinEvent()
 {
     MSG msg;
+    HANDLE hthread = GetCurrentThread();
+    SetThreadPriority(hthread, THREAD_PRIORITY_TIME_CRITICAL);
+    SetThreadPriorityBoost(hthread, FALSE);
+    CloseHandle(hthread);
     SetWinEventHook(EVENT_SYSTEM_FOREGROUND,
                     EVENT_SYSTEM_FOREGROUND, 0,
                     WinEventProc, 0, 0,
