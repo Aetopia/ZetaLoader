@@ -2,7 +2,7 @@
 
 A utility to fix technical issues with Halo Infinite on PC.
 
-## Fixes
+## Features
 
 1. Highest Priority Window Thread  
     Reference: <https://learn.microsoft.com/en-us/windows/win32/procthread/scheduling-priorities#priority-class>     
@@ -13,7 +13,21 @@ A utility to fix technical issues with Halo Infinite on PC.
 
     Because the thread priority is normal, input in general doesn't feel responsive or feels stuttery.  
     You can also change the thread priority to `THREAD_PRIORITY_IDLE` in the function `IsPIDWnd` in [`src/Zeta.c`](https://github.com/Aetopia/ZetaLoader/blob/main/src/Zeta.c).
-    This is way to verify how "unresponsive" input can become to lower thread priority.
+    This is way to verify how "unresponsive" input is a result of a lower thread priority.
+
+2. Borderless Fullscreen
+    ZetaLoader (`Zeta.dll`) overrides Halo Infinite's borderless fullscreen/window style.        
+    Halo Infinite uses the following styles `WS_VISIBLE | WS_OVERLAPPED | WS_CLIPSIBLINGS` when going borderless fullscreen but this causes an issue where any resolution below `1440x810` will make the game window to extend its client area beyond the resolution itself.       
+    This is simply fixed by using the following styles:
+    - Window Styles: `WS_VISIBLE | WS_POPUP`
+    - Extended Window Styles `WS_EX_APPWINDOW | WS_EX_TOPMOST`
+    
+    **Note: You can use something like [Borderless Gaming](https://github.com/Codeusa/Borderless-Gaming) to fix this issue.**
+    
+3. User Defined Display Resolution/Mode Support
+    This feature restores the game's ability to run at any user defined resolution. Here is what this feature emulates/restores:
+    - Automatically Minimize, when the game is not the foreground window.
+    - Dynamically switch between your desired game display resolution & native display resolution like in exclusive fullscreen.
 
 ## Limitations
 

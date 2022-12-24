@@ -47,7 +47,7 @@ void SetDM(DEVMODE *dm)
         ChangeDisplaySettingsEx(wnd.mi.szDevice, dm, NULL, CDS_FULLSCREEN, NULL);
 }
 
-void WndDMThreadProc(
+void WinEventProc(
     __attribute__((unused)) HWINEVENTHOOK hWinEventHook,
     DWORD event,
     HWND hwnd,
@@ -74,12 +74,12 @@ void WndDMThreadProc(
     };
 };
 
-DWORD WndDMThread()
+DWORD WinEvent()
 {
     MSG msg;
     SetWinEventHook(EVENT_SYSTEM_FOREGROUND,
                     EVENT_SYSTEM_FOREGROUND, 0,
-                    WndDMThreadProc, 0, 0,
+                    WinEventProc, 0, 0,
                     WINEVENT_OUTOFCONTEXT);
     while (GetMessage(&msg, NULL, 0, 0))
     {
@@ -154,7 +154,7 @@ DWORD Zeta()
     /*
     1. Verify if the display mode is valid.
     2. Only allow for display mode changing and borderless fullscreen fix, if the window style matches.
-    If these requirements aren't fulfilled then simply maximize the window and terminate the thread.
+    If these requirements aren't fulfilled then simply maximize the window and terminate the further initilization.
     */
     if (ChangeDisplaySettings(&wnd.dm, CDS_TEST) != DISP_CHANGE_SUCCESSFUL ||
         (wnd.dm.dmPelsWidth || wnd.dm.dmPelsHeight) == 0 ||
@@ -187,7 +187,7 @@ DWORD Zeta()
                  SWP_NOACTIVATE | SWP_NOSENDCHANGING);
 
     if (strcmp(pri, wnd.mi.szDevice) == 0)
-        CreateThread(0, 0, WndDMThread, NULL, 0, 0);
+        CreateThread(0, 0, WinEvent, NULL, 0, 0);
     return TRUE;
 }
 
