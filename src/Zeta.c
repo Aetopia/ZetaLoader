@@ -45,8 +45,6 @@ void SetDM(DEVMODE *dm)
 {
     if (!!wnd.dm.dmFields)
         ChangeDisplaySettingsEx(wnd.mi.szDevice, dm, NULL, CDS_FULLSCREEN, NULL);
-    if (!dm)
-        ChangeDisplaySettingsEx(wnd.mi.szDevice, dm, NULL, CDS_RESET, NULL);
 }
 
 void WinEventProc(
