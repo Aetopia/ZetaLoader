@@ -60,6 +60,7 @@ void WinEventProc(
     if (IsPIDWnd(hwnd) && wnd.cds)
     {
         wnd.cds = FALSE;
+        SetForegroundWindow(FindWindow("Shell_TrayWnd", NULL));
         if (IsIconic(wnd.hwnd))
             SwitchToThisWindow(wnd.hwnd, TRUE);
         SetDM(&wnd.dm);
@@ -102,8 +103,7 @@ DWORD Zeta()
     UINT dpi;
     ULONG min, max, cur;
     float scale;
-    if (GetShellWindow() == FindWindow("Shell_TrayWnd", NULL))
-        MessageBox(NULL, NULL, NULL, 0);
+
     /*
     Force the highest timer resolution.
     Halo Infinite uses 1 ms by default, we can force 0.5 ms using NtSetTimerResolution.
