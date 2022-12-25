@@ -114,7 +114,6 @@ DWORD Zeta()
     wnd.pid = GetCurrentProcessId();
     while (EnumWindows(EnumWindowsProc, 0))
         Sleep(1);
-    Sleep(1);
     do
         SwitchToThisWindow(wnd.hwnd, TRUE);
     while (wnd.hwnd != GetForegroundWindow());
