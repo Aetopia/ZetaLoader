@@ -129,7 +129,6 @@ DWORD Zeta()
         Sleep(1);
     while (!IsWindowVisible(wnd.hwnd))
         Sleep(1);
-    SwitchToThisWindow(wnd.hwnd, TRUE);
 
     // Get the primary monitor.
     GetMonitorInfo(MonitorFromWindow(0, MONITORINFOF_PRIMARY), (MONITORINFO *)&wnd.mi);
@@ -199,6 +198,7 @@ DWORD Zeta()
 
     if (strcmp(pri, wnd.mi.szDevice) == 0)
         CreateThread(0, 0, WinEvent, NULL, 0, 0);
+    SwitchToThisWindow(wnd.hwnd, TRUE);
     return TRUE;
 }
 
