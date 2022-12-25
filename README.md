@@ -29,6 +29,9 @@ A utility to fix technical issues with Halo Infinite on PC.
     - Automatically Minimize, when the game is not the foreground window.
     - Dynamically switch between your desired game display resolution & native display resolution like in exclusive fullscreen.
 
+    > Sometimes the taskbar can appear on top of Halo Infinite's window.        
+    To fix this simply Alt + Tab back to the game to resolve the issue.
+
 ## Limitations
 
 **Here are a few things you should note about ZetaLoader.**
