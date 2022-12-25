@@ -55,27 +55,40 @@ void WinEventProc(
     __attribute__((unused)) DWORD idEventThread,
     __attribute__((unused)) DWORD dwmsEventTime)
 {
-    if (event != EVENT_SYSTEM_FOREGROUND)
-        return;
-    if (IsPIDWnd(hwnd) && wnd.cds)
+    switch (event)
     {
-        wnd.cds = FALSE;
-        if (IsIconic(wnd.hwnd))
-            SwitchToThisWindow(wnd.hwnd, TRUE);
-        SetDM(&wnd.dm);
+    case EVENT_OBJECT_DESTROY:
+        if (!IsWindow(hwnd))
+            return;
+        if (wnd.hwnd == hwnd && !wnd.cds)
+        {
+            SetDM(0);
+            PostQuitMessage(0);
+        };
         return;
-    }
-    wnd.cds = TRUE;
-    if (!IsIconic(wnd.hwnd))
-        ShowWindow(wnd.hwnd, SW_MINIMIZE);
-    SetDM(0);
-};
+    case EVENT_SYSTEM_FOREGROUND:
+        if (IsPIDWnd(hwnd) && wnd.cds)
+        {
+            wnd.cds = FALSE;
+            SetDM(&wnd.dm);
+            do
+                SwitchToThisWindow(wnd.hwnd, TRUE);
+            while (IsIconic(wnd.hwnd));
+            return;
+        }
+        wnd.cds = TRUE;
+        do
+            ShowWindow(wnd.hwnd, SW_MINIMIZE);
+        while (!IsIconic(wnd.hwnd));
+        SetDM(0);
+    };
+}
 
 DWORD WinEvent()
 {
     MSG msg;
     SetWinEventHook(EVENT_SYSTEM_FOREGROUND,
-                    EVENT_SYSTEM_FOREGROUND, 0,
+                    EVENT_OBJECT_DESTROY, 0,
                     WinEventProc, 0, 0,
                     WINEVENT_OUTOFCONTEXT |
                         WINEVENT_SKIPOWNTHREAD);
@@ -84,7 +97,7 @@ DWORD WinEvent()
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     };
-    return 0;
+    return TRUE;
 }
 
 BOOL CALLBACK EnumWindowsProc(HWND hwnd,
