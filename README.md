@@ -27,7 +27,7 @@ A utility to fix technical issues with Halo Infinite on PC.
 3. User Defined Display Resolution/Mode Support
     This feature restores the game's ability to run at any user defined resolution. Here is what this feature emulates/restores:
     - Automatically Minimize, when the game is not the foreground window.
-    - Dynamically switch between your desired game display resolution & native display resolution like in exclusive fullscreen.
+    - Dynamically switch between your desired game display resolution & native display resolution like in exclusive fullscreen.            
 
     > Sometimes the taskbar can appear on top of Halo Infinite's window.        
     To fix this simply Alt + Tab back to the game to resolve the issue.
