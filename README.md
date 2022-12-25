@@ -5,7 +5,7 @@ A utility to fix technical issues with Halo Infinite on PC.
 ## Features
 
 1. Highest Priority Window Thread  
-    Reference: <https://learn.microsoft.com/en-us/windows/win32/procthread/scheduling-priorities#priority-class>     
+    Reference: https://learn.microsoft.com/en-us/windows/win32/procthread/scheduling-priorities#priority-level
 
     Microsoft recommends for any thread that handles input should use `THREAD_PRIORITY_HIGHEST | THREAD_PRIORITY_ABOVE_NORMAL`.        
     In the case of Halo Infinite, its window thread also handles input.      
