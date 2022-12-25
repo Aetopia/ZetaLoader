@@ -87,22 +87,8 @@ DWORD WinEvent()
     return TRUE;
 }
 
-void GetMainWindow(
-    __attribute__((unused)) HWINEVENTHOOK hWinEventHook,
-    DWORD event,
-    HWND hwnd,
-    __attribute__((unused)) LONG idObject,
-    __attribute__((unused)) LONG idChild,
-    __attribute__((unused)) DWORD idEventThread,
-    __attribute__((unused)) DWORD dwmsEventTime)
-{
-    if (event != EVENT_OBJECT_CREATE)
-        return;
-    if (!IsWindow(hwnd))
-        return;
-    if (IsPIDWnd(hwnd))
-        PostQuitMessage(0);
-}
+BOOL CALLBACK EnumWindowsProc(HWND hwnd,
+                              __attribute__((unused)) LPARAM lParam) { return !IsPIDWnd(hwnd); }
 
 DWORD Zeta()
 {
@@ -113,8 +99,6 @@ DWORD Zeta()
     HMONITOR hmon;
     UINT dpi;
     ULONG min, max, cur;
-    HWINEVENTHOOK event;
-    MSG msg;
     float scale;
 
     /*
@@ -128,17 +112,9 @@ DWORD Zeta()
 
     // Get process ID and window HWND using IsPIDWnd.
     wnd.pid = GetCurrentProcessId();
-    event = SetWinEventHook(EVENT_OBJECT_CREATE,
-                    EVENT_OBJECT_CREATE, 0,
-                    GetMainWindow, 0, 0,
-                    WINEVENT_OUTOFCONTEXT |
-                        WINEVENT_SKIPOWNTHREAD);
-    while (GetMessage(&msg, NULL, 0, 0))
-    {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
-    };
-    UnhookWinEvent(event);
+    while (EnumWindows(EnumWindowsProc, 0))
+        Sleep(1);
+    Sleep(1);
     do
         SwitchToThisWindow(wnd.hwnd, TRUE);
     while (wnd.hwnd != GetForegroundWindow());
