@@ -113,6 +113,7 @@ DWORD Zeta()
     UINT dpi;
     ULONG min, max, cur;
     float scale;
+    Beep(1000, 100);
 
     /*
     Force the highest timer resolution.
@@ -129,6 +130,9 @@ DWORD Zeta()
         Sleep(1);
     while (!IsWindowVisible(wnd.hwnd))
         Sleep(1);
+    do
+        SwitchToThisWindow(wnd.hwnd, TRUE);
+    while (wnd.hwnd != GetForegroundWindow());
 
     // Get the primary monitor.
     GetMonitorInfo(MonitorFromWindow(0, MONITORINFOF_PRIMARY), (MONITORINFO *)&wnd.mi);
@@ -198,7 +202,9 @@ DWORD Zeta()
 
     if (strcmp(pri, wnd.mi.szDevice) == 0)
         CreateThread(0, 0, WinEvent, NULL, 0, 0);
-    SwitchToThisWindow(wnd.hwnd, TRUE);
+    do
+        SwitchToThisWindow(wnd.hwnd, TRUE);
+    while (wnd.hwnd != GetForegroundWindow());
     return TRUE;
 }
 
