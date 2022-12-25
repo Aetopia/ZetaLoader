@@ -22,7 +22,7 @@ A utility to fix technical issues with Halo Infinite on PC.
     - Window Styles: `WS_VISIBLE | WS_POPUP`
     - Extended Window Styles `WS_EX_APPWINDOW | WS_EX_TOPMOST`
     
-    **Note: You can use something like [Borderless Gaming](https://github.com/Codeusa/Borderless-Gaming) to fix this issue.**
+    > You can use something like [Borderless Gaming](https://github.com/Codeusa/Borderless-Gaming) to fix this issue.
     
 3. User Defined Display Resolution/Mode Support
     This feature restores the game's ability to run at any user defined resolution. Here is what this feature emulates/restores:
