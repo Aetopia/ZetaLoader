@@ -64,7 +64,6 @@ void WinEventProc(
         SetDM(&wnd.dm);
         if (IsIconic(wnd.hwnd))
             SwitchToThisWindow(wnd.hwnd, TRUE);
-        BringWindowToTop(wnd.hwnd);
         return;
     }
     wnd.cds = TRUE;
