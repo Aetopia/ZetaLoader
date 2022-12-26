@@ -99,22 +99,14 @@ DWORD Zeta()
     DEVMODE dm;
     HMONITOR hmon;
     UINT dpi;
-    ULONG min, max, cur;
     float scale;
 
-    /*
-    Force the highest timer resolution.
-    Halo Infinite uses 1 ms by default, we can force 0.5 ms using NtSetTimerResolution.
-    Starting with Windows 2004, setting the timer resolution is no longer global but on a per process basis.
-    Reference: https://learn.microsoft.com/en-us/windows/win32/api/timeapi/nf-timeapi-timebeginperiod#remarks
-    */
-    NtQueryTimerResolution(&min, &max, &cur);
-    NtSetTimerResolution(max, TRUE, &cur);
-
     // Get process ID and window HWND using IsPIDWnd.
-    wnd.pid = GetCurrentProcessId();
     while (EnumWindows(EnumWindowsProc, 0))
         Sleep(1);
+    do
+        SwitchToThisWindow(wnd.hwnd, TRUE);
+    while (wnd.hwnd != GetForegroundWindow(wnd.hwnd));
 
     // Get the primary monitor.
     GetMonitorInfo(MonitorFromWindow(0, MONITORINFOF_PRIMARY), (MONITORINFO *)&wnd.mi);
@@ -194,8 +186,26 @@ BOOL WINAPI DllMain(__attribute__((unused)) HINSTANCE hInstDll,
                     DWORD fwdreason,
                     __attribute__((unused)) LPVOID lpReserved)
 {
-    // The dynamic link library is intitalized via the Zeta() function in a thread to prevent the target application from getting locked up.
     if (fwdreason == DLL_PROCESS_ATTACH)
+    {
+
+        /*
+        Force the highest timer resolution.
+        Halo Infinite uses 1 ms by default, we can force 0.5 ms using NtSetTimerResolution.
+        Starting with Windows 2004, setting the timer resolution is no longer global but on a per process basis.
+        Reference: https://learn.microsoft.com/en-us/windows/win32/api/timeapi/nf-timeapi-timebeginperiod#remarks
+        */
+        ULONG min, max, cur;
+        NtQueryTimerResolution(&min, &max, &cur);
+        NtSetTimerResolution(max, TRUE, &cur);
+
+        // Makes sure that the SetForegroundWindow() or any similar functions work properly.
+        wnd.pid = GetCurrentProcessId();
+        AllowSetForegroundWindow(wnd.pid);
+        SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, 0, SPIF_UPDATEINIFILE);
+        
+        // Execute Zeta() function in a thread to prevent the target application from getting locked up.
         CreateThread(0, 0, Zeta, NULL, 0, 0);
+    };
     return TRUE;
 }
