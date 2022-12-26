@@ -52,12 +52,14 @@ void WndDisplayModeProc(
     __attribute__((unused)) HWINEVENTHOOK hWinEventHook,
     DWORD event,
     HWND hwnd,
-    __attribute__((unused)) LONG idObject,
-    __attribute__((unused)) LONG idChild,
+    LONG idObject,
+    LONG idChild,
     __attribute__((unused)) DWORD idEventThread,
     __attribute__((unused)) DWORD dwmsEventTime)
 {
     if (event != EVENT_SYSTEM_FOREGROUND)
+        return;
+    if (idObject != OBJID_WINDOW || idChild != CHILDID_SELF)
         return;
     if (IsPIDWnd(hwnd) && wnd.cds)
     {
@@ -73,6 +75,24 @@ void WndDisplayModeProc(
         if (!ShowWindow(wnd.hwnd, SW_MINIMIZE))
             break;
     while (!IsIconic(wnd.hwnd));
+    SetDM(0);
+}
+
+void WndExistProc(
+    __attribute__((unused)) HWINEVENTHOOK hWinEventHook,
+    DWORD event,
+    HWND hwnd,
+    LONG idObject,
+    LONG idChild,
+    __attribute__((unused)) DWORD idEventThread,
+    __attribute__((unused)) DWORD dwmsEventTime)
+{
+    if (event != EVENT_OBJECT_DESTROY)
+        return;
+    if (idObject != OBJID_WINDOW || idChild != CHILDID_SELF)
+        return;
+    if (wnd.hwnd != hwnd)
+        return;
     SetDM(0);
 }
 
@@ -99,13 +119,15 @@ int main(__attribute__((unused)) int argc, char *argv[])
     UINT dpi;
     float scale;
     MSG msg;
+    WINEVENTPROC wineventproc = WndDisplayModeProc;
+    DWORD event = EVENT_SYSTEM_FOREGROUND;
 
-if (GetFileAttributes("HaloInfinite.exe") == INVALID_FILE_ATTRIBUTES)
-    return 0;
-if (!CreateProcess("HaloInfinite.exe", NULL, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
-    return 0;
-CreateThread(0, 0, IsProcessAlive, (LPVOID)pi.hProcess, 0, 0);
-WaitForInputIdle(pi.hProcess, INFINITE);
+    if (GetFileAttributes("HaloInfinite.exe") == INVALID_FILE_ATTRIBUTES)
+        return 0;
+    if (!CreateProcess("HaloInfinite.exe", NULL, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
+        return 0;
+    CreateThread(0, 0, IsProcessAlive, (LPVOID)pi.hProcess, 0, 0);
+    WaitForInputIdle(pi.hProcess, INFINITE);
 
     // Makes sure that the SetForegroundWindow() or any similar functions work properly.
     wnd.pid = pi.dwProcessId;
@@ -179,8 +201,8 @@ WaitForInputIdle(pi.hProcess, INFINITE);
     wnd.cy = wnd.dm.dmPelsHeight * scale;
 
     SetWindowLongPtr(wnd.hwnd, GWL_STYLE, WS_VISIBLE | WS_POPUP);
-    SetWindowLongPtr(wnd.hwnd, GWL_EXSTYLE, WS_EX_APPWINDOW | WS_EX_TOPMOST);
-    SetWindowPos(wnd.hwnd, 0,
+    SetWindowLongPtr(wnd.hwnd, GWL_EXSTYLE, WS_EX_APPWINDOW);
+    SetWindowPos(wnd.hwnd, HWND_TOPMOST,
                  wnd.mi.rcMonitor.left, wnd.mi.rcMonitor.top,
                  wnd.cx, wnd.cy,
                  SWP_NOACTIVATE | SWP_NOSENDCHANGING);
@@ -188,18 +210,16 @@ WaitForInputIdle(pi.hProcess, INFINITE);
         SwitchToThisWindow(wnd.hwnd, TRUE);
     while (wnd.hwnd != GetForegroundWindow());
 
-    if (strcmp(pri, wnd.mi.szDevice) == 0)
+    if (strcmp(pri, wnd.mi.szDevice) != 0)
     {
-        SetWinEventHook(EVENT_SYSTEM_FOREGROUND,
-                        EVENT_SYSTEM_FOREGROUND,
-                        0,
-                        WndDisplayModeProc, 0, 0,
-                        WINEVENT_OUTOFCONTEXT);
-        while (GetMessage(&msg, NULL, 0, 0))
-        {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
-        };
+        wineventproc = WndExistProc;
+        event = EVENT_OBJECT_DESTROY;
+    };
+    SetWinEventHook(event, event, 0, wineventproc, 0, 0, WINEVENT_OUTOFCONTEXT);
+    while (GetMessage(&msg, NULL, 0, 0))
+    {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
     };
     return 0;
 }
