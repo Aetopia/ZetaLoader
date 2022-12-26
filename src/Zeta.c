@@ -155,8 +155,7 @@ DWORD Zeta()
     If these requirements aren't fulfilled then simply maximize the window and terminate the further initilization.
     */
     if (ChangeDisplaySettings(&wnd.dm, CDS_TEST) != DISP_CHANGE_SUCCESSFUL ||
-        (wnd.dm.dmPelsWidth || wnd.dm.dmPelsHeight) == 0 ||
-        GetWindowLongPtr(wnd.hwnd, GWL_STYLE) != (WS_VISIBLE | WS_OVERLAPPED | WS_CLIPSIBLINGS))
+        (wnd.dm.dmPelsWidth || wnd.dm.dmPelsHeight) == 0)
     {
         ShowWindow(wnd.hwnd, SW_MAXIMIZE);
         return TRUE;
@@ -173,7 +172,7 @@ DWORD Zeta()
         wnd.dm.dmFields = 0;
     SetDM(&wnd.dm);
     GetDpiForMonitor(hmon, 0, &dpi, &dpi);
-    scale = dpi / 96;
+    scale = (float)dpi / 96.0;
     wnd.cx = wnd.dm.dmPelsWidth * scale;
     wnd.cy = wnd.dm.dmPelsHeight * scale;
 
