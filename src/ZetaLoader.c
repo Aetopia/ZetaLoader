@@ -19,7 +19,6 @@ struct WINDOW wnd = {.mi.cbSize = sizeof(wnd.mi),
                      .dm.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT,
                      .cds = FALSE};
 
-// This function makes the window thread, sleepless and assigns the HWND of the process' window to the WINDOW structure.
 BOOL IsPIDWnd(HWND hwnd)
 {
     DWORD pid, tid = GetWindowThreadProcessId(hwnd, &pid);
