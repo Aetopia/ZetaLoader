@@ -62,13 +62,16 @@ void WinEventProc(
     {
         wnd.cds = FALSE;
         SetDM(&wnd.dm);
-        if (IsIconic(wnd.hwnd))
+        do
             SwitchToThisWindow(wnd.hwnd, TRUE);
+        while (IsIconic(wnd.hwnd));
         return;
     }
     wnd.cds = TRUE;
-    if (!IsIconic(wnd.hwnd))
-        ShowWindow(wnd.hwnd, SW_MINIMIZE);
+    do
+        if (!ShowWindow(wnd.hwnd, SW_MINIMIZE))
+            break;
+    while (!IsIconic(wnd.hwnd));
     SetDM(0);
 }
 
