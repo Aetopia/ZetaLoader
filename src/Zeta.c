@@ -170,8 +170,8 @@ DWORD Zeta()
     If these requirements aren't fulfilled then simply maximize the window and terminate the further initilization.
     */
     if (ChangeDisplaySettings(&wnd.dm, CDS_TEST) != DISP_CHANGE_SUCCESSFUL ||
-        (wnd.dm.dmPelsWidth || wnd.dm.dmPelsHeight) == 0) // ||
-                                                          // GetWindowLongPtr(wnd.hwnd, GWL_STYLE) != (WS_VISIBLE | WS_OVERLAPPED | WS_CLIPSIBLINGS))
+        (wnd.dm.dmPelsWidth || wnd.dm.dmPelsHeight) == 0 ||
+        GetWindowLongPtr(wnd.hwnd, GWL_STYLE) != (WS_VISIBLE | WS_OVERLAPPED | WS_CLIPSIBLINGS))
     {
         ShowWindow(wnd.hwnd, SW_MAXIMIZE);
         return TRUE;

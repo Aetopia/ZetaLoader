@@ -13,7 +13,7 @@ int main(__attribute__((unused)) int argc, char *argv[])
     if (GetFileAttributes(dll) == INVALID_FILE_ATTRIBUTES ||
         GetFileAttributes("HaloInfinite.exe") == INVALID_FILE_ATTRIBUTES)
         return 0;
-    if (!CreateProcess("HaloInfinite.exe", NULL, NULL, NULL, FALSE, CREATE_SUSPENDED, NULL, NULL, &si, &pi))
+    if (!CreateProcess("HaloInfinite.exe", NULL, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
         return 0;
     WaitForInputIdle(pi.hProcess, INFINITE);
 
@@ -24,6 +24,5 @@ int main(__attribute__((unused)) int argc, char *argv[])
     WaitForSingleObject(CreateRemoteThread(pi.hProcess, 0, 0, (LPTHREAD_START_ROUTINE)LoadLibrary, mem, 0, 0), INFINITE);
 #pragma GCC diagnostic pop
     VirtualFreeEx(pi.hProcess, mem, MAX_PATH, MEM_RELEASE);
-    ResumeThread(pi.hThread);
     return 0;
 }
