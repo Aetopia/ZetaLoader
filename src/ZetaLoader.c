@@ -77,19 +77,11 @@ void WinEventProc(
     SetDM(0);
 }
 
-DWORD WinEvent()
+DWORD IsProcessAlive(LPVOID lpParameter)
 {
-    MSG msg;
-    SetWinEventHook(EVENT_SYSTEM_FOREGROUND,
-                    EVENT_SYSTEM_FOREGROUND,
-                    0,
-                    WinEventProc, 0, 0,
-                    WINEVENT_OUTOFCONTEXT);
-    while (GetMessage(&msg, NULL, 0, 0))
-    {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
-    };
+    WaitForSingleObject((HANDLE)lpParameter, INFINITE);
+    SetDM(0);
+    ExitProcess(0);
     return TRUE;
 }
 
@@ -107,12 +99,13 @@ int main(__attribute__((unused)) int argc, char *argv[])
     HMONITOR hmon;
     UINT dpi;
     float scale;
+    MSG msg;
 
     if (GetFileAttributes("HaloInfinite.exe") == INVALID_FILE_ATTRIBUTES)
         return 0;
     if (!CreateProcess("HaloInfinite.exe", NULL, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
         return 0;
-
+    CreateThread(0, 0, IsProcessAlive, (LPVOID)pi.hProcess, 0, 0);
     WaitForInputIdle(pi.hProcess, INFINITE);
 
     // Makes sure that the SetForegroundWindow() or any similar functions work properly.
@@ -197,9 +190,17 @@ int main(__attribute__((unused)) int argc, char *argv[])
     while (wnd.hwnd != GetForegroundWindow());
 
     if (strcmp(pri, wnd.mi.szDevice) == 0)
-        CreateThread(0, 0, WinEvent, NULL, 0, 0);
-
-    WaitForSingleObject(pi.hProcess, INFINITE);
-    SetDM(0);
+    {
+        SetWinEventHook(EVENT_SYSTEM_FOREGROUND,
+                        EVENT_SYSTEM_FOREGROUND,
+                        0,
+                        WinEventProc, 0, 0,
+                        WINEVENT_OUTOFCONTEXT);
+        while (GetMessage(&msg, NULL, 0, 0))
+        {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        };
+    };
     return 0;
 }
