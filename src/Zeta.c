@@ -56,37 +56,27 @@ void WinEventProc(
     __attribute__((unused)) DWORD idEventThread,
     __attribute__((unused)) DWORD dwmsEventTime)
 {
-    switch (event)
-    {
-    case EVENT_SYSTEM_FOREGROUND:
-        if (IsPIDWnd(hwnd) && wnd.cds)
-        {
-            wnd.cds = FALSE;
-            do
-                SwitchToThisWindow(wnd.hwnd, TRUE);
-            while (IsIconic(wnd.hwnd));
-            SetDM(&wnd.dm);
-            return;
-        }
-        wnd.cds = TRUE;
-        do
-            ShowWindow(wnd.hwnd, SW_MINIMIZE);
-        while (!IsIconic(wnd.hwnd));
-        SetDM(0);
+    if (event != EVENT_SYSTEM_FOREGROUND)
         return;
-    case EVENT_OBJECT_DESTROY:
-        if (wnd.hwnd != hwnd)
-            return;
-        SetDM(0);
-        PostQuitMessage(0);
-    };
+    if (IsPIDWnd(hwnd) && wnd.cds)
+    {
+        wnd.cds = FALSE;
+        if (IsIconic(wnd.hwnd))
+            SwitchToThisWindow(wnd.hwnd, TRUE);
+        SetDM(&wnd.dm);
+        return;
+    }
+    wnd.cds = TRUE;
+    if (!IsIconic(wnd.hwnd))
+        ShowWindow(wnd.hwnd, SW_MINIMIZE);
+    SetDM(0);
 }
 
 DWORD WinEvent()
 {
     MSG msg;
     SetWinEventHook(EVENT_SYSTEM_FOREGROUND,
-                    EVENT_OBJECT_DESTROY,
+                    EVENT_SYSTEM_FOREGROUND,
                     0,
                     WinEventProc, 0, 0,
                     WINEVENT_OUTOFCONTEXT);
