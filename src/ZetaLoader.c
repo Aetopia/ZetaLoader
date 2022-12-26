@@ -43,7 +43,7 @@ void SetDM(DEVMODE *dm)
     if (!!wnd.dm.dmFields)
     {
         ChangeDisplaySettingsEx(wnd.mi.szDevice, dm, NULL, CDS_FULLSCREEN, NULL);
-        if (wnd.cds)
+        if (!wnd.cds)
             ChangeDisplaySettingsEx(wnd.mi.szDevice, dm, NULL, 0, NULL);
     };
 }
