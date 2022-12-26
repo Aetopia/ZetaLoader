@@ -15,6 +15,7 @@ int main(__attribute__((unused)) int argc, char *argv[])
         return 0;
     if (!CreateProcess("HaloInfinite.exe", NULL, NULL, NULL, FALSE, CREATE_SUSPENDED, NULL, NULL, &si, &pi))
         return 0;
+    WaitForInputIdle(pi.hProcess, INFINITE);
 
     // Inject Zeta.dll into Halo Infinite.
     mem = VirtualAllocEx(pi.hProcess, NULL, MAX_PATH, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);

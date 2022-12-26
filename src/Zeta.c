@@ -56,30 +56,40 @@ void WinEventProc(
     __attribute__((unused)) DWORD idEventThread,
     __attribute__((unused)) DWORD dwmsEventTime)
 {
-    if (event != EVENT_SYSTEM_FOREGROUND)
-        return;
-    if (IsPIDWnd(hwnd) && wnd.cds)
+    switch (event)
     {
-        wnd.cds = FALSE;
-        if (IsIconic(wnd.hwnd))
-            SwitchToThisWindow(wnd.hwnd, TRUE);
-        SetDM(&wnd.dm);
+    case EVENT_SYSTEM_FOREGROUND:
+        if (IsPIDWnd(hwnd) && wnd.cds)
+        {
+            wnd.cds = FALSE;
+            do
+                SwitchToThisWindow(wnd.hwnd, TRUE);
+            while (IsIconic(wnd.hwnd));
+            SetDM(&wnd.dm);
+            return;
+        }
+        wnd.cds = TRUE;
+        do
+            ShowWindow(wnd.hwnd, SW_MINIMIZE);
+        while (!IsIconic(wnd.hwnd));
+        SetDM(0);
         return;
-    }
-    wnd.cds = TRUE;
-    if (!IsIconic(wnd.hwnd))
-        ShowWindow(wnd.hwnd, SW_MINIMIZE);
-    SetDM(0);
+    case EVENT_OBJECT_DESTROY:
+        if (wnd.hwnd != hwnd)
+            return;
+        SetDM(0);
+        PostQuitMessage(0);
+    };
 }
 
 DWORD WinEvent()
 {
     MSG msg;
     SetWinEventHook(EVENT_SYSTEM_FOREGROUND,
-                    EVENT_SYSTEM_FOREGROUND, 0,
+                    EVENT_OBJECT_DESTROY,
+                    0,
                     WinEventProc, 0, 0,
-                    WINEVENT_OUTOFCONTEXT |
-                        WINEVENT_SKIPOWNTHREAD);
+                    WINEVENT_OUTOFCONTEXT);
     while (GetMessage(&msg, NULL, 0, 0))
     {
         TranslateMessage(&msg);
@@ -160,8 +170,8 @@ DWORD Zeta()
     If these requirements aren't fulfilled then simply maximize the window and terminate the further initilization.
     */
     if (ChangeDisplaySettings(&wnd.dm, CDS_TEST) != DISP_CHANGE_SUCCESSFUL ||
-        (wnd.dm.dmPelsWidth || wnd.dm.dmPelsHeight) == 0 ||
-        GetWindowLongPtr(wnd.hwnd, GWL_STYLE) != (WS_VISIBLE | WS_OVERLAPPED | WS_CLIPSIBLINGS))
+        (wnd.dm.dmPelsWidth || wnd.dm.dmPelsHeight) == 0) // ||
+                                                          // GetWindowLongPtr(wnd.hwnd, GWL_STYLE) != (WS_VISIBLE | WS_OVERLAPPED | WS_CLIPSIBLINGS))
     {
         ShowWindow(wnd.hwnd, SW_MAXIMIZE);
         return TRUE;
