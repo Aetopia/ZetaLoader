@@ -8,7 +8,10 @@ A utility to fix technical issues with Halo Infinite on PC.
     Reference: https://learn.microsoft.com/en-us/windows/win32/procthread/scheduling-priorities#priority-level
 
     Microsoft recommends for any thread that handles input should use `THREAD_PRIORITY_HIGHEST | THREAD_PRIORITY_ABOVE_NORMAL`.        
-    In the case of Halo Infinite, its window thread also handles input.      
+    In the case of Halo Infinite, its window thread also handles input. 
+    > **This only an assumption!**    
+    > Reason being altering the window thread priority affects how input is processed by the game.
+
     For **some reason** the window thread priority is set THREAD_PRIORITY_NORMAL, one can verify this using `GetThreadPriority`.         
 
     Because the thread priority is normal, input in general doesn't feel responsive or feels stuttery.  
