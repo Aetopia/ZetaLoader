@@ -116,7 +116,7 @@ DWORD Zeta()
     AllowSetForegroundWindow(wnd.pid);
     SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, 0, SPIF_UPDATEINIFILE);
 
-    // Get process ID and window HWND using IsPIDWnd.
+    // Get the HWND of process' window.
     while (EnumWindows(EnumWindowsProc, 0))
         Sleep(1);
     do
