@@ -48,7 +48,7 @@ void SetDM(DEVMODE *dm)
     };
 }
 
-void WinEventProc(
+void WndDisplayModeProc(
     __attribute__((unused)) HWINEVENTHOOK hWinEventHook,
     DWORD event,
     HWND hwnd,
@@ -100,12 +100,12 @@ int main(__attribute__((unused)) int argc, char *argv[])
     float scale;
     MSG msg;
 
-    if (GetFileAttributes("HaloInfinite.exe") == INVALID_FILE_ATTRIBUTES)
-        return 0;
-    if (!CreateProcess("HaloInfinite.exe", NULL, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
-        return 0;
-    CreateThread(0, 0, IsProcessAlive, (LPVOID)pi.hProcess, 0, 0);
-    WaitForInputIdle(pi.hProcess, INFINITE);
+if (GetFileAttributes("HaloInfinite.exe") == INVALID_FILE_ATTRIBUTES)
+    return 0;
+if (!CreateProcess("HaloInfinite.exe", NULL, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
+    return 0;
+CreateThread(0, 0, IsProcessAlive, (LPVOID)pi.hProcess, 0, 0);
+WaitForInputIdle(pi.hProcess, INFINITE);
 
     // Makes sure that the SetForegroundWindow() or any similar functions work properly.
     wnd.pid = pi.dwProcessId;
@@ -193,7 +193,7 @@ int main(__attribute__((unused)) int argc, char *argv[])
         SetWinEventHook(EVENT_SYSTEM_FOREGROUND,
                         EVENT_SYSTEM_FOREGROUND,
                         0,
-                        WinEventProc, 0, 0,
+                        WndDisplayModeProc, 0, 0,
                         WINEVENT_OUTOFCONTEXT);
         while (GetMessage(&msg, NULL, 0, 0))
         {
