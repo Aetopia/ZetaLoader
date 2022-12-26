@@ -36,6 +36,7 @@ BOOL IsPIDWnd(HWND hwnd)
     SetThreadPriority(hthread, THREAD_PRIORITY_HIGHEST);
     SetThreadPriorityBoost(hthread, FALSE);
     CloseHandle(hthread);
+    SwitchToThisWindow(wnd.hwnd, TRUE);
     return TRUE;
 }
 
@@ -114,9 +115,6 @@ DWORD Zeta()
     wnd.pid = GetCurrentProcessId();
     while (EnumWindows(EnumWindowsProc, 0))
         Sleep(1);
-    do
-        SwitchToThisWindow(wnd.hwnd, TRUE);
-    while (wnd.hwnd != GetForegroundWindow());
 
     // Get the primary monitor.
     GetMonitorInfo(MonitorFromWindow(0, MONITORINFOF_PRIMARY), (MONITORINFO *)&wnd.mi);
