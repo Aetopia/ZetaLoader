@@ -204,6 +204,7 @@ int main(__attribute__((unused)) int argc, char *argv[])
     SetWindowPos(wnd.hwnd, HWND_TOPMOST,
                  wnd.mi.rcMonitor.left, wnd.mi.rcMonitor.top,
                  wnd.cx, wnd.cy, 0);
+    SwitchToThisWindow(wnd.hwnd, TRUE);
 
     if (strcmp(pri, wnd.mi.szDevice) != 0)
     {
