@@ -203,8 +203,7 @@ int main(__attribute__((unused)) int argc, char *argv[])
     SetWindowLongPtr(wnd.hwnd, GWL_EXSTYLE, WS_EX_APPWINDOW);
     SetWindowPos(wnd.hwnd, HWND_TOPMOST,
                  wnd.mi.rcMonitor.left, wnd.mi.rcMonitor.top,
-                 wnd.cx, wnd.cy,
-                 SWP_NOACTIVATE | SWP_NOSENDCHANGING);
+                 wnd.cx, wnd.cy, 0);
 
     if (strcmp(pri, wnd.mi.szDevice) != 0)
     {
