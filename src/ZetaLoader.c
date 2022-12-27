@@ -105,7 +105,12 @@ DWORD IsProcessAlive(LPVOID lpParameter)
 }
 
 BOOL CALLBACK EnumWindowsProc(HWND hwnd, __attribute__((unused)) LPARAM lParam) { return !IsPIDWnd(hwnd); }
-
+void ForceWindowForeground()
+{
+    do
+        SwitchToThisWindow(wnd.hwnd, TRUE);
+    while (wnd.hwnd != GetForegroundWindow());
+}
 int main(__attribute__((unused)) int argc, char *argv[])
 {
     SetCurrentDirectory(dirname(argv[0]));
@@ -137,9 +142,7 @@ int main(__attribute__((unused)) int argc, char *argv[])
     // Get the HWND of process' window.
     while (EnumWindows(EnumWindowsProc, 0))
         Sleep(1);
-    do
-        SwitchToThisWindow(wnd.hwnd, TRUE);
-    while (wnd.hwnd != GetForegroundWindow());
+    ForceWindowForeground();
 
     // Get the primary monitor.
     GetMonitorInfo(MonitorFromWindow(0, MONITORINFOF_PRIMARY), (MONITORINFO *)&wnd.mi);
@@ -206,9 +209,7 @@ int main(__attribute__((unused)) int argc, char *argv[])
                  wnd.mi.rcMonitor.left, wnd.mi.rcMonitor.top,
                  wnd.cx, wnd.cy,
                  SWP_NOACTIVATE | SWP_NOSENDCHANGING);
-    do
-        SwitchToThisWindow(wnd.hwnd, TRUE);
-    while (wnd.hwnd != GetForegroundWindow());
+    ForceWindowForeground();
 
     if (strcmp(pri, wnd.mi.szDevice) != 0)
     {
