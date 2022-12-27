@@ -53,13 +53,13 @@ void WndDisplayModeProc(
     DWORD event,
     HWND hwnd,
     LONG idObject,
-    LONG idChild,
+    __attribute__((unused)) LONG idChild,
     __attribute__((unused)) DWORD idEventThread,
     __attribute__((unused)) DWORD dwmsEventTime)
 {
     if (event != EVENT_SYSTEM_FOREGROUND)
         return;
-    if (idObject != OBJID_WINDOW || idChild != CHILDID_SELF)
+    if (idObject != OBJID_WINDOW)
         return;
     if (IsPIDWnd(hwnd) && wnd.cds)
     {
