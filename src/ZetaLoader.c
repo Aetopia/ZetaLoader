@@ -200,8 +200,8 @@ int main(__attribute__((unused)) int argc, char *argv[])
     wnd.cy = wnd.dm.dmPelsHeight * scale;
 
     SetWindowLongPtr(wnd.hwnd, GWL_STYLE, WS_VISIBLE | WS_POPUP);
-    SetWindowLongPtr(wnd.hwnd, GWL_EXSTYLE, WS_EX_APPWINDOW);
-    SetWindowPos(wnd.hwnd, HWND_TOPMOST,
+    SetWindowLongPtr(wnd.hwnd, GWL_EXSTYLE, WS_EX_APPWINDOW | WS_EX_TOPMOST);
+    SetWindowPos(wnd.hwnd, 0,
                  wnd.mi.rcMonitor.left, wnd.mi.rcMonitor.top,
                  wnd.cx, wnd.cy, 0);
     SwitchToThisWindow(wnd.hwnd, TRUE);
