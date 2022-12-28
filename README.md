@@ -5,25 +5,25 @@ A utility to fix technical issues with Halo Infinite on PC.
 ## Features
 
 1. Highest Priority Window Thread  
+    **This fixes screen tearing when an external framelimiter is being used.**
+
     Reference: https://learn.microsoft.com/en-us/windows/win32/procthread/scheduling-priorities#priority-level
 
-    Microsoft recommends for any thread that handles input should use `THREAD_PRIORITY_HIGHEST | THREAD_PRIORITY_ABOVE_NORMAL`.        
-    In the case of Halo Infinite, its window thread also handles input. 
-    > **This only an assumption!**    
-    > Reason being altering the window thread priority affects how input is processed by the game.
+    Microsoft recommends for any thread that handles input should use `THREAD_PRIORITY_HIGHEST | THREAD_PRIORITY_ABOVE_NORMAL`.                
+    When using an external framelimiter, the game has intense screen tearing.        
+    The reason why this happens might be due to the external framelimiter doesn't framepace correctly when the fps is capped.          
+    Source: https://forums.guru3d.com/threads/msi-ab-rtss-development-news-thread.412822/page-161#post-5949434         
 
-    For **some reason** the window thread priority is set THREAD_PRIORITY_NORMAL, one can verify this using `GetThreadPriority`.         
+    Setting the window thread priority to `THREAD_PRIORITY_HIGHEST` fixes this issue entirely.
+    > This fix will encountered when messing around with the window thread priority.
+    You can verify if this works by using a lower thread priority is set by `SetThreadPriority` in the source code.
 
-    Because the thread priority is normal, input in general doesn't feel responsive or feels stuttery.  
-    You can also change the thread priority to `THREAD_PRIORITY_IDLE` in the function `IsPIDWnd` in [`src/Zeta.c`](https://github.com/Aetopia/ZetaLoader/blob/main/src/ZetaLoader.c).
-    This is way to verify how "unresponsive" input is a result of a lower thread priority.
-
-2. Borderless Fullscreen
-    ZetaLoader (`Zeta.dll`) overrides Halo Infinite's borderless fullscreen/window style.        
-    Halo Infinite uses the following styles `WS_VISIBLE | WS_OVERLAPPED | WS_CLIPSIBLINGS` when going borderless fullscreen but this causes an issue where any resolution below `1440x810` will make the game window to extend its client area beyond the resolution itself.       
-    This is simply fixed by using the following styles:
-    - Window Styles: `WS_VISIBLE | WS_POPUP`
-    - Extended Window Styles `WS_EX_APPWINDOW | WS_EX_TOPMOST`
+2. Borderless Fullscreen 
+    ZetaLoader overrides Halo Infinite's borderless fullscreen/window style.            
+    Halo Infinite uses the following styles `WS_VISIBLE | WS_OVERLAPPED | WS_CLIPSIBLINGS` when going borderless fullscreen but this causes an issue where any resolution below `1440x810` will make the game window to extend its client area beyond the resolution itself.           
+    This is simply fixed by using the following styles:      
+    - Window Styles: `WS_VISIBLE | WS_POPUP` 
+    - Extended Window Styles `WS_EX_APPWINDOW | WS_EX_TOPMOST`   
     
     > You can use something like [Borderless Gaming](https://github.com/Codeusa/Borderless-Gaming) to fix this issue.
     
