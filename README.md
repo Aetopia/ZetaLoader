@@ -11,7 +11,11 @@ A utility to fix technical issues with Halo Infinite on PC.
 
     Microsoft recommends for any thread that handles input should use `THREAD_PRIORITY_HIGHEST | THREAD_PRIORITY_ABOVE_NORMAL`.                
     When using an external framelimiter, the game has intense screen tearing.        
-    The reason why this happens might be due to the external framelimiter doesn't framepace correctly when the fps is capped.          
+    The reason why this happens might be due:
+    1. To the external framelimiter doesn't framepace correctly when the FPS is capped.
+    2. The Window Thread goes to sleep for some reason when a external framelimiter is used.
+
+    **Note: This are only my assumptions!**           
     Source: https://forums.guru3d.com/threads/msi-ab-rtss-development-news-thread.412822/page-161#post-5949434         
 
     Setting the window thread priority to `THREAD_PRIORITY_HIGHEST` fixes this issue entirely.
@@ -23,7 +27,7 @@ A utility to fix technical issues with Halo Infinite on PC.
     Halo Infinite uses the following styles `WS_VISIBLE | WS_OVERLAPPED | WS_CLIPSIBLINGS` when going borderless fullscreen but this causes an issue where any resolution below `1440x810` will make the game window to extend its client area beyond the resolution itself.           
     This is simply fixed by using the following styles:      
     - Window Styles: `WS_VISIBLE | WS_POPUP` 
-    - Extended Window Styles `WS_EX_APPWINDOW | WS_EX_TOPMOST`   
+    - Extended Window Styles `WS_EX_APPWINDOW | WS_EX_TOPMOST`  
     
     > You can use something like [Borderless Gaming](https://github.com/Codeusa/Borderless-Gaming) to fix this issue.
     
