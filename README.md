@@ -6,10 +6,7 @@ A utility to fix technical issues with Halo Infinite on PC.
 
 1. Highest Priority Window Thread  
     **This fixes screen tearing when an external framelimiter is being used.**
-
-    Reference: https://learn.microsoft.com/en-us/windows/win32/procthread/scheduling-priorities#priority-level
-
-    Microsoft recommends for any thread that handles input should use `THREAD_PRIORITY_HIGHEST | THREAD_PRIORITY_ABOVE_NORMAL`.                
+              
     When using an external framelimiter, the game has intense screen tearing.        
     The reason why this happens might be due:
     1. To the external framelimiter doesn't framepace correctly when the FPS is capped.
@@ -19,7 +16,7 @@ A utility to fix technical issues with Halo Infinite on PC.
     Source: https://forums.guru3d.com/threads/msi-ab-rtss-development-news-thread.412822/page-161#post-5949434         
 
     Setting the window thread priority to `THREAD_PRIORITY_HIGHEST` fixes this issue entirely.
-    > This fix will encountered when messing around with the window thread priority.
+    > This fix was encountered when messing around with the window thread priority.
     You can verify if this works by using a lower thread priority is set by `SetThreadPriority` in the source code.
 
 2. Borderless Fullscreen 
