@@ -5,7 +5,7 @@ A utility to fix technical issues with Halo Infinite on PC.
 ## Features
 
 1. Highest Priority Window Thread  
-    **This fixes screen tearing when an external framelimiter is being used.**
+    **This fixes screen tearing & input issues when an external framelimiter is being used.**
               
     When using an external framelimiter, the game has intense screen tearing.        
     The reason why this happens might be due:
