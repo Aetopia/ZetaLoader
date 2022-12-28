@@ -10,7 +10,7 @@ A utility to fix technical issues with Halo Infinite on PC.
     When using an external framelimiter, the game has intense screen tearing.        
     The reason why this happens might be due:
     1. To the external framelimiter doesn't framepace correctly when the FPS is capped.
-    2. The Window Thread goes to sleep for some reason when a external framelimiter is used.
+    2. The Window Thread goes to sleep for some reason when a external framelimiter is used and the Window Thread handles the `WM_INPUT` message.
 
     **Note: This are only my assumptions!**           
     Source: https://forums.guru3d.com/threads/msi-ab-rtss-development-news-thread.412822/page-161#post-5949434         
