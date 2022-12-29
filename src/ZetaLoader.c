@@ -66,6 +66,7 @@ void WndDisplayModeProc(
         if (wnd.hwnd != hwnd)
             return;
         SetDM(0);
+        wnd.dm.dmFields = 0;
         return;
     case EVENT_SYSTEM_FOREGROUND:
         if (IsPIDWnd(hwnd) && wnd.cds)
@@ -107,6 +108,7 @@ void WndExistProc(
 DWORD IsProcessAlive(LPVOID lpParameter)
 {
     WaitForSingleObject((HANDLE)lpParameter, INFINITE);
+    SetDM(0);
     ExitProcess(0);
     return TRUE;
 }
