@@ -53,29 +53,37 @@ void WndDisplayModeProc(
     DWORD event,
     HWND hwnd,
     LONG idObject,
-    __attribute__((unused)) LONG idChild,
+    LONG idChild,
     __attribute__((unused)) DWORD idEventThread,
     __attribute__((unused)) DWORD dwmsEventTime)
 {
-    if (event != EVENT_SYSTEM_FOREGROUND)
+    if (idObject != OBJID_WINDOW ||
+        idChild != CHILDID_SELF)
         return;
-    if (idObject != OBJID_WINDOW)
-        return;
-    if (IsPIDWnd(hwnd) && wnd.cds)
+    switch (event)
     {
-        wnd.cds = FALSE;
-        SetDM(&wnd.dm);
-        do
-            SwitchToThisWindow(wnd.hwnd, TRUE);
-        while (IsIconic(wnd.hwnd));
+    case EVENT_OBJECT_DESTROY:
+        if (wnd.hwnd != hwnd)
+            return;
+        SetDM(0);
         return;
-    }
-    wnd.cds = TRUE;
-    do
-        if (!ShowWindow(wnd.hwnd, SW_MINIMIZE))
-            break;
-    while (!IsIconic(wnd.hwnd));
-    SetDM(0);
+    case EVENT_SYSTEM_FOREGROUND:
+        if (IsPIDWnd(hwnd) && wnd.cds)
+        {
+            wnd.cds = FALSE;
+            SetDM(&wnd.dm);
+            do
+                SwitchToThisWindow(wnd.hwnd, TRUE);
+            while (IsIconic(wnd.hwnd));
+            return;
+        }
+        wnd.cds = TRUE;
+        do
+            if (!ShowWindow(wnd.hwnd, SW_MINIMIZE))
+                break;
+        while (!IsIconic(wnd.hwnd));
+        SetDM(0);
+    };
 }
 
 void WndExistProc(
@@ -99,7 +107,6 @@ void WndExistProc(
 DWORD IsProcessAlive(LPVOID lpParameter)
 {
     WaitForSingleObject((HANDLE)lpParameter, INFINITE);
-    SetDM(0);
     ExitProcess(0);
     return TRUE;
 }
@@ -211,7 +218,7 @@ int main(__attribute__((unused)) int argc, char *argv[])
         wineventproc = WndExistProc;
         event = EVENT_OBJECT_DESTROY;
     };
-    SetWinEventHook(event, event, 0, wineventproc, 0, 0, WINEVENT_OUTOFCONTEXT);
+    SetWinEventHook(event, EVENT_OBJECT_DESTROY, 0, wineventproc, 0, 0, WINEVENT_OUTOFCONTEXT);
     while (GetMessage(&msg, NULL, 0, 0))
     {
         TranslateMessage(&msg);
