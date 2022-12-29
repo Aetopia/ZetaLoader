@@ -103,6 +103,7 @@ void WndExistProc(
     if (wnd.hwnd != hwnd)
         return;
     SetDM(0);
+    wnd.dm.dmFields = 0;
 }
 
 DWORD IsProcessAlive(LPVOID lpParameter)
