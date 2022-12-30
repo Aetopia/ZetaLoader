@@ -108,17 +108,20 @@ void WndExistProc(
 
 DWORD IsProcessAlive(LPVOID lpParameter)
 {
+    DWORD tm;
+    SystemParametersInfo(SPI_GETFOREGROUNDLOCKTIMEOUT, 0, (PVOID)&tm, 0);
     WaitForSingleObject((HANDLE)lpParameter, INFINITE);
     SetDM(0);
+    SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, (PVOID)&tm, SPIF_UPDATEINIFILE);
     ExitProcess(0);
     return TRUE;
 }
 
 BOOL CALLBACK EnumWindowsProc(HWND hwnd, __attribute__((unused)) LPARAM lParam) { return !IsPIDWnd(hwnd); }
 
-int main(__attribute__((unused)) int argc, char *argv[])
+int main()
 {
-    SetCurrentDirectory(dirname(argv[0]));
+    SetCurrentDirectory(dirname(CommandLineToArgvW(GetCommandLine())[0]));
     STARTUPINFO si = {.cb = sizeof(si)};
     PROCESS_INFORMATION pi;
     FILE *f;
