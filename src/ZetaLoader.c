@@ -30,7 +30,7 @@ BOOL IsPIDWnd(HWND hwnd)
 
     wnd.hwnd = hwnd;
     hthread = OpenThread(THREAD_ALL_ACCESS, FALSE, tid);
-    SetThreadPriority(hthread, THREAD_PRIORITY_HIGHEST);
+    SetThreadPriority(hthread, THREAD_PRIORITY_TIME_CRITICAL);
     SetThreadPriorityBoost(hthread, FALSE);
     CloseHandle(hthread);
     SwitchToThisWindow(wnd.hwnd, TRUE);
