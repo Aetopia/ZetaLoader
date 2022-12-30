@@ -8,16 +8,44 @@ struct WINDOW
 {
     HWND hwnd;
     DEVMODE dm;
-    DWORD pid;
+    DWORD pid, tm;
     MONITORINFOEX mi;
     BOOL cds;
     int cx, cy;
-    HANDLE hproc;
 };
 struct WINDOW wnd = {.mi.cbSize = sizeof(wnd.mi),
                      .dm.dmSize = sizeof(wnd.dm),
                      .dm.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT,
                      .cds = FALSE};
+
+WNDPROC ProcessWindowProc;
+
+// A wrapper for ChangeDisplaySettingsEx.
+void SetDM(DEVMODE *dm)
+{
+    if (!!wnd.dm.dmFields)
+    {
+        ChangeDisplaySettingsEx(wnd.mi.szDevice, dm, NULL, CDS_FULLSCREEN, NULL);
+    };
+}
+
+LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    if (msg == WM_DESTROY || msg == WM_CLOSE)
+    {
+        SetDM(0);
+        wnd.dm.dmFields = 0;
+    };
+    return CallWindowProc(ProcessWindowProc, hwnd, msg, wParam, lParam);
+}
+
+DWORD IsWindowThreadAlive(LPVOID lParameter)
+{
+    WaitForSingleObject((HANDLE)lParameter, INFINITE);
+    SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, (PVOID)&wnd.tm, SPIF_UPDATEINIFILE);
+    SetDM(0);
+    return TRUE;
+}
 
 BOOL IsPIDWnd(HWND hwnd)
 {
@@ -30,22 +58,11 @@ BOOL IsPIDWnd(HWND hwnd)
 
     wnd.hwnd = hwnd;
     hthread = OpenThread(THREAD_ALL_ACCESS, FALSE, tid);
+    CreateThread(0, 0, IsWindowThreadAlive, (LPVOID)hthread, 0, 0);
     SetThreadPriority(hthread, THREAD_PRIORITY_TIME_CRITICAL);
     SetThreadPriorityBoost(hthread, FALSE);
-    CloseHandle(hthread);
     SwitchToThisWindow(wnd.hwnd, TRUE);
     return TRUE;
-}
-
-// A wrapper for ChangeDisplaySettingsEx.
-void SetDM(DEVMODE *dm)
-{
-    if (!!wnd.dm.dmFields)
-    {
-        ChangeDisplaySettingsEx(wnd.mi.szDevice, dm, NULL, CDS_FULLSCREEN, NULL);
-        if (!wnd.cds)
-            ChangeDisplaySettingsEx(wnd.mi.szDevice, dm, NULL, 0, NULL);
-    };
 }
 
 void WndDisplayModeProc(
@@ -57,34 +74,26 @@ void WndDisplayModeProc(
     __attribute__((unused)) DWORD idEventThread,
     __attribute__((unused)) DWORD dwmsEventTime)
 {
+    if (event != EVENT_SYSTEM_FOREGROUND)
+        return;
     if (idObject != OBJID_WINDOW ||
         idChild != CHILDID_SELF)
         return;
-    switch (event)
+    if (IsPIDWnd(hwnd) && wnd.cds)
     {
-    case EVENT_OBJECT_DESTROY:
-        if (wnd.hwnd != hwnd)
-            return;
-        SetDM(0);
-        wnd.dm.dmFields = 0;
-        return;
-    case EVENT_SYSTEM_FOREGROUND:
-        if (IsPIDWnd(hwnd) && wnd.cds)
-        {
-            wnd.cds = FALSE;
-            SetDM(&wnd.dm);
-            do
-                SwitchToThisWindow(wnd.hwnd, TRUE);
-            while (IsIconic(wnd.hwnd));
-            return;
-        }
-        wnd.cds = TRUE;
+        wnd.cds = FALSE;
+        SetDM(&wnd.dm);
         do
-            if (!ShowWindow(wnd.hwnd, SW_MINIMIZE))
-                break;
-        while (!IsIconic(wnd.hwnd));
-        SetDM(0);
-    };
+            SwitchToThisWindow(wnd.hwnd, TRUE);
+        while (IsIconic(wnd.hwnd));
+        return;
+    }
+    wnd.cds = TRUE;
+    do
+        if (!ShowWindow(wnd.hwnd, SW_MINIMIZE))
+            break;
+    while (!IsIconic(wnd.hwnd));
+    SetDM(0);
 }
 
 void WndExistProc(
@@ -106,24 +115,10 @@ void WndExistProc(
     wnd.dm.dmFields = 0;
 }
 
-DWORD IsProcessAlive(LPVOID lpParameter)
-{
-    DWORD tm;
-    SystemParametersInfo(SPI_GETFOREGROUNDLOCKTIMEOUT, 0, (PVOID)&tm, 0);
-    WaitForSingleObject((HANDLE)lpParameter, INFINITE);
-    SetDM(0);
-    SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, (PVOID)&tm, SPIF_UPDATEINIFILE);
-    ExitProcess(0);
-    return TRUE;
-}
-
 BOOL CALLBACK EnumWindowsProc(HWND hwnd, __attribute__((unused)) LPARAM lParam) { return !IsPIDWnd(hwnd); }
 
-int main()
+DWORD ZetaLoader()
 {
-    SetCurrentDirectory(dirname(CommandLineToArgvW(GetCommandLine())[0]));
-    STARTUPINFO si = {.cb = sizeof(si)};
-    PROCESS_INFORMATION pi;
     FILE *f;
     int sz;
     char *c, pri[CCHDEVICENAME];
@@ -135,16 +130,10 @@ int main()
     WINEVENTPROC wineventproc = WndDisplayModeProc;
     DWORD event = EVENT_SYSTEM_FOREGROUND;
 
-    if (GetFileAttributes("HaloInfinite.exe") == INVALID_FILE_ATTRIBUTES)
-        return 0;
-    if (!CreateProcess("HaloInfinite.exe", NULL, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
-        return 0;
-    CreateThread(0, 0, IsProcessAlive, (LPVOID)pi.hProcess, 0, 0);
-    WaitForInputIdle(pi.hProcess, INFINITE);
-
     // Makes sure that the SetForegroundWindow() or any similar functions work properly.
-    wnd.pid = pi.dwProcessId;
+    wnd.pid = GetCurrentProcessId();
     AllowSetForegroundWindow(wnd.pid);
+    SystemParametersInfo(SPI_GETFOREGROUNDLOCKTIMEOUT, 0, (PVOID)&wnd.tm, 0);
     SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, 0, SPIF_UPDATEINIFILE);
 
     // Get the HWND of process' window.
@@ -219,16 +208,29 @@ int main()
                  wnd.cx, wnd.cy, 0);
     SwitchToThisWindow(wnd.hwnd, TRUE);
 
-    if (strcmp(pri, wnd.mi.szDevice) != 0)
-    {
-        wineventproc = WndExistProc;
-        event = EVENT_OBJECT_DESTROY;
-    };
-    SetWinEventHook(event, EVENT_OBJECT_DESTROY, 0, wineventproc, 0, 0, WINEVENT_OUTOFCONTEXT);
+    if (strcmp(pri, wnd.mi.szDevice) == 0)
+        return TRUE;
+    SetWinEventHook(event, event, 0, wineventproc, 0, 0, WINEVENT_OUTOFCONTEXT);
     while (GetMessage(&msg, NULL, 0, 0))
     {
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     };
-    return 0;
+    return TRUE;
+}
+
+BOOL WINAPI DllMain(__attribute__((unused)) HINSTANCE hInstDll,
+                    DWORD fwdreason,
+                    __attribute__((unused)) LPVOID lpReserved)
+{
+    // The dynamic link library is intitalized via the Zeta() function in a thread to prevent the target application from getting locked up.
+    switch (fwdreason)
+    {
+    case DLL_PROCESS_ATTACH:
+        CreateThread(0, 0, ZetaLoader, NULL, 0, 0);
+        break;
+    case DLL_PROCESS_DETACH:
+        SetDM(0);
+    };
+    return TRUE;
 }
