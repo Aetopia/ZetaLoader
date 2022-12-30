@@ -18,8 +18,6 @@ struct WINDOW wnd = {.mi.cbSize = sizeof(wnd.mi),
                      .dm.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT,
                      .cds = FALSE};
 
-WNDPROC ProcessWindowProc;
-
 // A wrapper for ChangeDisplaySettingsEx.
 void SetDM(DEVMODE *dm)
 {
@@ -27,16 +25,6 @@ void SetDM(DEVMODE *dm)
     {
         ChangeDisplaySettingsEx(wnd.mi.szDevice, dm, NULL, CDS_FULLSCREEN, NULL);
     };
-}
-
-LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-    if (msg == WM_DESTROY || msg == WM_CLOSE)
-    {
-        SetDM(0);
-        wnd.dm.dmFields = 0;
-    };
-    return CallWindowProc(ProcessWindowProc, hwnd, msg, wParam, lParam);
 }
 
 DWORD IsWindowThreadAlive(LPVOID lParameter)
@@ -129,6 +117,7 @@ DWORD ZetaLoader()
     MSG msg;
     WINEVENTPROC wineventproc = WndDisplayModeProc;
     DWORD event = EVENT_SYSTEM_FOREGROUND;
+    WaitForInputIdle(GetCurrentProcess(), INFINITE);
 
     // Makes sure that the SetForegroundWindow() or any similar functions work properly.
     wnd.pid = GetCurrentProcessId();
@@ -208,8 +197,11 @@ DWORD ZetaLoader()
                  wnd.cx, wnd.cy, 0);
     SwitchToThisWindow(wnd.hwnd, TRUE);
 
-    if (strcmp(pri, wnd.mi.szDevice) == 0)
-        return TRUE;
+    if (strcmp(pri, wnd.mi.szDevice) != 0)
+    {
+        wineventproc = WndExistProc;
+        event = EVENT_OBJECT_DESTROY;
+    };
     SetWinEventHook(event, event, 0, wineventproc, 0, 0, WINEVENT_OUTOFCONTEXT);
     while (GetMessage(&msg, NULL, 0, 0))
     {
@@ -224,13 +216,7 @@ BOOL WINAPI DllMain(__attribute__((unused)) HINSTANCE hInstDll,
                     __attribute__((unused)) LPVOID lpReserved)
 {
     // The dynamic link library is intitalized via the Zeta() function in a thread to prevent the target application from getting locked up.
-    switch (fwdreason)
-    {
-    case DLL_PROCESS_ATTACH:
+    if (fwdreason == DLL_PROCESS_ATTACH)
         CreateThread(0, 0, ZetaLoader, NULL, 0, 0);
-        break;
-    case DLL_PROCESS_DETACH:
-        SetDM(0);
-    };
     return TRUE;
 }
