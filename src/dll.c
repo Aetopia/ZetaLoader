@@ -16,7 +16,8 @@ struct WINDOW
 struct WINDOW wnd = {.mi.cbSize = sizeof(wnd.mi),
                      .dm.dmSize = sizeof(wnd.dm),
                      .dm.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT,
-                     .cds = FALSE};
+                     .cds = TRUE};
+WNDPROC _WindowProc;
 
 // A wrapper for ChangeDisplaySettingsEx.
 void SetDM(DEVMODE *dm)
@@ -25,6 +26,39 @@ void SetDM(DEVMODE *dm)
     {
         ChangeDisplaySettingsEx(wnd.mi.szDevice, dm, NULL, CDS_FULLSCREEN, NULL);
     };
+}
+void BorderlessWindow()
+{
+    SetWindowLongPtr(wnd.hwnd, GWL_STYLE, WS_VISIBLE | WS_POPUP);
+    SetWindowLongPtr(wnd.hwnd, GWL_EXSTYLE, WS_EX_APPWINDOW | WS_EX_TOPMOST);
+    SetWindowPos(wnd.hwnd, 0,
+                 wnd.mi.rcMonitor.left, wnd.mi.rcMonitor.top,
+                 wnd.cx, wnd.cy, SWP_NOSENDCHANGING);
+};
+LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    if (msg == WM_DESTROY || msg == WM_CLOSE || msg == WM_QUIT)
+    {
+        ShowWindow(wnd.hwnd, SW_HIDE);
+        SetDM(0);
+        wnd.dm.dmFields = 0;
+    }
+    else if ((msg == WM_ACTIVATE || msg == WM_ACTIVATEAPP) && wnd.cds)
+    {
+        if (wParam == WA_ACTIVE || wParam == WA_CLICKACTIVE || wParam == TRUE)
+        {
+            SwitchToThisWindow(wnd.hwnd, TRUE);
+            SetDM(&wnd.dm);
+        }
+        else if (wParam == WA_INACTIVE || wParam == FALSE)
+        {
+            ShowWindow(wnd.hwnd, SW_MINIMIZE);
+            SetDM(0);
+        };
+    }
+    else if (msg == WM_WINDOWPOSCHANGING)
+        BorderlessWindow();
+    return CallWindowProc(_WindowProc, hwnd, msg, wParam, lParam);
 }
 
 DWORD IsWindowThreadAlive(LPVOID lParameter)
@@ -35,13 +69,11 @@ DWORD IsWindowThreadAlive(LPVOID lParameter)
     return TRUE;
 }
 
-BOOL IsPIDWnd(HWND hwnd)
+BOOL CALLBACK EnumWindowsProc(HWND hwnd, __attribute__((unused)) LPARAM lParam)
 {
     DWORD pid, tid = GetWindowThreadProcessId(hwnd, &pid);
     HANDLE hthread;
     if (wnd.pid != pid)
-        return FALSE;
-    if (wnd.hwnd == hwnd)
         return TRUE;
 
     wnd.hwnd = hwnd;
@@ -49,61 +81,10 @@ BOOL IsPIDWnd(HWND hwnd)
     CreateThread(0, 0, IsWindowThreadAlive, (LPVOID)hthread, 0, 0);
     SetThreadPriority(hthread, THREAD_PRIORITY_TIME_CRITICAL);
     SetThreadPriorityBoost(hthread, FALSE);
-    SwitchToThisWindow(wnd.hwnd, TRUE);
-    return TRUE;
+    while (!IsWindowVisible(wnd.hwnd))
+        Sleep(1);
+    return FALSE;
 }
-
-void WndDisplayModeProc(
-    __attribute__((unused)) HWINEVENTHOOK hWinEventHook,
-    DWORD event,
-    HWND hwnd,
-    LONG idObject,
-    LONG idChild,
-    __attribute__((unused)) DWORD idEventThread,
-    __attribute__((unused)) DWORD dwmsEventTime)
-{
-    if (event != EVENT_SYSTEM_FOREGROUND)
-        return;
-    if (idObject != OBJID_WINDOW ||
-        idChild != CHILDID_SELF)
-        return;
-    if (IsPIDWnd(hwnd) && wnd.cds)
-    {
-        wnd.cds = FALSE;
-        SetDM(&wnd.dm);
-        do
-            SwitchToThisWindow(wnd.hwnd, TRUE);
-        while (IsIconic(wnd.hwnd));
-        return;
-    }
-    wnd.cds = TRUE;
-    do
-        if (!ShowWindow(wnd.hwnd, SW_MINIMIZE))
-            break;
-    while (!IsIconic(wnd.hwnd));
-    SetDM(0);
-}
-
-void WndExistProc(
-    __attribute__((unused)) HWINEVENTHOOK hWinEventHook,
-    DWORD event,
-    HWND hwnd,
-    LONG idObject,
-    LONG idChild,
-    __attribute__((unused)) DWORD idEventThread,
-    __attribute__((unused)) DWORD dwmsEventTime)
-{
-    if (event != EVENT_OBJECT_DESTROY)
-        return;
-    if (idObject != OBJID_WINDOW || idChild != CHILDID_SELF)
-        return;
-    if (wnd.hwnd != hwnd)
-        return;
-    SetDM(0);
-    wnd.dm.dmFields = 0;
-}
-
-BOOL CALLBACK EnumWindowsProc(HWND hwnd, __attribute__((unused)) LPARAM lParam) { return !IsPIDWnd(hwnd); }
 
 DWORD ZetaLoader()
 {
@@ -114,10 +95,6 @@ DWORD ZetaLoader()
     HMONITOR hmon;
     UINT dpi;
     float scale;
-    MSG msg;
-    WINEVENTPROC wineventproc = WndDisplayModeProc;
-    DWORD event = EVENT_SYSTEM_FOREGROUND;
-    WaitForInputIdle(GetCurrentProcess(), INFINITE);
 
     // Makes sure that the SetForegroundWindow() or any similar functions work properly.
     wnd.pid = GetCurrentProcessId();
@@ -127,8 +104,6 @@ DWORD ZetaLoader()
 
     // Get the HWND of process' window.
     while (EnumWindows(EnumWindowsProc, 0))
-        Sleep(1);
-    while (!IsWindowVisible(wnd.hwnd))
         Sleep(1);
 
     // Get the primary monitor.
@@ -174,6 +149,8 @@ DWORD ZetaLoader()
         ShowWindow(wnd.hwnd, SW_MAXIMIZE);
         return TRUE;
     };
+    _WindowProc = (WNDPROC)GetWindowLongPtr(wnd.hwnd, GWLP_WNDPROC);
+    SetWindowLongPtr(wnd.hwnd, GWLP_WNDPROC, (LONG_PTR)&WindowProc);
 
     /*
     1. Check if the native and specified display mode/resolution are the same, if yes then don't allow for display mode changing.
@@ -184,30 +161,16 @@ DWORD ZetaLoader()
     */
     if (dm.dmPelsWidth == wnd.dm.dmPelsWidth && dm.dmPelsHeight == wnd.dm.dmPelsHeight)
         wnd.dm.dmFields = 0;
-    SetDM(&wnd.dm);
+    SendMessage(wnd.hwnd, WM_ACTIVATE, WA_ACTIVE, 0);
     GetDpiForMonitor(hmon, 0, &dpi, &dpi);
     scale = (float)dpi / 96.0;
     wnd.cx = wnd.dm.dmPelsWidth * scale;
     wnd.cy = wnd.dm.dmPelsHeight * scale;
-
-    SetWindowLongPtr(wnd.hwnd, GWL_STYLE, WS_VISIBLE | WS_POPUP);
-    SetWindowLongPtr(wnd.hwnd, GWL_EXSTYLE, WS_EX_APPWINDOW | WS_EX_TOPMOST);
-    SetWindowPos(wnd.hwnd, 0,
-                 wnd.mi.rcMonitor.left, wnd.mi.rcMonitor.top,
-                 wnd.cx, wnd.cy, 0);
-    SwitchToThisWindow(wnd.hwnd, TRUE);
+    BorderlessWindow();
+    SendMessage(wnd.hwnd, WM_ACTIVATE, WA_ACTIVE, 0);
 
     if (strcmp(pri, wnd.mi.szDevice) != 0)
-    {
-        wineventproc = WndExistProc;
-        event = EVENT_OBJECT_DESTROY;
-    };
-    SetWinEventHook(event, event, 0, wineventproc, 0, 0, WINEVENT_OUTOFCONTEXT);
-    while (GetMessage(&msg, NULL, 0, 0))
-    {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
-    };
+        wnd.cds = FALSE;
     return TRUE;
 }
 
