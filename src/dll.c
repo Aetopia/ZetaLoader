@@ -1,6 +1,8 @@
 #include <windows.h>
 #include <stdio.h>
 #include <shellscalingapi.h>
+#include <dwmapi.h>
+
 // Timer resolution related functions.
 NTSYSAPI NTSTATUS NTAPI NtSetTimerResolution(ULONG DesiredResolution, BOOLEAN SetResolution, PULONG CurrentResolution);
 NTSYSAPI NTSTATUS NTAPI NtQueryTimerResolution(PULONG MinimumResolution, PULONG MaximumResolution, PULONG CurrentResolution);
@@ -67,6 +69,7 @@ BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lparam)
     hthread = OpenThread(THREAD_ALL_ACCESS, FALSE, tid);
     SetThreadPriority(hthread, THREAD_PRIORITY_TIME_CRITICAL);
     SetThreadPriorityBoost(hthread, FALSE);
+    CloseHandle(hthread);
     while (!IsWindowVisible(wnd.hwnd))
         Sleep(1);
     return FALSE;
@@ -92,6 +95,7 @@ DWORD ZetaLoader()
     */
     NtQueryTimerResolution(&min, &max, &cur);
     NtSetTimerResolution(max, TRUE, &cur);
+    DwmEnableMMCSS(TRUE);
 
     // Makes sure that the SetForegroundWindow() or any similar functions work properly.
     AllowSetForegroundWindow(pid);
