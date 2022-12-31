@@ -8,9 +8,8 @@ NTSYSAPI NTSTATUS NTAPI NtQueryTimerResolution(PULONG MinimumResolution, PULONG 
 // Structure relating to information of a process' window.
 struct WINDOW
 {
-    HWND hwnd, con;
+    HWND hwnd;
     DEVMODE dm;
-    DWORD pid, tm;
     MONITORINFOEX mi;
     BOOL cds;
     int cx, cy;
@@ -58,11 +57,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
     return CallWindowProc(_WindowProc, hwnd, msg, wparam, lparam);
 }
 
-BOOL CALLBACK EnumWindowsProc(HWND hwnd, __attribute__((unused)) LPARAM lparam)
+BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lparam)
 {
     DWORD pid, tid = GetWindowThreadProcessId(hwnd, &pid);
     HANDLE hthread;
-    if (wnd.pid != pid)
+    if ((DWORD)lparam != pid)
         return TRUE;
     wnd.hwnd = hwnd;
     hthread = OpenThread(THREAD_ALL_ACCESS, FALSE, tid);
@@ -83,6 +82,7 @@ DWORD ZetaLoader()
     UINT dpi;
     float scale;
     ULONG min, max, cur;
+    DWORD pid = GetCurrentProcessId();
 
     /*
     Force the highest timer resolution.
@@ -94,13 +94,11 @@ DWORD ZetaLoader()
     NtSetTimerResolution(max, TRUE, &cur);
 
     // Makes sure that the SetForegroundWindow() or any similar functions work properly.
-    wnd.pid = GetCurrentProcessId();
     AllowSetForegroundWindow(wnd.pid);
-    SystemParametersInfo(SPI_GETFOREGROUNDLOCKTIMEOUT, 0, (PVOID)&wnd.tm, 0);
     SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, 0, SPIF_UPDATEINIFILE);
 
     // Get the HWND of process' window.
-    while (EnumWindows(EnumWindowsProc, 0))
+    while (EnumWindows(EnumWindowsProc, (LPARAM)pid))
         Sleep(1);
 
     // Get the primary monitor.
@@ -164,7 +162,7 @@ DWORD ZetaLoader()
     wnd.cx = wnd.dm.dmPelsWidth * scale;
     wnd.cy = wnd.dm.dmPelsHeight * scale;
     SetWindowLongPtr(wnd.hwnd, GWL_STYLE, WS_VISIBLE | WS_POPUP);
-    SetWindowLongPtr(wnd.hwnd, GWL_EXSTYLE, WS_EX_APPWINDOW | WS_EX_TOPMOST);
+    SetWindowLongPtr(wnd.hwnd, GWL_EXSTYLE, WS_EX_APPWINDOW);
     SetWindowPos(wnd.hwnd, 0,
                  wnd.mi.rcMonitor.left, wnd.mi.rcMonitor.top,
                  wnd.cx, wnd.cy, 0);
