@@ -94,7 +94,7 @@ DWORD ZetaLoader()
     NtSetTimerResolution(max, TRUE, &cur);
 
     // Makes sure that the SetForegroundWindow() or any similar functions work properly.
-    AllowSetForegroundWindow(wnd.pid);
+    AllowSetForegroundWindow(pid);
     SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, 0, SPIF_UPDATEINIFILE);
 
     // Get the HWND of process' window.
