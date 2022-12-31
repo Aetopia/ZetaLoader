@@ -4,8 +4,12 @@
 #include <dwmapi.h>
 
 // Timer resolution related functions.
-NTSYSAPI NTSTATUS NTAPI NtSetTimerResolution(ULONG DesiredResolution, BOOLEAN SetResolution, PULONG CurrentResolution);
-NTSYSAPI NTSTATUS NTAPI NtQueryTimerResolution(PULONG MinimumResolution, PULONG MaximumResolution, PULONG CurrentResolution);
+NTSYSAPI NTSTATUS NTAPI NtSetTimerResolution(ULONG DesiredResolution,
+                                             BOOLEAN SetResolution,
+                                             PULONG CurrentResolution);
+NTSYSAPI NTSTATUS NTAPI NtQueryTimerResolution(PULONG MinimumResolution,
+                                               PULONG MaximumResolution,
+                                               PULONG CurrentResolution);
 
 // Structure relating to information of a process' window.
 struct WINDOW

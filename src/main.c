@@ -9,8 +9,8 @@ void WinEventProc(
     HWND hwnd,
     LONG idObject,
     LONG idChild,
-    DWORD idEventThread,
-    DWORD dwmsEventTime)
+    __attribute__((unused)) DWORD idEventThread,
+    __attribute__((unused)) DWORD dwmsEventTime)
 {
     if (event != EVENT_OBJECT_CREATE)
         return;
@@ -23,6 +23,13 @@ void WinEventProc(
         return;
     UnhookWinEvent(hWinEventHook);
     PostQuitMessage(0);
+}
+
+DWORD IsProcessAlive()
+{
+    WaitForSingleObject(pi.hProcess, INFINITE);
+    ExitProcess(0);
+    return TRUE;
 }
 
 int main(__attribute__((unused)) int argc, char *argv[])
@@ -39,6 +46,7 @@ int main(__attribute__((unused)) int argc, char *argv[])
         return 0;
     if (!CreateProcess("HaloInfinite.exe", NULL, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
         return 0;
+    CreateThread(0, 0, IsProcessAlive, 0, 0, 0);
     SetWinEventHook(EVENT_OBJECT_CREATE,
                     EVENT_OBJECT_CREATE, 0,
                     WinEventProc,
