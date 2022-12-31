@@ -1,12 +1,14 @@
 #include <windows.h>
-#include <libgen.h>
 #include <stdio.h>
 #include <shellscalingapi.h>
+// Timer resolution related functions.
+NTSYSAPI NTSTATUS NTAPI NtSetTimerResolution(ULONG DesiredResolution, BOOLEAN SetResolution, PULONG CurrentResolution);
+NTSYSAPI NTSTATUS NTAPI NtQueryTimerResolution(PULONG MinimumResolution, PULONG MaximumResolution, PULONG CurrentResolution);
 
 // Structure relating to information of a process' window.
 struct WINDOW
 {
-    HWND hwnd;
+    HWND hwnd, con;
     DEVMODE dm;
     DWORD pid, tm;
     MONITORINFOEX mi;
@@ -56,14 +58,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
     return CallWindowProc(_WindowProc, hwnd, msg, wparam, lparam);
 }
 
-DWORD IsWindowThreadAlive(LPVOID lparam)
-{
-    WaitForSingleObject((HANDLE)lparam, INFINITE);
-    SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, (PVOID)&wnd.tm, SPIF_UPDATEINIFILE);
-    SetDM(0);
-    return TRUE;
-}
-
 BOOL CALLBACK EnumWindowsProc(HWND hwnd, __attribute__((unused)) LPARAM lparam)
 {
     DWORD pid, tid = GetWindowThreadProcessId(hwnd, &pid);
@@ -72,7 +66,6 @@ BOOL CALLBACK EnumWindowsProc(HWND hwnd, __attribute__((unused)) LPARAM lparam)
         return TRUE;
     wnd.hwnd = hwnd;
     hthread = OpenThread(THREAD_ALL_ACCESS, FALSE, tid);
-    CreateThread(0, 0, IsWindowThreadAlive, (LPVOID)hthread, 0, 0);
     SetThreadPriority(hthread, THREAD_PRIORITY_TIME_CRITICAL);
     SetThreadPriorityBoost(hthread, FALSE);
     while (!IsWindowVisible(wnd.hwnd))
@@ -89,6 +82,16 @@ DWORD ZetaLoader()
     HMONITOR hmon;
     UINT dpi;
     float scale;
+    ULONG min, max, cur;
+
+    /*
+    Force the highest timer resolution.
+    Halo Infinite uses 1 ms by default, we can force 0.5 ms using NtSetTimerResolution.
+    Starting with Windows 2004, setting the timer resolution is no longer global but on a per process basis.
+    Reference: https://learn.microsoft.com/en-us/windows/win32/api/timeapi/nf-timeapi-timebeginperiod#remarks
+    */
+    NtQueryTimerResolution(&min, &max, &cur);
+    NtSetTimerResolution(max, TRUE, &cur);
 
     // Makes sure that the SetForegroundWindow() or any similar functions work properly.
     wnd.pid = GetCurrentProcessId();
@@ -172,12 +175,15 @@ DWORD ZetaLoader()
     return TRUE;
 }
 
-BOOL WINAPI DllMain(__attribute__((unused)) HINSTANCE hInstDll,
+BOOL WINAPI DllMain(HINSTANCE hInstDll,
                     DWORD fwdreason,
-                    __attribute__((unused)) LPVOID lpReserved)
+                    __attribute__((unused)) LPVOID lpvReserved)
 {
     // The dynamic link library is intitalized via the Zeta() function in a thread to prevent the target application from getting locked up.
     if (fwdreason == DLL_PROCESS_ATTACH)
+    {
+        DisableThreadLibraryCalls(hInstDll);
         CreateThread(0, 0, ZetaLoader, NULL, 0, 0);
+    };
     return TRUE;
 }
