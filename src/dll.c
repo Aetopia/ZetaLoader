@@ -23,59 +23,53 @@ WNDPROC _WindowProc;
 void SetDM(DEVMODE *dm)
 {
     if (!!wnd.dm.dmFields)
-    {
         ChangeDisplaySettingsEx(wnd.mi.szDevice, dm, NULL, CDS_FULLSCREEN, NULL);
-    };
 }
-void BorderlessWindow()
+
+LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
-    SetWindowLongPtr(wnd.hwnd, GWL_STYLE, WS_VISIBLE | WS_POPUP);
-    SetWindowLongPtr(wnd.hwnd, GWL_EXSTYLE, WS_EX_APPWINDOW | WS_EX_TOPMOST);
-    SetWindowPos(wnd.hwnd, 0,
-                 wnd.mi.rcMonitor.left, wnd.mi.rcMonitor.top,
-                 wnd.cx, wnd.cy, SWP_NOSENDCHANGING);
-};
-LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-    if (msg == WM_DESTROY || msg == WM_CLOSE || msg == WM_QUIT)
+    if (msg == WM_DESTROY ||
+        msg == WM_CLOSE ||
+        msg == WM_QUIT)
     {
         ShowWindow(wnd.hwnd, SW_HIDE);
         SetDM(0);
         wnd.dm.dmFields = 0;
     }
-    else if ((msg == WM_ACTIVATE || msg == WM_ACTIVATEAPP) && wnd.cds)
+    else if (msg == WM_ACTIVATE ||
+             msg == WM_ACTIVATEAPP)
     {
-        if (wParam == WA_ACTIVE || wParam == WA_CLICKACTIVE || wParam == TRUE)
+        if (wparam == WA_ACTIVE ||
+            wparam == WA_CLICKACTIVE ||
+            wparam == TRUE)
         {
             SwitchToThisWindow(wnd.hwnd, TRUE);
             SetDM(&wnd.dm);
         }
-        else if (wParam == WA_INACTIVE || wParam == FALSE)
+        else if (wparam == WA_INACTIVE ||
+                 wparam == FALSE)
         {
             ShowWindow(wnd.hwnd, SW_MINIMIZE);
             SetDM(0);
         };
-    }
-    else if (msg == WM_WINDOWPOSCHANGING)
-        BorderlessWindow();
-    return CallWindowProc(_WindowProc, hwnd, msg, wParam, lParam);
+    };
+    return CallWindowProc(_WindowProc, hwnd, msg, wparam, lparam);
 }
 
-DWORD IsWindowThreadAlive(LPVOID lParameter)
+DWORD IsWindowThreadAlive(LPVOID lparam)
 {
-    WaitForSingleObject((HANDLE)lParameter, INFINITE);
+    WaitForSingleObject((HANDLE)lparam, INFINITE);
     SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, (PVOID)&wnd.tm, SPIF_UPDATEINIFILE);
     SetDM(0);
     return TRUE;
 }
 
-BOOL CALLBACK EnumWindowsProc(HWND hwnd, __attribute__((unused)) LPARAM lParam)
+BOOL CALLBACK EnumWindowsProc(HWND hwnd, __attribute__((unused)) LPARAM lparam)
 {
     DWORD pid, tid = GetWindowThreadProcessId(hwnd, &pid);
     HANDLE hthread;
     if (wnd.pid != pid)
         return TRUE;
-
     wnd.hwnd = hwnd;
     hthread = OpenThread(THREAD_ALL_ACCESS, FALSE, tid);
     CreateThread(0, 0, IsWindowThreadAlive, (LPVOID)hthread, 0, 0);
@@ -166,7 +160,11 @@ DWORD ZetaLoader()
     scale = (float)dpi / 96.0;
     wnd.cx = wnd.dm.dmPelsWidth * scale;
     wnd.cy = wnd.dm.dmPelsHeight * scale;
-    BorderlessWindow();
+    SetWindowLongPtr(wnd.hwnd, GWL_STYLE, WS_VISIBLE | WS_POPUP);
+    SetWindowLongPtr(wnd.hwnd, GWL_EXSTYLE, WS_EX_APPWINDOW | WS_EX_TOPMOST);
+    SetWindowPos(wnd.hwnd, 0,
+                 wnd.mi.rcMonitor.left, wnd.mi.rcMonitor.top,
+                 wnd.cx, wnd.cy, 0);
     SendMessage(wnd.hwnd, WM_ACTIVATE, WA_ACTIVE, 0);
 
     if (strcmp(pri, wnd.mi.szDevice) != 0)
