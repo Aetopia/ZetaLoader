@@ -5,19 +5,12 @@ A utility to fix technical issues with Halo Infinite on PC.
 ## Features
 
 1. Highest Priority Window Thread  
-    **This fixes screen tearing & input issues when an external framelimiter is being used.**
-              
-    When using an external framelimiter, the game has intense screen tearing.        
-    The reason why this happens might be due:
-    1. To the external framelimiter doesn't framepace correctly when the FPS is capped.
-    2. The Window Thread goes to sleep for some reason when a external framelimiter is used and the Window Thread handles the `WM_INPUT` message.
-
-    **Note: This are only my assumptions!**           
+    **This fixes screen tearing & input issues when a driver based framerate limiter is being used.**            
+    When using an external framelimiter, the game has intense screen tearing.                
     Source: https://forums.guru3d.com/threads/msi-ab-rtss-development-news-thread.412822/page-161#post-5949434         
-
-    Setting the window thread priority to `THREAD_PRIORITY_HIGHEST` fixes this issue entirely.
+    Setting the window thread priority to `THREAD_PRIORITY_HIGHEST | THREAD_PRIORITY_TIME_CRITICAL` fixes this issue entirely.
+    You can verify if this works by using a lower thread priority is set by `SetThreadPriority` in the source code and using a driver based framerate limiter.
     > This fix was encountered when messing around with the window thread priority.
-    You can verify if this works by using a lower thread priority is set by `SetThreadPriority` in the source code.
 
 2. Borderless Fullscreen 
     ZetaLoader overrides Halo Infinite's borderless fullscreen/window style.            
