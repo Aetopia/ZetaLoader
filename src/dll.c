@@ -41,13 +41,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
     {
         if (wparam == WA_ACTIVE ||
             wparam == WA_CLICKACTIVE ||
-            wparam == TRUE)
+            wparam)
         {
             SwitchToThisWindow(wnd.hwnd, TRUE);
             SetDM(&wnd.dm);
         }
         else if (wparam == WA_INACTIVE ||
-                 wparam == FALSE)
+                 !wparam)
         {
             ShowWindow(wnd.hwnd, SW_MINIMIZE);
             SetDM(0);
