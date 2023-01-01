@@ -65,10 +65,7 @@ int main(__attribute__((unused)) int argc, char *argv[])
                        MAX_PATH,
                        NULL);
 #pragma GCC diagnostic ignored "-Wcast-function-type"
-    WaitForSingleObject(CreateRemoteThread(pi.hProcess, 0, 0,
-                                           (LPTHREAD_START_ROUTINE)LoadLibrary,
-                                           mem, 0, 0),
-                        INFINITE);
+    WaitForSingleObject(CreateRemoteThread(pi.hProcess, 0, 0, (LPTHREAD_START_ROUTINE)LoadLibrary, mem, 0, 0), INFINITE);
 #pragma GCC diagnostic pop
     VirtualFreeEx(pi.hProcess, mem, MAX_PATH, MEM_RELEASE);
     return 0;
