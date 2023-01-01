@@ -15,6 +15,7 @@ NTSYSAPI NTSTATUS NTAPI NtQueryTimerResolution(PULONG MinimumResolution,
 struct WINDOW
 {
     HWND hwnd;
+    DWORD tm;
     DEVMODE dm;
     MONITORINFOEX mi;
     BOOL cds;
@@ -41,7 +42,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
     {
         ShowWindow(wnd.hwnd, SW_HIDE);
         SetDM(0);
-        wnd.dm.dmFields = 0;
+        SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, (LPVOID)&wnd.tm, SPIF_UPDATEINIFILE);
     }
     else if (msg == WM_ACTIVATE ||
              msg == WM_ACTIVATEAPP)
@@ -105,6 +106,7 @@ DWORD ZetaLoader()
 
     // Makes sure that the SetForegroundWindow() or any similar functions work properly.
     AllowSetForegroundWindow(pid);
+    SystemParametersInfo(SPI_GETFOREGROUNDLOCKTIMEOUT, 0, (LPVOID)&wnd.tm, 0);
     SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, 0, SPIF_UPDATEINIFILE);
 
     // Get the HWND of process' window.
