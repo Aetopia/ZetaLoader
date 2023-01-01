@@ -1,8 +1,6 @@
 #include <windows.h>
 #include <libgen.h>
 
-PROCESS_INFORMATION pi;
-
 void WinEventProc(
     HWINEVENTHOOK hWinEventHook,
     DWORD event,
@@ -21,9 +19,9 @@ void WinEventProc(
     PostQuitMessage(0);
 }
 
-DWORD IsProcessAlive()
+DWORD IsProcessAlive(LPVOID lparam)
 {
-    WaitForSingleObject(pi.hProcess, INFINITE);
+    WaitForSingleObject((HANDLE)lparam, INFINITE);
     ExitProcess(0);
     return TRUE;
 }
@@ -34,6 +32,7 @@ int main(__attribute__((unused)) int argc, char *argv[])
     LPVOID mem;
     char dll[MAX_PATH];
     STARTUPINFO si = {.cb = sizeof(si)};
+    PROCESS_INFORMATION pi;
     MSG msg;
 
     GetFullPathName("ZetaLoader.dll", MAX_PATH, dll, NULL);
@@ -42,7 +41,8 @@ int main(__attribute__((unused)) int argc, char *argv[])
         return 0;
     if (!CreateProcess("HaloInfinite.exe", NULL, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
         return 0;
-    CreateThread(0, 0, IsProcessAlive, 0, 0, 0);
+    CreateThread(0, 0, IsProcessAlive, (LPVOID)pi.hProcess, 0, 0);
+
     SetWinEventHook(EVENT_OBJECT_CREATE,
                     EVENT_OBJECT_CREATE, 0,
                     WinEventProc,
