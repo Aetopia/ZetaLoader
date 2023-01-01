@@ -174,7 +174,8 @@ DWORD ZetaLoader()
     SetWindowLongPtr(wnd.hwnd, GWL_STYLE, WS_VISIBLE | WS_POPUP);
     SetWindowLongPtr(wnd.hwnd, GWL_EXSTYLE, WS_EX_APPWINDOW);
     SetWindowPos(wnd.hwnd, 0,
-                 wnd.mi.rcMonitor.left, wnd.mi.rcMonitor.top,
+                 wnd.mi.rcMonitor.left,
+                 wnd.mi.rcMonitor.top,
                  wnd.cx, wnd.cy, 0);
     SendMessage(wnd.hwnd, WM_ACTIVATE, WA_ACTIVE, 0);
 
