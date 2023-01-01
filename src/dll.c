@@ -27,6 +27,15 @@ struct WINDOW wnd = {.mi.cbSize = sizeof(wnd.mi),
                      .cds = TRUE};
 WNDPROC _WindowProc;
 
+static void DwmWndAttributes(HWND hwnd)
+{
+    static BOOL vAttribute = TRUE, *pvAttribute = &vAttribute;
+    DwmSetWindowAttribute(hwnd, DWMWA_TRANSITIONS_FORCEDISABLED, pvAttribute, 4);
+    DwmSetWindowAttribute(hwnd, DWMWA_DISALLOW_PEEK, pvAttribute, 4);
+    DwmSetWindowAttribute(hwnd, DWMWA_EXCLUDED_FROM_PEEK, pvAttribute, 4);
+    DwmSetWindowAttribute(hwnd, DWMWA_FORCE_ICONIC_REPRESENTATION, pvAttribute, 4);
+}
+
 // A wrapper for ChangeDisplaySettingsEx.
 void SetDM(DEVMODE *dm)
 {
@@ -73,6 +82,7 @@ BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lparam)
     if ((DWORD)lparam != pid)
         return TRUE;
     wnd.hwnd = hwnd;
+    DwmWndAttributes(hwnd);
     hthread = OpenThread(THREAD_ALL_ACCESS, FALSE, tid);
     SetThreadPriority(hthread, THREAD_PRIORITY_TIME_CRITICAL);
     SetThreadPriorityBoost(hthread, FALSE);
