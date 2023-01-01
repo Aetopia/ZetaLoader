@@ -4,7 +4,7 @@ A utility to fix technical issues with Halo Infinite on PC.
 
 ## Fixes
 
-1. Highest Priority Window Thread  
+1. Window Thread  
     **This fixes screen tearing & input issues when an external framelimiter is being used.**      
     Setting the window thread priority to `THREAD_PRIORITY_HIGHEST | THREAD_PRIORITY_TIME_CRITICAL` fixes this issue entirely.
     You can verify if this works by using a lower thread priority is set by `SetThreadPriority` in the source code.
