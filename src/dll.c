@@ -50,13 +50,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
             wparam == WA_CLICKACTIVE ||
             wparam)
         {
-            SwitchToThisWindow(wnd.hwnd, TRUE);
+            if (IsIconic(wnd.hwnd))
+                SwitchToThisWindow(wnd.hwnd, TRUE);
             SetDM(&wnd.dm);
         }
         else if (wparam == WA_INACTIVE ||
                  !wparam)
         {
-            ShowWindow(wnd.hwnd, SW_MINIMIZE);
+            if (!IsIconic(wnd.hwnd))
+                ShowWindow(wnd.hwnd, SW_MINIMIZE);
             SetDM(0);
         };
     };
@@ -74,7 +76,7 @@ BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lparam)
     SetThreadPriority(hthread, THREAD_PRIORITY_TIME_CRITICAL);
     SetThreadPriorityBoost(hthread, FALSE);
     CloseHandle(hthread);
-    while (!IsWindowVisible(wnd.hwnd))
+    while (!IsWindowVisible(hwnd))
         Sleep(1);
     return FALSE;
 }

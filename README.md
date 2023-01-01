@@ -2,7 +2,7 @@
 
 A utility to fix technical issues with Halo Infinite on PC.
 
-## Features
+## Fixes
 
 1. Highest Priority Window Thread  
     **This fixes screen tearing & input issues when an external framelimiter is being used.**      
@@ -16,7 +16,7 @@ A utility to fix technical issues with Halo Infinite on PC.
     Halo Infinite uses the following styles `WS_VISIBLE | WS_OVERLAPPED | WS_CLIPSIBLINGS` when going borderless fullscreen but this causes an issue where any resolution below `1440x810` will make the game window to extend its client area beyond the resolution itself.           
     This is simply fixed by using the following styles:      
     - Window Styles: `WS_VISIBLE | WS_POPUP` 
-    - Extended Window Styles `WS_EX_APPWINDOW | WS_EX_TOPMOST`  
+    - Extended Window Styles `WS_EX_APPWINDOW`  
     
     > You can use something like [Borderless Gaming](https://github.com/Codeusa/Borderless-Gaming) to fix this issue.
     

@@ -6,7 +6,7 @@ PROCESS_INFORMATION pi;
 void WinEventProc(
     HWINEVENTHOOK hWinEventHook,
     DWORD event,
-    HWND hwnd,
+    __attribute__((unused)) HWND hwnd,
     LONG idObject,
     LONG idChild,
     __attribute__((unused)) DWORD idEventThread,
@@ -16,10 +16,6 @@ void WinEventProc(
         return;
     if (idObject != OBJID_WINDOW ||
         idChild != CHILDID_SELF)
-        return;
-    DWORD pid;
-    GetWindowThreadProcessId(hwnd, &pid);
-    if (pid != pi.dwProcessId)
         return;
     UnhookWinEvent(hWinEventHook);
     PostQuitMessage(0);
@@ -70,7 +66,8 @@ int main(__attribute__((unused)) int argc, char *argv[])
                        NULL);
 #pragma GCC diagnostic ignored "-Wcast-function-type"
     WaitForSingleObject(CreateRemoteThread(pi.hProcess, 0, 0,
-                                           (LPTHREAD_START_ROUTINE)LoadLibrary, mem, 0, 0),
+                                           (LPTHREAD_START_ROUTINE)LoadLibrary,
+                                           mem, 0, 0),
                         INFINITE);
 #pragma GCC diagnostic pop
     VirtualFreeEx(pi.hProcess, mem, MAX_PATH, MEM_RELEASE);
