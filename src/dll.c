@@ -28,7 +28,7 @@ struct WINDOW wnd = {.mi.cbSize = sizeof(wnd.mi),
 WNDPROC _WindowProc;
 
 /*
-This function disables the following: 
+This function disables the following:
 1. Disable transition effects.
 2. Prevent window peeking.
 3. Disable live representation of window and force static bitmap.
@@ -49,16 +49,16 @@ static void SetDM(DEVMODE *dm)
         ChangeDisplaySettingsEx(wnd.mi.szDevice, dm, NULL, CDS_FULLSCREEN, NULL);
 }
 
-// This function is used to intercept any incoming window messages
+// This function is used to intercept any incoming window messages.
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
     if (msg == WM_DESTROY ||
         msg == WM_CLOSE ||
         msg == WM_QUIT)
     {
+        SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, (LPVOID)&wnd.tm, SPIF_UPDATEINIFILE);
         ShowWindow(wnd.hwnd, SW_HIDE);
         SetDM(0);
-        SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, (LPVOID)&wnd.tm, SPIF_UPDATEINIFILE);
     }
     else if (msg == WM_ACTIVATE ||
              msg == WM_ACTIVATEAPP)
