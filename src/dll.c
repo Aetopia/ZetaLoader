@@ -31,7 +31,7 @@ WNDPROC _WindowProc;
 This function disables the following:
 1. Disable transition effects.
 2. Prevent window peeking.
-3. Disable live representation of window and force static bitmap.
+3. Disable live representation of the window and force a static bitmap of the window.
 */
 static void DwmWndAttributes(HWND hwnd)
 {
