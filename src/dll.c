@@ -75,7 +75,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
             if (!IsIconic(wnd.hwnd))
                 ShowWindow(wnd.hwnd, SW_MINIMIZE);
             SetDM(0);
-            break;
         };
     };
     return CallWindowProc(_WindowProc, hwnd, msg, wparam, lparam);
