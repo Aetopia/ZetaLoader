@@ -185,6 +185,8 @@ DWORD ZetaLoader()
     */
     if (dm.dmPelsWidth == wnd.dm.dmPelsWidth && dm.dmPelsHeight == wnd.dm.dmPelsHeight)
         wnd.dm.dmFields = 0;
+    while (wnd.hwnd != GetForegroundWindow())
+        Sleep(1);
     SendMessage(wnd.hwnd, WM_ACTIVATE, WA_ACTIVE, 0);
     GetDpiForMonitor(hmon, 0, &dpi, &dpi);
     scale = (float)dpi / 96.0;
@@ -196,7 +198,6 @@ DWORD ZetaLoader()
                  wnd.mi.rcMonitor.left,
                  wnd.mi.rcMonitor.top,
                  wnd.cx, wnd.cy, 0);
-    SendMessage(wnd.hwnd, WM_ACTIVATE, WA_ACTIVE, 0);
 
     if (strcmp(pri, wnd.mi.szDevice) != 0)
         wnd.cds = FALSE;
