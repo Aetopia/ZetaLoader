@@ -27,6 +27,12 @@ struct WINDOW wnd = {.mi.cbSize = sizeof(wnd.mi),
                      .cds = TRUE};
 WNDPROC _WindowProc;
 
+/*
+This function disables the following: 
+1. Disable transition effects.
+2. Prevent window peeking.
+3. Disable live representation of window and force static bitmap.
+*/
 static void DwmWndAttributes(HWND hwnd)
 {
     static BOOL vAttribute = TRUE, *pvAttribute = &vAttribute;
@@ -37,12 +43,13 @@ static void DwmWndAttributes(HWND hwnd)
 }
 
 // A wrapper for ChangeDisplaySettingsEx.
-void SetDM(DEVMODE *dm)
+static void SetDM(DEVMODE *dm)
 {
     if (!!wnd.dm.dmFields)
         ChangeDisplaySettingsEx(wnd.mi.szDevice, dm, NULL, CDS_FULLSCREEN, NULL);
 }
 
+// This function is used to intercept any incoming window messages
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
     if (msg == WM_DESTROY ||
