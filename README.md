@@ -64,15 +64,18 @@ A utility to fix technical issues with Halo Infinite on PC.
     1. The game window automatically maximizes when it starts up in windowed mode.
     2. Automatically minimizes when the game window is not in the foreground.
     3. `ZetaLoader.txt` is generated in the game's installation directory.
-
 7.  To configure the resolution Halo Infinite uses, modify `ZetaLoader.txt`.
     To launch Halo Infinite at `1280 x 720`:
     ```
     1280
     720
     ```
-    Also Ensure **Borderless Fullscreen is enabled** & set this as the contents of `ZetaLoader.txt`.
+    Also ensure **Borderless Fullscreen is enabled** & set this as the contents of `ZetaLoader.txt`.
      
+# Building:
+1. Install `GCC`
+2. Run `build.bat`.
+
 ## Limitations
 
 **Here are a few things you should note about ZetaLoader.**
