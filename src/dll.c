@@ -52,31 +52,30 @@ static void SetDM(DEVMODE *dm)
 // This function is used to intercept any incoming window messages.
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
-    if (msg == WM_DESTROY ||
-        msg == WM_CLOSE ||
-        msg == WM_QUIT)
+    switch (msg)
     {
+    case WM_DESTROY:
+    case WM_CLOSE:
+    case WM_QUIT:
         SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, (LPVOID)&wnd.tm, SPIF_UPDATEINIFILE);
         ShowWindow(wnd.hwnd, SW_HIDE);
         SetDM(0);
-    }
-    else if (msg == WM_ACTIVATE ||
-             msg == WM_ACTIVATEAPP)
-    {
-        if (wparam == WA_ACTIVE ||
-            wparam == WA_CLICKACTIVE ||
-            wparam)
+        break;
+    case WM_ACTIVATE:
+    case WM_ACTIVATEAPP:
+        switch (wparam)
         {
+        case WA_ACTIVE:
+        case WA_CLICKACTIVE:
             if (IsIconic(wnd.hwnd))
                 SwitchToThisWindow(wnd.hwnd, TRUE);
             SetDM(&wnd.dm);
-        }
-        else if (wparam == WA_INACTIVE ||
-                 !wparam)
-        {
+            break;
+        case WA_INACTIVE:
             if (!IsIconic(wnd.hwnd))
                 ShowWindow(wnd.hwnd, SW_MINIMIZE);
             SetDM(0);
+            break;
         };
     };
     return CallWindowProc(_WindowProc, hwnd, msg, wparam, lparam);
