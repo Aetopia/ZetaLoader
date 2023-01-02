@@ -41,8 +41,10 @@ int main(__attribute__((unused)) int argc, char *argv[])
         return 0;
     if (!CreateProcess("HaloInfinite.exe", NULL, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
         return 0;
+    // This thread will ensure incase Halo Infinite crashes before the dynamic link library is injected, ZetaLoader will terminate itself.
     CreateThread(0, 0, IsProcessAlive, (LPVOID)pi.hProcess, 0, 0);
 
+    // In order to ensure the dynamic link library injects with a 100% success rate, listen for Window creation events and then inject.
     SetWinEventHook(EVENT_OBJECT_CREATE,
                     EVENT_OBJECT_CREATE, 0,
                     WinEventProc,
@@ -55,7 +57,7 @@ int main(__attribute__((unused)) int argc, char *argv[])
         DispatchMessage(&msg);
     };
 
-    // Inject Zeta.dll into Halo Infinite.
+    // Inject the dynamic link library into Halo Infinite.
     mem = VirtualAllocEx(pi.hProcess,
                          NULL, MAX_PATH,
                          MEM_COMMIT | MEM_RESERVE,
