@@ -53,7 +53,7 @@ A utility to fix technical issues with Halo Infinite on PC.
 ## Results
 > Specifications:     
     1. i7-10700K @ 4.8 GHz HT Disabled @ 1.15V   
-    2. GTX 1650 @ 2055 ~ 2070 MHz (135 MHz+ Core) & 7200 MHz (1200 MHz+ RAM) OCs   
+    2. GTX 1650 @ 2055 ~ 2070 MHz (135 MHz+ Core) & 7200 MHz (1300 MHz+ RAM) OCs   
     3. 2933 MHz RAM (**But its mismatched!**)     
 
 Result Video: https://www.youtube.com/watch?v=o9u0oAyv3dc
