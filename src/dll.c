@@ -15,17 +15,14 @@ NTSYSAPI NTSTATUS NTAPI NtQueryTimerResolution(PULONG MinimumResolution,
 struct WINDOW
 {
     HWND hwnd;
-    DWORD tm;
     DEVMODE dm;
-    MONITORINFOEX mi;
+    char mon[CCHDEVICENAME];
     BOOL cds;
-    int cx, cy;
+    WNDPROC WindowProc;
 };
-struct WINDOW wnd = {.mi.cbSize = sizeof(wnd.mi),
-                     .dm.dmSize = sizeof(wnd.dm),
+struct WINDOW wnd = {.dm.dmSize = sizeof(wnd.dm),
                      .dm.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT,
                      .cds = TRUE};
-WNDPROC _WindowProc;
 
 /*
 This function disables the following:
@@ -46,7 +43,7 @@ static void DwmWndAttributes(HWND hwnd)
 static void SetDM(DEVMODE *dm)
 {
     if (!!wnd.dm.dmFields)
-        ChangeDisplaySettingsEx(wnd.mi.szDevice, dm, NULL, CDS_FULLSCREEN, NULL);
+        ChangeDisplaySettingsEx(wnd.mon, dm, NULL, CDS_FULLSCREEN, NULL);
 }
 
 // This function is used to intercept any incoming window messages.
@@ -57,7 +54,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
     case WM_DESTROY:
     case WM_CLOSE:
     case WM_QUIT:
-        SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, (LPVOID)&wnd.tm, SPIF_UPDATEINIFILE);
         ShowWindow(wnd.hwnd, SW_HIDE);
         SetDM(0);
         break;
@@ -77,7 +73,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
             SetDM(0);
         };
     };
-    return CallWindowProc(_WindowProc, hwnd, msg, wparam, lparam);
+    return CallWindowProc(wnd.WindowProc, hwnd, msg, wparam, lparam);
 }
 
 BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lparam)
@@ -102,6 +98,7 @@ DWORD ZetaLoader()
     FILE *f;
     int sz;
     char *c, pri[CCHDEVICENAME];
+    MONITORINFOEX mi = {.cbSize = sizeof(mi)};
     DEVMODE dm;
     HMONITOR hmon;
     UINT dpi;
@@ -118,24 +115,21 @@ DWORD ZetaLoader()
     NtQueryTimerResolution(&min, &max, &cur);
     NtSetTimerResolution(max, TRUE, &cur);
     DwmEnableMMCSS(TRUE);
-
-    // Makes sure that the SetForegroundWindow() or any similar functions work properly.
     AllowSetForegroundWindow(pid);
-    SystemParametersInfo(SPI_GETFOREGROUNDLOCKTIMEOUT, 0, (LPVOID)&wnd.tm, 0);
-    SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, 0, SPIF_UPDATEINIFILE);
 
     // Get the HWND of process' window.
     while (EnumWindows(EnumWindowsProc, (LPARAM)pid))
         Sleep(1);
 
     // Get the primary monitor.
-    GetMonitorInfo(MonitorFromWindow(0, MONITORINFOF_PRIMARY), (MONITORINFO *)&wnd.mi);
-    strcpy(pri, wnd.mi.szDevice);
+    GetMonitorInfo(MonitorFromWindow(0, MONITORINFOF_PRIMARY), (MONITORINFO *)&mi);
+    strcpy(pri, mi.szDevice);
 
     // Setting up Custom Display Mode Support.
     hmon = MonitorFromWindow(wnd.hwnd, MONITOR_DEFAULTTONEAREST);
-    GetMonitorInfo(hmon, (MONITORINFO *)&wnd.mi);
-    EnumDisplaySettings(wnd.mi.szDevice, ENUM_CURRENT_SETTINGS, &dm);
+    GetMonitorInfo(hmon, (MONITORINFO *)&mi);
+    strcpy(wnd.mon, mi.szDevice);
+    EnumDisplaySettings(mi.szDevice, ENUM_CURRENT_SETTINGS, &dm);
 
     if (GetFileAttributes("ZetaLoader.txt") == INVALID_FILE_ATTRIBUTES)
     {
@@ -171,7 +165,7 @@ DWORD ZetaLoader()
         ShowWindow(wnd.hwnd, SW_MAXIMIZE);
         return TRUE;
     };
-    _WindowProc = (WNDPROC)GetWindowLongPtr(wnd.hwnd, GWLP_WNDPROC);
+    wnd.WindowProc = (WNDPROC)GetWindowLongPtr(wnd.hwnd, GWLP_WNDPROC);
     SetWindowLongPtr(wnd.hwnd, GWLP_WNDPROC, (LONG_PTR)&WindowProc);
 
     /*
@@ -181,23 +175,22 @@ DWORD ZetaLoader()
     4. Size the window.
     Reference: https://learn.microsoft.com/en-us/windows/win32/direct2d/how-to--size-a-window-properly-for-high-dpi-displays
     */
-    if (dm.dmPelsWidth == wnd.dm.dmPelsWidth && dm.dmPelsHeight == wnd.dm.dmPelsHeight)
+    if (dm.dmPelsWidth == wnd.dm.dmPelsWidth &&
+        dm.dmPelsHeight == wnd.dm.dmPelsHeight)
         wnd.dm.dmFields = 0;
     while (wnd.hwnd != GetForegroundWindow())
         Sleep(1);
     SendMessage(wnd.hwnd, WM_ACTIVATE, WA_ACTIVE, 0);
     GetDpiForMonitor(hmon, 0, &dpi, &dpi);
     scale = (float)dpi / 96.0;
-    wnd.cx = wnd.dm.dmPelsWidth * scale;
-    wnd.cy = wnd.dm.dmPelsHeight * scale;
     SetWindowLongPtr(wnd.hwnd, GWL_STYLE, WS_VISIBLE | WS_POPUP);
     SetWindowLongPtr(wnd.hwnd, GWL_EXSTYLE, WS_EX_APPWINDOW);
     SetWindowPos(wnd.hwnd, 0,
-                 wnd.mi.rcMonitor.left,
-                 wnd.mi.rcMonitor.top,
-                 wnd.cx, wnd.cy, 0);
-
-    if (strcmp(pri, wnd.mi.szDevice) != 0)
+                 mi.rcMonitor.left,
+                 mi.rcMonitor.top,
+                 wnd.dm.dmPelsWidth * scale,
+                 wnd.dm.dmPelsHeight * scale, 0);
+    if (strcmp(pri, mi.szDevice) != 0)
         wnd.cds = FALSE;
     return TRUE;
 }
