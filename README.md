@@ -28,7 +28,7 @@ A utility to fix technical issues with Halo Infinite on PC.
     
     > You can use something like [Borderless Gaming](https://github.com/Codeusa/Borderless-Gaming) to fix this issue.
 ## Features   
-1. User Defined Display Resolution/Mode Support Restoration
+1. User Defined Display Resolution/Mode Support
 
     > **Available with Borderless fullscreen only at game startup.**
     This feature restores the game's ability to run at any user defined resolution. Here is what this feature emulates/restores:
@@ -38,7 +38,7 @@ A utility to fix technical issues with Halo Infinite on PC.
     > Sometimes the taskbar can appear on top of Halo Infinite's window.        
     To fix this simply Alt + Tab back to the game to resolve the issue.
 
-2. Timer Resolution
+2. 0.5 Timer Resolution
 
     Using the hidden `NtSetTimerResolution` function, Halo Infinite can use a maximum timer resolution of 0.5 ms.
     >  Halo Infinite uses 1 ms by default, we can force 0.5 ms using NtSetTimerResolution.        
@@ -79,7 +79,11 @@ Result Video: https://www.youtube.com/watch?v=o9u0oAyv3dc
     720
     ```
     Also ensure **Borderless Fullscreen is enabled** & set this as the contents of `ZetaLoader.txt`.
-     
+
+## Uninstallation
+1. Set Halo Infinite's launch options to blank.
+2. Delete `ZetaLoader.exe`, `ZetaLoader.dll`, `ZetaLoader.txt` from Halo Infinite's installation directory.
+
 # Building:
 1. Install `GCC`. 
     > **Make sure it is in the system path!**

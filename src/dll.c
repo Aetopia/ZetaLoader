@@ -76,6 +76,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
     return CallWindowProc(wnd.WindowProc, hwnd, msg, wparam, lparam);
 }
 
+/*
+1. Enumerate all windows and find the one that belongs to the process.
+2. Set the window thread priority to the time critical.
+3. Enable Thread Priority Boost.
+4. Wait for the window to be visible.
+*/
 BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lparam)
 {
     DWORD pid, tid = GetWindowThreadProcessId(hwnd, &pid);
