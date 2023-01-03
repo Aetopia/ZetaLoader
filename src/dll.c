@@ -117,6 +117,9 @@ DWORD ZetaLoader()
     Halo Infinite uses 1 ms by default, we can force 0.5 ms using NtSetTimerResolution.
     Starting with Windows 2004, setting the timer resolution is no longer global but on a per process basis.
     Reference: https://learn.microsoft.com/en-us/windows/win32/api/timeapi/nf-timeapi-timebeginperiod#remarks
+
+    Making DWM opt in for MMCSS when calling process is alive improves performance.
+    Reference: https://github.com/djdallmann/GamingPCSetup/blob/master/CONTENT/RESEARCH/WINSERVICES/README.md#multimedia-class-scheduler-service-mmcss
     */
     NtQueryTimerResolution(&min, &max, &cur);
     NtSetTimerResolution(max, TRUE, &cur);
