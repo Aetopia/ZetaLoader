@@ -47,7 +47,7 @@ static void SetDM(DEVMODE *dm)
 }
 
 // This function is used to intercept any incoming window messages.
-LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
+LRESULT WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
     switch (msg)
     {
@@ -82,7 +82,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 3. Enable Thread Priority Boost.
 4. Wait for the window to be visible.
 */
-BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lparam)
+BOOL EnumWindowsProc(HWND hwnd, LPARAM lparam)
 {
     DWORD pid, tid = GetWindowThreadProcessId(hwnd, &pid);
     HANDLE hthread;
