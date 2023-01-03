@@ -50,6 +50,14 @@ A utility to fix technical issues with Halo Infinite on PC.
     Using the function `DwmEnableMMCSS` makes the calling process opt in for multimedia class schedule service scheduling which boosts performance in non-fullscreen applications.  
     [More information can be found here](https://github.com/djdallmann/GamingPCSetup/blob/master/CONTENT/RESEARCH/WINSERVICES/README.md#multimedia-class-scheduler-service-mmcss).
 
+## Results
+    > Specifications: 
+    1. i7-10700K @ 4.8 GHz HT Disabled @ 1.15V   
+    2. GTX 1650 @ 2055 ~ 2070 MHz (135 MHz+ Core) & 7200 MHz (1200 MHz+ RAM) OCs 
+    3. 2933 MHz RAM (**But its mismatched!**)     
+    
+    Result Video: https://www.youtube.com/watch?v=o9u0oAyv3dc
+
 ## Installation:
 1. Download ZetaLoader from [GitHub Releases](https://github.com/Aetopia/ZetaLoader).
 2. Browse Halo Infinite's local files & unzip `ZetaLoader.zip` in the game's installation directory.
@@ -73,7 +81,8 @@ A utility to fix technical issues with Halo Infinite on PC.
     Also ensure **Borderless Fullscreen is enabled** & set this as the contents of `ZetaLoader.txt`.
      
 # Building:
-1. Install `GCC`
+1. Install `GCC`. 
+    > **Make sure it is in the system path!**
 2. Run `build.bat`.
 
 ## Limitations
