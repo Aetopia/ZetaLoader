@@ -70,8 +70,8 @@ Result Video: https://www.youtube.com/watch?v=o9u0oAyv3dc
 5. Launch the game through or execute `ZetaLoader.exe`.
 6. If the following happens, then ZetaLoader has been successfully installed:
     1. The game window automatically maximizes when it starts up in windowed mode.
-    2. Automatically minimizes when the game window is not in the foreground.
-    3. `ZetaLoader.txt` is generated in the game's installation directory.
+    2. `ZetaLoader.txt` is generated in the game's installation directory.
+    3. Display resolution swaps when the game window is the foreground window.
 7.  To configure the resolution Halo Infinite uses, modify `ZetaLoader.txt`.
     To launch Halo Infinite at `1280 x 720`:
     ```
