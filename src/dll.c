@@ -48,7 +48,8 @@ static void SetDM(DEVMODE *dm)
 }
 
 // This function is uses window styles that fix Halo Infinite's borderless fullscreen..
-static void BorderlessFullscreen(){
+static void BorderlessFullscreen()
+{
     SetWindowLongPtr(dll.hwnd, GWL_STYLE, WS_VISIBLE | WS_POPUP);
     SetWindowLongPtr(dll.hwnd, GWL_EXSTYLE, WS_EX_APPWINDOW);
     SetWindowPos(dll.hwnd, 0, dll.x, dll.y, dll.cx, dll.cy, 0);
@@ -190,14 +191,13 @@ DWORD ZetaLoader()
         ShowWindow(dll.hwnd, SW_MAXIMIZE);
         return TRUE;
     };
-    dll.WindowProc = (WNDPROC)GetWindowLongPtr(dll.hwnd, GWLP_WNDPROC);
-    SetWindowLongPtr(dll.hwnd, GWLP_WNDPROC, (LONG_PTR)&WindowProc);
 
     /*
     1. Check if the native and specified display mode/resolution are the same, if yes then don't allow for display mode changing.
     2. Scale window size according to DPI of the current resolution.
     3. Override the Borderless Window/Fullscreen style set by the program.
-    4. Size the window.
+    4. Size and position the window.
+    5. Intercept the game's window procedure.
     Reference: https://learn.microsoft.com/en-us/windows/win32/direct2d/how-to--size-a-window-properly-for-high-dpi-displays
     */
     if (dm.dmPelsWidth == dll.dm.dmPelsWidth &&
@@ -211,6 +211,8 @@ DWORD ZetaLoader()
     dll.cx = dll.dm.dmPelsWidth * scale;
     dll.cy = dll.dm.dmPelsHeight * scale;
     BorderlessFullscreen();
+    dll.WindowProc = (WNDPROC)GetWindowLongPtr(dll.hwnd, GWLP_WNDPROC);
+    SetWindowLongPtr(dll.hwnd, GWLP_WNDPROC, (LONG_PTR)&WindowProc);
 
     if (strcmp(pri, mi.szDevice) != 0)
         dll.cds = FALSE;
