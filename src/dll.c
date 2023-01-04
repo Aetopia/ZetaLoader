@@ -110,8 +110,9 @@ BOOL EnumWindowsProc(HWND hwnd, LPARAM lparam)
     SetThreadPriority(hthread, THREAD_PRIORITY_TIME_CRITICAL);
     SetThreadPriorityBoost(hthread, FALSE);
     CloseHandle(hthread);
-    while (!IsWindowVisible(hwnd) &&
-           hwnd != GetForegroundWindow())
+    while (!IsWindowVisible(hwnd))
+        Sleep(1);
+    while (hwnd != GetForegroundWindow())
         SwitchToThisWindow(dll.hwnd, TRUE);
     return FALSE;
 }
