@@ -111,7 +111,7 @@ BOOL EnumWindowsProc(HWND hwnd, LPARAM lparam)
     SetThreadPriorityBoost(hthread, FALSE);
     CloseHandle(hthread);
     while (!IsWindowVisible(hwnd))
-        Sleep(1);
+        SwitchToThisWindow(dll.hwnd, TRUE);
     return FALSE;
 }
 
@@ -204,8 +204,6 @@ DWORD ZetaLoader()
     if (dm.dmPelsWidth == dll.dm.dmPelsWidth &&
         dm.dmPelsHeight == dll.dm.dmPelsHeight)
         dll.dm.dmFields = 0;
-    while (dll.hwnd != GetForegroundWindow())
-        Sleep(1);
     SetDM(&dll.dm);
     GetDpiForMonitor(hmon, 0, &dpi, &dpi);
     scale = (float)dpi / 96.0;
