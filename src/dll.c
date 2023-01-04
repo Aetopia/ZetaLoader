@@ -11,18 +11,19 @@ NTSYSAPI NTSTATUS NTAPI NtQueryTimerResolution(PULONG MinimumResolution,
                                                PULONG MaximumResolution,
                                                PULONG CurrentResolution);
 
-// Structure relating to information of a process' window.
-struct WINDOW
+// Global Structure, used to store all the variables.
+struct DLL
 {
     HWND hwnd;
     DEVMODE dm;
     char mon[CCHDEVICENAME];
+    int x, y, cx, cy;
     BOOL cds;
     WNDPROC WindowProc;
 };
-struct WINDOW wnd = {.dm.dmSize = sizeof(wnd.dm),
-                     .dm.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT,
-                     .cds = TRUE};
+struct DLL dll = {.dm.dmSize = sizeof(dll.dm),
+                  .dm.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT,
+                  .cds = TRUE};
 
 /*
 This function disables the following:
@@ -42,8 +43,15 @@ static void DwmWndAttributes(HWND hwnd)
 // A wrapper for ChangeDisplaySettingsEx.
 static void SetDM(DEVMODE *dm)
 {
-    if (!!wnd.dm.dmFields)
-        ChangeDisplaySettingsEx(wnd.mon, dm, NULL, CDS_FULLSCREEN, NULL);
+    if (!!dll.dm.dmFields)
+        ChangeDisplaySettingsEx(dll.mon, dm, NULL, CDS_FULLSCREEN, NULL);
+}
+
+// This function is uses window styles that fix Halo Infinite's borderless fullscreen..
+static void BorderlessFullscreen(){
+    SetWindowLongPtr(dll.hwnd, GWL_STYLE, WS_VISIBLE | WS_POPUP);
+    SetWindowLongPtr(dll.hwnd, GWL_EXSTYLE, WS_EX_APPWINDOW);
+    SetWindowPos(dll.hwnd, 0, dll.x, dll.y, dll.cx, dll.cy, 0);
 }
 
 // This function is used to intercept any incoming window messages.
@@ -54,28 +62,32 @@ LRESULT WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
     case WM_DESTROY:
     case WM_CLOSE:
     case WM_QUIT:
-        ShowWindow(wnd.hwnd, SW_HIDE);
+        ShowWindow(dll.hwnd, SW_HIDE);
         SetDM(0);
         break;
     case WM_ACTIVATE:
     case WM_ACTIVATEAPP:
-        if (!wnd.cds)
+        if (!dll.cds)
             break;
         switch (wparam)
         {
         case WA_ACTIVE:
         case WA_CLICKACTIVE:
-            if (IsIconic(wnd.hwnd))
-                SwitchToThisWindow(wnd.hwnd, TRUE);
-            SetDM(&wnd.dm);
+            if (IsIconic(dll.hwnd))
+                SwitchToThisWindow(dll.hwnd, TRUE);
+            SetDM(&dll.dm);
             break;
         case WA_INACTIVE:
-            if (!IsIconic(wnd.hwnd))
-                ShowWindow(wnd.hwnd, SW_MINIMIZE);
+            if (!IsIconic(dll.hwnd))
+                ShowWindow(dll.hwnd, SW_MINIMIZE);
             SetDM(0);
         };
+        break;
+    case WM_NCCALCSIZE:
+        BorderlessFullscreen();
+        msg = WM_NULL;
     };
-    return CallWindowProc(wnd.WindowProc, hwnd, msg, wparam, lparam);
+    return CallWindowProc(dll.WindowProc, hwnd, msg, wparam, lparam);
 }
 
 /*
@@ -90,7 +102,7 @@ BOOL EnumWindowsProc(HWND hwnd, LPARAM lparam)
     HANDLE hthread;
     if ((DWORD)lparam != pid)
         return TRUE;
-    wnd.hwnd = hwnd;
+    dll.hwnd = hwnd;
     DwmWndAttributes(hwnd);
     hthread = OpenThread(THREAD_ALL_ACCESS, FALSE, tid);
     SetThreadPriority(hthread, THREAD_PRIORITY_TIME_CRITICAL);
@@ -107,8 +119,8 @@ DWORD ZetaLoader()
     int sz;
     char *c, pri[CCHDEVICENAME];
     MONITORINFOEX mi = {.cbSize = sizeof(mi)};
-    DEVMODE dm;
     HMONITOR hmon;
+    DEVMODE dm;
     UINT dpi;
     float scale;
     ULONG min, max, cur;
@@ -137,9 +149,11 @@ DWORD ZetaLoader()
     strcpy(pri, mi.szDevice);
 
     // Setting up Custom Display Mode Support.
-    hmon = MonitorFromWindow(wnd.hwnd, MONITOR_DEFAULTTONEAREST);
+    hmon = MonitorFromWindow(dll.hwnd, MONITOR_DEFAULTTONEAREST);
     GetMonitorInfo(hmon, (MONITORINFO *)&mi);
-    strcpy(wnd.mon, mi.szDevice);
+    dll.x = mi.rcMonitor.left;
+    dll.y = mi.rcMonitor.top;
+    strcpy(dll.mon, mi.szDevice);
     EnumDisplaySettings(mi.szDevice, ENUM_CURRENT_SETTINGS, &dm);
 
     if (GetFileAttributes("ZetaLoader.txt") == INVALID_FILE_ATTRIBUTES)
@@ -147,8 +161,8 @@ DWORD ZetaLoader()
         f = fopen("ZetaLoader.txt", "w");
         fprintf(f, "%ld\n%ld", dm.dmPelsWidth, dm.dmPelsHeight);
         fclose(f);
-        wnd.dm.dmPelsWidth = dm.dmPelsWidth;
-        wnd.dm.dmPelsHeight = dm.dmPelsHeight;
+        dll.dm.dmPelsWidth = dm.dmPelsWidth;
+        dll.dm.dmPelsHeight = dm.dmPelsHeight;
     }
     else
     {
@@ -159,8 +173,8 @@ DWORD ZetaLoader()
         c = malloc(sz);
         fread(c, 1, sz, f);
         fclose(f);
-        wnd.dm.dmPelsWidth = atoi(strtok(c, "\n"));
-        wnd.dm.dmPelsHeight = atoi(strtok(NULL, "\n"));
+        dll.dm.dmPelsWidth = atoi(strtok(c, "\n"));
+        dll.dm.dmPelsHeight = atoi(strtok(NULL, "\n"));
         free(c);
     };
 
@@ -169,15 +183,15 @@ DWORD ZetaLoader()
     2. Only allow for display mode changing and borderless fullscreen fix, if the window style matches.
     If these requirements aren't fulfilled then simply maximize the window and terminate the further initilization.
     */
-    if (ChangeDisplaySettings(&wnd.dm, CDS_TEST) != DISP_CHANGE_SUCCESSFUL ||
-        (wnd.dm.dmPelsWidth || wnd.dm.dmPelsHeight) == 0 ||
-        GetWindowLongPtr(wnd.hwnd, GWL_STYLE) != (WS_VISIBLE | WS_OVERLAPPED | WS_CLIPSIBLINGS))
+    if (ChangeDisplaySettings(&dll.dm, CDS_TEST) != DISP_CHANGE_SUCCESSFUL ||
+        (dll.dm.dmPelsWidth || dll.dm.dmPelsHeight) == 0 ||
+        GetWindowLongPtr(dll.hwnd, GWL_STYLE) != (WS_VISIBLE | WS_OVERLAPPED | WS_CLIPSIBLINGS))
     {
-        ShowWindow(wnd.hwnd, SW_MAXIMIZE);
+        ShowWindow(dll.hwnd, SW_MAXIMIZE);
         return TRUE;
     };
-    wnd.WindowProc = (WNDPROC)GetWindowLongPtr(wnd.hwnd, GWLP_WNDPROC);
-    SetWindowLongPtr(wnd.hwnd, GWLP_WNDPROC, (LONG_PTR)&WindowProc);
+    dll.WindowProc = (WNDPROC)GetWindowLongPtr(dll.hwnd, GWLP_WNDPROC);
+    SetWindowLongPtr(dll.hwnd, GWLP_WNDPROC, (LONG_PTR)&WindowProc);
 
     /*
     1. Check if the native and specified display mode/resolution are the same, if yes then don't allow for display mode changing.
@@ -186,23 +200,20 @@ DWORD ZetaLoader()
     4. Size the window.
     Reference: https://learn.microsoft.com/en-us/windows/win32/direct2d/how-to--size-a-window-properly-for-high-dpi-displays
     */
-    if (dm.dmPelsWidth == wnd.dm.dmPelsWidth &&
-        dm.dmPelsHeight == wnd.dm.dmPelsHeight)
-        wnd.dm.dmFields = 0;
-    while (wnd.hwnd != GetForegroundWindow())
+    if (dm.dmPelsWidth == dll.dm.dmPelsWidth &&
+        dm.dmPelsHeight == dll.dm.dmPelsHeight)
+        dll.dm.dmFields = 0;
+    while (dll.hwnd != GetForegroundWindow())
         Sleep(1);
-    SendMessage(wnd.hwnd, WM_ACTIVATE, WA_ACTIVE, 0);
+    SetDM(&dll.dm);
     GetDpiForMonitor(hmon, 0, &dpi, &dpi);
     scale = (float)dpi / 96.0;
-    SetWindowLongPtr(wnd.hwnd, GWL_STYLE, WS_VISIBLE | WS_POPUP);
-    SetWindowLongPtr(wnd.hwnd, GWL_EXSTYLE, WS_EX_APPWINDOW);
-    SetWindowPos(wnd.hwnd, 0,
-                 mi.rcMonitor.left,
-                 mi.rcMonitor.top,
-                 wnd.dm.dmPelsWidth * scale,
-                 wnd.dm.dmPelsHeight * scale, 0);
+    dll.cx = dll.dm.dmPelsWidth * scale;
+    dll.cy = dll.dm.dmPelsHeight * scale;
+    BorderlessFullscreen();
+
     if (strcmp(pri, mi.szDevice) != 0)
-        wnd.cds = FALSE;
+        dll.cds = FALSE;
     return TRUE;
 }
 
