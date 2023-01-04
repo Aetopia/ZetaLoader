@@ -1,6 +1,5 @@
 #include <windows.h>
 #include <stdio.h>
-#include <shellscalingapi.h>
 #include <dwmapi.h>
 
 // Timer resolution related functions.
@@ -124,8 +123,6 @@ DWORD ZetaLoader()
     MONITORINFOEX mi = {.cbSize = sizeof(mi)};
     HMONITOR hmon;
     DEVMODE dm;
-    UINT dpi;
-    float scale;
     ULONG min, max, cur;
     DWORD pid = GetCurrentProcessId();
 
@@ -208,10 +205,9 @@ DWORD ZetaLoader()
         dm.dmPelsHeight == dll.dm.dmPelsHeight)
         dll.dm.dmFields = 0;
     SetDM(&dll.dm);
-    GetDpiForMonitor(hmon, 0, &dpi, &dpi);
-    scale = (float)dpi / 96.0;
-    dll.cx = dll.dm.dmPelsWidth * scale;
-    dll.cy = dll.dm.dmPelsHeight * scale;
+    GetMonitorInfo(hmon, (MONITORINFO *)&mi);
+    dll.cx = mi.rcMonitor.right - mi.rcMonitor.left;
+    dll.cy = mi.rcMonitor.bottom - mi.rcMonitor.top;
     BorderlessFullscreen();
     SetWindowLongPtr(dll.hwnd, GWLP_WNDPROC, (LONG_PTR)&WindowProc);
     do
