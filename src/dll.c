@@ -59,6 +59,8 @@ LRESULT WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
         break;
     case WM_ACTIVATE:
     case WM_ACTIVATEAPP:
+        if (!wnd.cds)
+            break;
         switch (wparam)
         {
         case WA_ACTIVE:
