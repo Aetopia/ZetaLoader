@@ -104,6 +104,7 @@ BOOL EnumWindowsProc(HWND hwnd, LPARAM lparam)
     if ((DWORD)lparam != pid)
         return TRUE;
     dll.hwnd = hwnd;
+    dll.WindowProc = (WNDPROC)GetWindowLongPtr(hwnd, GWLP_WNDPROC);
     DwmWndAttributes(hwnd);
     hthread = OpenThread(THREAD_ALL_ACCESS, FALSE, tid);
     SetThreadPriority(hthread, THREAD_PRIORITY_TIME_CRITICAL);
@@ -211,7 +212,6 @@ DWORD ZetaLoader()
     dll.cx = dll.dm.dmPelsWidth * scale;
     dll.cy = dll.dm.dmPelsHeight * scale;
     BorderlessFullscreen();
-    dll.WindowProc = (WNDPROC)GetWindowLongPtr(dll.hwnd, GWLP_WNDPROC);
     SetWindowLongPtr(dll.hwnd, GWLP_WNDPROC, (LONG_PTR)&WindowProc);
 
     if (strcmp(pri, mi.szDevice) != 0)
