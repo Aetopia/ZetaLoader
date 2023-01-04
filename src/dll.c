@@ -143,7 +143,7 @@ DWORD ZetaLoader()
     DwmEnableMMCSS(TRUE);
     AllowSetForegroundWindow(pid);
     SystemParametersInfo(SPI_GETFOREGROUNDLOCKTIMEOUT, 0, (LPVOID)&tm, 0);
-    SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, (LPVOID)0, SPIF_SENDCHANGE);
+    SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, 0, 0);
 
     // Get the HWND of process' window.
     while (EnumWindows(EnumWindowsProc, (LPARAM)pid))
@@ -217,7 +217,8 @@ DWORD ZetaLoader()
     do
         SwitchToThisWindow(dll.hwnd, TRUE);
     while (dll.hwnd != GetForegroundWindow());
-    SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, (LPVOID)&tm, SPIF_SENDCHANGE);
+    if (tm)
+        SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, (LPVOID)&tm, 0);
 
     if (strcmp(pri, mi.szDevice) != 0)
         dll.cds = FALSE;
