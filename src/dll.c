@@ -111,9 +111,10 @@ BOOL EnumWindowsProc(HWND hwnd, LPARAM lparam)
     SetThreadPriorityBoost(hthread, FALSE);
     CloseHandle(hthread);
     while (!IsWindowVisible(hwnd))
-        Sleep(1);
-    while (hwnd != GetForegroundWindow())
+        ;
+    do
         SwitchToThisWindow(dll.hwnd, TRUE);
+    while (hwnd != GetForegroundWindow());
     return FALSE;
 }
 
@@ -122,6 +123,7 @@ DWORD ZetaLoader()
     FILE *f;
     int sz;
     char *c, pri[CCHDEVICENAME];
+    DWORD tm;
     MONITORINFOEX mi = {.cbSize = sizeof(mi)};
     HMONITOR hmon;
     DEVMODE dm;
@@ -143,10 +145,13 @@ DWORD ZetaLoader()
     NtSetTimerResolution(max, TRUE, &cur);
     DwmEnableMMCSS(TRUE);
     AllowSetForegroundWindow(pid);
+    SystemParametersInfo(SPI_GETFOREGROUNDLOCKTIMEOUT, 0, &tm, 0);
+    SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, 0, 0);
 
     // Get the HWND of process' window.
     while (EnumWindows(EnumWindowsProc, (LPARAM)pid))
-        Sleep(1);
+        ;
+    SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, (LPVOID)&tm, 0);
 
     // Get the primary monitor.
     GetMonitorInfo(MonitorFromWindow(0, MONITORINFOF_PRIMARY), (MONITORINFO *)&mi);
