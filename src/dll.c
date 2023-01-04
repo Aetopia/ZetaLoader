@@ -17,7 +17,6 @@ struct WINDOW
     HWND hwnd;
     DEVMODE dm;
     char mon[CCHDEVICENAME];
-    int x, y, cx, cy;
     BOOL cds;
     WNDPROC WindowProc;
 };
@@ -75,12 +74,6 @@ LRESULT WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
                 ShowWindow(wnd.hwnd, SW_MINIMIZE);
             SetDM(0);
         };
-        break;
-    case WM_NCCALCSIZE:
-        SetWindowLongPtr(wnd.hwnd, GWL_STYLE, WS_VISIBLE | WS_POPUP);
-        SetWindowLongPtr(wnd.hwnd, GWL_EXSTYLE, WS_EX_APPWINDOW);
-        SetWindowPos(wnd.hwnd, 0, wnd.x, wnd.y, wnd.cx, wnd.cy, SWP_NOACTIVATE);
-        msg = WM_NULL;
     };
     return CallWindowProc(wnd.WindowProc, hwnd, msg, wparam, lparam);
 }
@@ -114,8 +107,8 @@ DWORD ZetaLoader()
     int sz;
     char *c, pri[CCHDEVICENAME];
     MONITORINFOEX mi = {.cbSize = sizeof(mi)};
-    HMONITOR hmon;
     DEVMODE dm;
+    HMONITOR hmon;
     UINT dpi;
     float scale;
     ULONG min, max, cur;
@@ -146,8 +139,6 @@ DWORD ZetaLoader()
     // Setting up Custom Display Mode Support.
     hmon = MonitorFromWindow(wnd.hwnd, MONITOR_DEFAULTTONEAREST);
     GetMonitorInfo(hmon, (MONITORINFO *)&mi);
-    wnd.x = mi.rcMonitor.left;
-    wnd.y = mi.rcMonitor.top;
     strcpy(wnd.mon, mi.szDevice);
     EnumDisplaySettings(mi.szDevice, ENUM_CURRENT_SETTINGS, &dm);
 
@@ -200,15 +191,16 @@ DWORD ZetaLoader()
         wnd.dm.dmFields = 0;
     while (wnd.hwnd != GetForegroundWindow())
         Sleep(1);
-    SetDM(&wnd.dm);
+    SendMessage(wnd.hwnd, WM_ACTIVATE, WA_ACTIVE, 0);
     GetDpiForMonitor(hmon, 0, &dpi, &dpi);
     scale = (float)dpi / 96.0;
-    wnd.cx = wnd.dm.dmPelsWidth * scale;
-    wnd.cy = wnd.dm.dmPelsHeight * scale;
     SetWindowLongPtr(wnd.hwnd, GWL_STYLE, WS_VISIBLE | WS_POPUP);
     SetWindowLongPtr(wnd.hwnd, GWL_EXSTYLE, WS_EX_APPWINDOW);
-    SetWindowPos(wnd.hwnd, 0, wnd.x, wnd.y, wnd.cx, wnd.cy, 0);
-
+    SetWindowPos(wnd.hwnd, 0,
+                 mi.rcMonitor.left,
+                 mi.rcMonitor.top,
+                 wnd.dm.dmPelsWidth * scale,
+                 wnd.dm.dmPelsHeight * scale, 0);
     if (strcmp(pri, mi.szDevice) != 0)
         wnd.cds = FALSE;
     return TRUE;
