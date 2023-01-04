@@ -112,9 +112,6 @@ BOOL EnumWindowsProc(HWND hwnd, LPARAM lparam)
     CloseHandle(hthread);
     while (!IsWindowVisible(hwnd))
         ;
-    do
-        SwitchToThisWindow(dll.hwnd, TRUE);
-    while (hwnd != GetForegroundWindow());
     return FALSE;
 }
 
@@ -145,13 +142,12 @@ DWORD ZetaLoader()
     NtSetTimerResolution(max, TRUE, &cur);
     DwmEnableMMCSS(TRUE);
     AllowSetForegroundWindow(pid);
-    SystemParametersInfo(SPI_GETFOREGROUNDLOCKTIMEOUT, 0, &tm, 0);
-    SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, 0, 0);
+    SystemParametersInfo(SPI_GETFOREGROUNDLOCKTIMEOUT, 0, (LPVOID)&tm, 0);
+    SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, (LPVOID)0, SPIF_SENDCHANGE);
 
     // Get the HWND of process' window.
     while (EnumWindows(EnumWindowsProc, (LPARAM)pid))
         ;
-    SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, (LPVOID)&tm, 0);
 
     // Get the primary monitor.
     GetMonitorInfo(MonitorFromWindow(0, MONITORINFOF_PRIMARY), (MONITORINFO *)&mi);
@@ -218,6 +214,10 @@ DWORD ZetaLoader()
     dll.cy = dll.dm.dmPelsHeight * scale;
     BorderlessFullscreen();
     SetWindowLongPtr(dll.hwnd, GWLP_WNDPROC, (LONG_PTR)&WindowProc);
+    do
+        SwitchToThisWindow(dll.hwnd, TRUE);
+    while (dll.hwnd != GetForegroundWindow());
+    SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, (LPVOID)&tm, SPIF_SENDCHANGE);
 
     if (strcmp(pri, mi.szDevice) != 0)
         dll.cds = FALSE;
