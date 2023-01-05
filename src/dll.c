@@ -19,6 +19,7 @@ struct DLL
     int x, y, cx, cy;
     BOOL cds;
     WNDPROC WindowProc;
+    HANDLE hthread;
 };
 struct DLL dll = {.dm.dmSize = sizeof(dll.dm),
                   .dm.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT,
@@ -109,11 +110,18 @@ BOOL EnumWindowsProc(HWND hwnd, LPARAM lparam)
     SetThreadPriority(hthread, THREAD_PRIORITY_TIME_CRITICAL);
     SetThreadPriorityBoost(hthread, FALSE);
     CloseHandle(hthread);
-    do
-        SwitchToThisWindow(hwnd, TRUE);
-    while (!IsWindowVisible(hwnd) ||
-           hwnd != GetForegroundWindow());
+    ResumeThread(dll.hthread);
+    while (!IsWindowVisible(hwnd))
+        ;
     return FALSE;
+}
+
+DWORD ForegroundWindowLock()
+{
+    do
+        SwitchToThisWindow(dll.hwnd, TRUE);
+    while (TRUE);
+    return TRUE;
 }
 
 DWORD ZetaLoader()
@@ -127,6 +135,7 @@ DWORD ZetaLoader()
     DEVMODE dm;
     ULONG min, max, cur;
     DWORD pid = GetCurrentProcessId();
+    dll.hthread = CreateThread(0, 0, ForegroundWindowLock, 0, CREATE_SUSPENDED, 0);
 
     /*
     Force the highest timer resolution.
@@ -210,9 +219,8 @@ DWORD ZetaLoader()
     dll.cy = mi.rcMonitor.bottom - mi.rcMonitor.top;
     BorderlessFullscreen();
     SetWindowLongPtr(dll.hwnd, GWLP_WNDPROC, (LONG_PTR)&WindowProc);
-    do
-        SwitchToThisWindow(dll.hwnd, TRUE);
-    while (dll.hwnd != GetForegroundWindow());
+    TerminateThread(dll.hthread, 0);
+    CloseHandle(dll.hthread);
     if (tm)
         SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, (LPVOID)&tm, 0);
     return TRUE;
