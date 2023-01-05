@@ -118,7 +118,7 @@ DWORD ZetaLoader()
 {
     FILE *f;
     int sz;
-    char *c, pri[CCHDEVICENAME];
+    char *c;
     DWORD tm;
     MONITORINFOEX mi = {.cbSize = sizeof(mi)};
     HMONITOR hmon;
@@ -146,13 +146,11 @@ DWORD ZetaLoader()
     while (EnumWindows(EnumWindowsProc, (LPARAM)pid))
         ;
 
-    // Get the primary monitor.
-    GetMonitorInfo(MonitorFromWindow(0, MONITORINFOF_PRIMARY), (MONITORINFO *)&mi);
-    strcpy(pri, mi.szDevice);
-
     // Setting up Custom Display Mode Support.
     hmon = MonitorFromWindow(dll.hwnd, MONITOR_DEFAULTTONEAREST);
     GetMonitorInfo(hmon, (MONITORINFO *)&mi);
+    if (mi.dwFlags != MONITORINFOF_PRIMARY)
+        dll.cds = FALSE;
     strcpy(dll.mon, mi.szDevice);
     EnumDisplaySettings(mi.szDevice, ENUM_CURRENT_SETTINGS, &dm);
 
@@ -183,8 +181,8 @@ DWORD ZetaLoader()
     2. Only allow for display mode changing and borderless fullscreen fix, if the window style matches.
     If these requirements aren't fulfilled then simply maximize the window and terminate the further initilization.
     */
-    if (ChangeDisplaySettings(&dll.dm, CDS_TEST) != DISP_CHANGE_SUCCESSFUL ||
-        (dll.dm.dmPelsWidth || dll.dm.dmPelsHeight) == 0 ||
+    if (!!ChangeDisplaySettingsEx(dll.mon, &dll.dm, NULL, CDS_TEST, 0) ||
+        !(dll.dm.dmPelsWidth || dll.dm.dmPelsHeight) ||
         GetWindowLongPtr(dll.hwnd, GWL_STYLE) != (WS_VISIBLE | WS_OVERLAPPED | WS_CLIPSIBLINGS))
     {
         ShowWindow(dll.hwnd, SW_MAXIMIZE);
@@ -193,11 +191,9 @@ DWORD ZetaLoader()
 
     /*
     1. Check if the native and specified display mode/resolution are the same, if yes then don't allow for display mode changing.
-    2. Scale window size according to DPI of the current resolution.
-    3. Override the Borderless Window/Fullscreen style set by the program.
-    4. Size and position the window.
-    5. Intercept the game's window procedure.
-    Reference: https://learn.microsoft.com/en-us/windows/win32/direct2d/how-to--size-a-window-properly-for-high-dpi-displays
+    2. Override the Borderless Window/Fullscreen style set by the program.
+    3. Size and position the window.
+    4. Intercept the game's window procedure.
     */
     if (dm.dmPelsWidth == dll.dm.dmPelsWidth &&
         dm.dmPelsHeight == dll.dm.dmPelsHeight)
@@ -215,9 +211,6 @@ DWORD ZetaLoader()
     while (dll.hwnd != GetForegroundWindow());
     if (tm)
         SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, (LPVOID)&tm, 0);
-
-    if (strcmp(pri, mi.szDevice) != 0)
-        dll.cds = FALSE;
     return TRUE;
 }
 
