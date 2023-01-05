@@ -21,7 +21,8 @@ struct DLL
     WNDPROC WindowProc;
 };
 struct DLL dll = {.dm.dmSize = sizeof(dll.dm),
-                  .dm.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT,
+                  .dm.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT | DM_DISPLAYFIXEDOUTPUT,
+                  .dm.dmDisplayFixedOutput = DMDFO_STRETCH,
                   .cds = TRUE};
 
 /*
