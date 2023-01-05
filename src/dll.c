@@ -21,8 +21,7 @@ struct DLL
     WNDPROC WindowProc;
 };
 struct DLL dll = {.dm.dmSize = sizeof(dll.dm),
-                  .dm.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT | DM_DISPLAYFIXEDOUTPUT,
-                  .dm.dmDisplayFixedOutput = DMDFO_STRETCH,
+                  .dm.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT,
                   .cds = TRUE};
 
 /*
@@ -110,8 +109,10 @@ BOOL EnumWindowsProc(HWND hwnd, LPARAM lparam)
     SetThreadPriority(hthread, THREAD_PRIORITY_TIME_CRITICAL);
     SetThreadPriorityBoost(hthread, FALSE);
     CloseHandle(hthread);
-    while (!IsWindowVisible(hwnd))
-        ;
+    do
+        SwitchToThisWindow(hwnd, TRUE);
+    while (!IsWindowVisible(hwnd) ||
+           hwnd != GetForegroundWindow());
     return FALSE;
 }
 
