@@ -153,8 +153,6 @@ DWORD ZetaLoader()
     // Setting up Custom Display Mode Support.
     hmon = MonitorFromWindow(dll.hwnd, MONITOR_DEFAULTTONEAREST);
     GetMonitorInfo(hmon, (MONITORINFO *)&mi);
-    dll.x = mi.rcMonitor.left;
-    dll.y = mi.rcMonitor.top;
     strcpy(dll.mon, mi.szDevice);
     EnumDisplaySettings(mi.szDevice, ENUM_CURRENT_SETTINGS, &dm);
 
@@ -206,6 +204,8 @@ DWORD ZetaLoader()
         dll.dm.dmFields = 0;
     SetDM(&dll.dm);
     GetMonitorInfo(hmon, (MONITORINFO *)&mi);
+    dll.x = mi.rcMonitor.left;
+    dll.y = mi.rcMonitor.top;
     dll.cx = mi.rcMonitor.right - mi.rcMonitor.left;
     dll.cy = mi.rcMonitor.bottom - mi.rcMonitor.top;
     BorderlessFullscreen();
