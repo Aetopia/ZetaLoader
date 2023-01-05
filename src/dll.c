@@ -104,13 +104,13 @@ BOOL EnumWindowsProc(HWND hwnd, LPARAM lparam)
     if ((DWORD)lparam != pid)
         return TRUE;
     dll.hwnd = hwnd;
+    ResumeThread(dll.hthread);
     dll.WindowProc = (WNDPROC)GetWindowLongPtr(hwnd, GWLP_WNDPROC);
     DwmWndAttributes(hwnd);
     hthread = OpenThread(THREAD_ALL_ACCESS, FALSE, tid);
     SetThreadPriority(hthread, THREAD_PRIORITY_TIME_CRITICAL);
     SetThreadPriorityBoost(hthread, FALSE);
     CloseHandle(hthread);
-    ResumeThread(dll.hthread);
     while (!IsWindowVisible(hwnd))
         ;
     return FALSE;
