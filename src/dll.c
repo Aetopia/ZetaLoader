@@ -138,7 +138,6 @@ DWORD ZetaLoader()
     dll.hthread = CreateThread(0, 0, ForegroundWindowLock, 0, CREATE_SUSPENDED, 0);
 
     /*
-    Force the highest timer resolution.
     Halo Infinite uses 1 ms by default, we can force 0.5 ms using NtSetTimerResolution.
     Starting with Windows 2004, setting the timer resolution is no longer global but on a per process basis.
     Reference: https://learn.microsoft.com/en-us/windows/win32/api/timeapi/nf-timeapi-timebeginperiod#remarks
