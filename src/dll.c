@@ -78,13 +78,15 @@ LRESULT WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
         {
         case WA_ACTIVE:
         case WA_CLICKACTIVE:
-            if (IsIconic(dll.hwnd))
+            do
                 SwitchToThisWindow(dll.hwnd, TRUE);
+            while (dll.hwnd != GetForegroundWindow());
             SetDM(&dll.dm);
             break;
         case WA_INACTIVE:
-            if (!IsIconic(dll.hwnd))
+            do
                 ShowWindow(dll.hwnd, SW_MINIMIZE);
+            while (dll.hwnd == GetForegroundWindow());
             SetDM(0);
         };
         break;
@@ -206,6 +208,8 @@ DWORD ZetaLoader()
         GetWindowLongPtr(dll.hwnd, GWL_STYLE) != (WS_VISIBLE | WS_OVERLAPPED | WS_CLIPSIBLINGS))
     {
         ShowWindow(dll.hwnd, SW_MAXIMIZE);
+        TerminateThread(dll.hthread, 0);
+        CloseHandle(dll.hthread);
         return TRUE;
     };
 
