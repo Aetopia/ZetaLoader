@@ -230,7 +230,7 @@ BOOL WINAPI DllMain(HINSTANCE hInstDll,
                     DWORD fwdreason,
                     __attribute__((unused)) LPVOID lpvReserved)
 {
-    // The dynamic link library is intitalized via the Zeta() function in a thread to prevent the target application from getting locked up.
+    // The dynamic link library is intitalized via the ZetaLoader() function in a thread to prevent the target application from getting locked up.
     if (fwdreason == DLL_PROCESS_ATTACH)
     {
         DisableThreadLibraryCalls(hInstDll);
