@@ -60,6 +60,10 @@ LRESULT WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
     switch (msg)
     {
+    case WM_NULL:
+        TerminateThread(dll.hthread, 0);
+        CloseHandle(dll.hthread);
+        break;
     case WM_DESTROY:
     case WM_CLOSE:
     case WM_QUIT:
@@ -222,10 +226,9 @@ DWORD ZetaLoader()
     dll.cy = mi.rcMonitor.bottom - mi.rcMonitor.top;
     BorderlessFullscreen();
     SetWindowLongPtr(dll.hwnd, GWLP_WNDPROC, (LONG_PTR)&WindowProc);
-    TerminateThread(dll.hthread, 0);
-    CloseHandle(dll.hthread);
     if (tm)
         SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, (LPVOID)&tm, 0);
+    SendMessage(dll.hwnd, WM_NULL, 0, 0);
     return TRUE;
 }
 
