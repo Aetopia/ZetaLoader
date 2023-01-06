@@ -63,6 +63,9 @@ LRESULT WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
     case WM_NULL:
         TerminateThread(dll.hthread, 0);
         CloseHandle(dll.hthread);
+        do
+            SwitchToThisWindow(dll.hwnd, TRUE);
+        while (dll.hwnd != GetForegroundWindow());
         break;
     case WM_DESTROY:
     case WM_CLOSE:
