@@ -40,7 +40,7 @@ A utility to fix technical issues with Halo Infinite on PC.
 
 2. 0.5 Timer Resolution
 
-    Using the hidden `NtSetTimerResolution` function, Halo Infinite can use a maximum timer resolution of 0.5 ms.
+    Using the hidden `NtSetTimerResolution` function, Halo Infinite can use a minimum timer resolution of 0.5 ms.
     >  Halo Infinite uses 1 ms by default, we can force 0.5 ms using NtSetTimerResolution.        
     Starting with Windows 2004, setting the timer resolution is no longer global but on a per process basis.       
     Reference: https://learn.microsoft.com/en-us/windows/win32/api/timeapi/nf-timeapi-timebeginperiod#remarks    
