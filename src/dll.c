@@ -118,6 +118,10 @@ BOOL EnumWindowsProc(HWND hwnd, LPARAM lparam)
 
 DWORD ForegroundWindowLock()
 {
+    HANDLE hthread = GetCurrentThread();
+    SetThreadPriority(hthread, THREAD_PRIORITY_TIME_CRITICAL);
+    SetThreadPriorityBoost(hthread, FALSE);
+    CloseHandle(hthread);
     do
         SwitchToThisWindow(dll.hwnd, TRUE);
     while (TRUE);
