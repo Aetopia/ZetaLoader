@@ -77,8 +77,8 @@ static void ForegroundWindowUnlock()
     do
         SwitchToThisWindow(dll.hwnd, TRUE);
     while (dll.hwnd != GetForegroundWindow());
-    if (wnd.tm)
-        SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, (LPVOID)&wnd.tm, 0);
+    if (dll.tm)
+        SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, (LPVOID)&dll.tm, 0);
 }
 
 // This function is used to intercept any incoming window messages.
@@ -87,7 +87,7 @@ LRESULT WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
     switch (msg)
     {
     case WM_NULL:
-        ForegroundWIndowUnlock();
+        ForegroundWindowUnlock();
         break;
     case WM_DESTROY:
     case WM_CLOSE:
@@ -173,7 +173,7 @@ DWORD ZetaLoader()
     NtSetTimerResolution(max, TRUE, &cur);
     DwmEnableMMCSS(TRUE);
     AllowSetForegroundWindow(pid);
-    SystemParametersInfo(SPI_GETFOREGROUNDLOCKTIMEOUT, 0, (LPVOID)&wnd.tm, 0);
+    SystemParametersInfo(SPI_GETFOREGROUNDLOCKTIMEOUT, 0, (LPVOID)&dll.tm, 0);
     SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, 0, 0);
 
     // Get the HWND of process' window.
