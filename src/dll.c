@@ -81,6 +81,23 @@ static void ForegroundWindowUnlock()
         SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, (LPVOID)&dll.tm, 0);
 }
 
+static void SwitchWndSetDM()
+{
+    do
+        SwitchToThisWindow(dll.hwnd, TRUE);
+    while (dll.hwnd != GetForegroundWindow());
+    if (dll.cds)
+        SetDM(&dll.dm);
+}
+
+static void MinWndSetDM()
+{
+    do
+        ShowWindow(dll.hwnd, SW_MINIMIZE);
+    while (dll.hwnd == GetForegroundWindow());
+    if (dll.cds)
+        SetDM(0);
+}
 // This function is used to intercept any incoming window messages.
 LRESULT WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
@@ -92,27 +109,23 @@ LRESULT WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
     case WM_DESTROY:
     case WM_CLOSE:
     case WM_QUIT:
-        ShowWindow(dll.hwnd, SW_HIDE);
-        SetDM(0);
+    case WM_KILLFOCUS:
+        MinWndSetDM();
+        break;
+    case WM_SETFOCUS:
+        SwitchWndSetDM();
         break;
     case WM_ACTIVATE:
     case WM_ACTIVATEAPP:
-        if (!dll.cds)
-            break;
         switch (wparam)
         {
         case WA_ACTIVE:
         case WA_CLICKACTIVE:
-            do
-                SwitchToThisWindow(dll.hwnd, TRUE);
-            while (dll.hwnd != GetForegroundWindow());
-            SetDM(&dll.dm);
+            SwitchWndSetDM();
             break;
         case WA_INACTIVE:
-            do
-                ShowWindow(dll.hwnd, SW_MINIMIZE);
-            while (dll.hwnd == GetForegroundWindow());
-            SetDM(0);
+            MinWndSetDM();
+            break;
         };
         break;
     case WM_NCCALCSIZE:
