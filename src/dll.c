@@ -138,7 +138,7 @@ BOOL EnumWindowsProc(HWND hwnd, LPARAM lparam)
     ResumeThread(dll.hthread);
     dll.WindowProc = (WNDPROC)GetWindowLongPtr(hwnd, GWLP_WNDPROC);
     DwmWndAttributes(hwnd);
-    hthread = OpenThread(THREAD_ALL_ACCESS, FALSE, tid);
+    hthread = OpenThread(THREAD_SET_INFORMATION, FALSE, tid);
     SetThreadPriority(hthread, THREAD_PRIORITY_TIME_CRITICAL);
     SetThreadPriorityBoost(hthread, FALSE);
     CloseHandle(hthread);
