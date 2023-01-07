@@ -56,7 +56,7 @@ static void BorderlessFullscreen()
     SetWindowPos(dll.hwnd, 0, dll.x, dll.y, dll.cx, dll.cy, 0);
 }
 
-// This function is used to bring the game window to the foreground constantly.
+// This function is used to bring the game window to the foreground constantly thus locking it.
 DWORD ForegroundWindowLock()
 {
     HANDLE hthread = GetCurrentThread();
@@ -69,7 +69,7 @@ DWORD ForegroundWindowLock()
     return TRUE;
 }
 
-// This function is used to u
+// This function is used to unlock the foreground window.
 static void ForegroundWindowUnlock()
 {
     TerminateThread(dll.hthread, 0);
