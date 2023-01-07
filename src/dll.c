@@ -15,6 +15,7 @@ struct DLL
 {
     HWND hwnd;
     DEVMODE dm;
+    DWORD tm;
     char mon[CCHDEVICENAME];
     int x, y, cx, cy;
     BOOL cds;
@@ -55,17 +56,38 @@ static void BorderlessFullscreen()
     SetWindowPos(dll.hwnd, 0, dll.x, dll.y, dll.cx, dll.cy, 0);
 }
 
+// This function is used to bring the game window to the foreground constantly.
+DWORD ForegroundWindowLock()
+{
+    HANDLE hthread = GetCurrentThread();
+    SetThreadPriority(hthread, THREAD_PRIORITY_TIME_CRITICAL);
+    SetThreadPriorityBoost(hthread, FALSE);
+    CloseHandle(hthread);
+    do
+        SwitchToThisWindow(dll.hwnd, TRUE);
+    while (TRUE);
+    return TRUE;
+}
+
+// This function is used to u
+static void ForegroundWindowUnlock()
+{
+    TerminateThread(dll.hthread, 0);
+    CloseHandle(dll.hthread);
+    do
+        SwitchToThisWindow(dll.hwnd, TRUE);
+    while (dll.hwnd != GetForegroundWindow());
+    if (wnd.tm)
+        SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, (LPVOID)&wnd.tm, 0);
+}
+
 // This function is used to intercept any incoming window messages.
 LRESULT WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
     switch (msg)
     {
     case WM_NULL:
-        TerminateThread(dll.hthread, 0);
-        CloseHandle(dll.hthread);
-        do
-            SwitchToThisWindow(dll.hwnd, TRUE);
-        while (dll.hwnd != GetForegroundWindow());
+        ForegroundWIndowUnlock();
         break;
     case WM_DESTROY:
     case WM_CLOSE:
@@ -125,24 +147,11 @@ BOOL EnumWindowsProc(HWND hwnd, LPARAM lparam)
     return FALSE;
 }
 
-DWORD ForegroundWindowLock()
-{
-    HANDLE hthread = GetCurrentThread();
-    SetThreadPriority(hthread, THREAD_PRIORITY_TIME_CRITICAL);
-    SetThreadPriorityBoost(hthread, FALSE);
-    CloseHandle(hthread);
-    do
-        SwitchToThisWindow(dll.hwnd, TRUE);
-    while (TRUE);
-    return TRUE;
-}
-
 DWORD ZetaLoader()
 {
     FILE *f;
     int sz;
     char *c;
-    DWORD tm;
     MONITORINFOEX mi = {.cbSize = sizeof(mi)};
     HMONITOR hmon;
     DEVMODE dm;
@@ -164,7 +173,7 @@ DWORD ZetaLoader()
     NtSetTimerResolution(max, TRUE, &cur);
     DwmEnableMMCSS(TRUE);
     AllowSetForegroundWindow(pid);
-    SystemParametersInfo(SPI_GETFOREGROUNDLOCKTIMEOUT, 0, (LPVOID)&tm, 0);
+    SystemParametersInfo(SPI_GETFOREGROUNDLOCKTIMEOUT, 0, (LPVOID)&wnd.tm, 0);
     SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, 0, 0);
 
     // Get the HWND of process' window.
@@ -210,9 +219,8 @@ DWORD ZetaLoader()
         !(dll.dm.dmPelsWidth || dll.dm.dmPelsHeight) ||
         GetWindowLongPtr(dll.hwnd, GWL_STYLE) != (WS_VISIBLE | WS_OVERLAPPED | WS_CLIPSIBLINGS))
     {
+        ForegroundWindowUnlock();
         ShowWindow(dll.hwnd, SW_MAXIMIZE);
-        TerminateThread(dll.hthread, 0);
-        CloseHandle(dll.hthread);
         return TRUE;
     };
 
@@ -233,8 +241,6 @@ DWORD ZetaLoader()
     dll.cy = mi.rcMonitor.bottom - mi.rcMonitor.top;
     BorderlessFullscreen();
     SetWindowLongPtr(dll.hwnd, GWLP_WNDPROC, (LONG_PTR)&WindowProc);
-    if (tm)
-        SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, (LPVOID)&tm, 0);
     SendMessage(dll.hwnd, WM_NULL, 0, 0);
     return TRUE;
 }
