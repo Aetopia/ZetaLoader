@@ -18,13 +18,11 @@ struct DLL
     DWORD tm;
     char mon[CCHDEVICENAME];
     int x, y, cx, cy;
-    BOOL cds;
     WNDPROC WindowProc;
     HANDLE hthread;
 };
 struct DLL dll = {.dm.dmSize = sizeof(dll.dm),
-                  .dm.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT,
-                  .cds = TRUE};
+                  .dm.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT};
 
 /*
 This function disables the following:
@@ -44,7 +42,7 @@ static void DwmWndAttributes(HWND hwnd)
 // A wrapper for ChangeDisplaySettingsEx.
 static void SetDM(DEVMODE *dm)
 {
-    if (!!dll.dm.dmFields && dll.cds)
+    if (!!dll.dm.dmFields)
         ChangeDisplaySettingsEx(dll.mon, dm, NULL, CDS_FULLSCREEN, NULL);
 }
 
@@ -56,39 +54,11 @@ static void BorderlessFullscreen()
     SetWindowPos(dll.hwnd, 0, dll.x, dll.y, dll.cx, dll.cy, 0);
 }
 
-// This function is used to bring the game window to the foreground constantly thus locking it.
-DWORD ForegroundWindowLock()
-{
-    HANDLE hthread = GetCurrentThread();
-    SetThreadPriority(hthread, THREAD_PRIORITY_TIME_CRITICAL);
-    SetThreadPriorityBoost(hthread, FALSE);
-    CloseHandle(hthread);
-    do
-        SwitchToThisWindow(dll.hwnd, TRUE);
-    while (TRUE);
-    return TRUE;
-}
-
-// This function is used to unlock the foreground window.
-static void ForegroundWindowUnlock()
-{
-    TerminateThread(dll.hthread, 0);
-    CloseHandle(dll.hthread);
-    do
-        SwitchToThisWindow(dll.hwnd, TRUE);
-    while (dll.hwnd != GetForegroundWindow());
-    if (dll.tm)
-        SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, (LPVOID)&dll.tm, 0);
-}
-
 // This function is used to intercept any incoming window messages.
 LRESULT WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
     switch (msg)
     {
-    case WM_NULL:
-        ForegroundWindowUnlock();
-        break;
     case WM_DESTROY:
     case WM_CLOSE:
     case WM_QUIT:
@@ -124,7 +94,6 @@ BOOL EnumWindowsProc(HWND hwnd, LPARAM lparam)
     if ((DWORD)lparam != pid)
         return TRUE;
     dll.hwnd = hwnd;
-    ResumeThread(dll.hthread);
     dll.WindowProc = (WNDPROC)GetWindowLongPtr(hwnd, GWLP_WNDPROC);
     DwmWndAttributes(hwnd);
     hthread = OpenThread(THREAD_SET_INFORMATION, FALSE, tid);
@@ -146,7 +115,6 @@ DWORD ZetaLoader()
     DEVMODE dm;
     ULONG min, max, cur;
     DWORD pid = GetCurrentProcessId();
-    dll.hthread = CreateThread(0, 0, ForegroundWindowLock, 0, CREATE_SUSPENDED, 0);
 
     /*
     Halo Infinite uses 1 ms by default, we can force 0.5 ms using NtSetTimerResolution.
@@ -172,8 +140,6 @@ DWORD ZetaLoader()
     // Setting up Custom Display Mode Support for primary monitor only.
     hmon = MonitorFromWindow(dll.hwnd, MONITOR_DEFAULTTONEAREST);
     GetMonitorInfo(hmon, (MONITORINFO *)&mi);
-    if (mi.dwFlags != MONITORINFOF_PRIMARY)
-        dll.cds = FALSE;
     strcpy(dll.mon, mi.szDevice);
     EnumDisplaySettings(mi.szDevice, ENUM_CURRENT_SETTINGS, &dm);
 
@@ -208,7 +174,6 @@ DWORD ZetaLoader()
         !(dll.dm.dmPelsWidth || dll.dm.dmPelsHeight) ||
         GetWindowLongPtr(dll.hwnd, GWL_STYLE) != (WS_VISIBLE | WS_OVERLAPPED | WS_CLIPSIBLINGS))
     {
-        ForegroundWindowUnlock();
         ShowWindow(dll.hwnd, SW_MAXIMIZE);
         return TRUE;
     };
@@ -229,7 +194,7 @@ DWORD ZetaLoader()
     dll.cy = mi.rcMonitor.bottom - mi.rcMonitor.top;
     BorderlessFullscreen();
     SetWindowLongPtr(dll.hwnd, GWLP_WNDPROC, (LONG_PTR)&WindowProc);
-    SendMessage(dll.hwnd, WM_NULL, 0, 0);
+    SendMessage(dll.hwnd, WM_SETFOCUS, 0, 0);
     return TRUE;
 }
 
