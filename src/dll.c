@@ -44,7 +44,7 @@ static void DwmWndAttributes(HWND hwnd)
 // A wrapper for ChangeDisplaySettingsEx.
 static void SetDM(DEVMODE *dm)
 {
-    if (!!dll.dm.dmFields)
+    if (!!dll.dm.dmFields && dll.cds)
         ChangeDisplaySettingsEx(dll.mon, dm, NULL, CDS_FULLSCREEN, NULL);
 }
 
@@ -81,23 +81,6 @@ static void ForegroundWindowUnlock()
         SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, (LPVOID)&dll.tm, 0);
 }
 
-static void SwitchWndSetDM()
-{
-    do
-        SwitchToThisWindow(dll.hwnd, TRUE);
-    while (dll.hwnd != GetForegroundWindow());
-    if (dll.cds)
-        SetDM(&dll.dm);
-}
-
-static void MinWndSetDM()
-{
-    do
-        ShowWindow(dll.hwnd, SW_MINIMIZE);
-    while (dll.hwnd == GetForegroundWindow());
-    if (dll.cds)
-        SetDM(0);
-}
 // This function is used to intercept any incoming window messages.
 LRESULT WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
@@ -110,23 +93,16 @@ LRESULT WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
     case WM_CLOSE:
     case WM_QUIT:
     case WM_KILLFOCUS:
-        MinWndSetDM();
+        do
+            ShowWindow(dll.hwnd, SW_MINIMIZE);
+        while (dll.hwnd == GetForegroundWindow());
+        SetDM(0);
         break;
     case WM_SETFOCUS:
-        SwitchWndSetDM();
-        break;
-    case WM_ACTIVATE:
-    case WM_ACTIVATEAPP:
-        switch (wparam)
-        {
-        case WA_ACTIVE:
-        case WA_CLICKACTIVE:
-            SwitchWndSetDM();
-            break;
-        case WA_INACTIVE:
-            MinWndSetDM();
-            break;
-        };
+        do
+            SwitchToThisWindow(dll.hwnd, TRUE);
+        while (dll.hwnd != GetForegroundWindow());
+        SetDM(&dll.dm);
         break;
     case WM_NCCALCSIZE:
         BorderlessFullscreen();
@@ -193,7 +169,7 @@ DWORD ZetaLoader()
     while (EnumWindows(EnumWindowsProc, (LPARAM)pid))
         ;
 
-    // Setting up Custom Display Mode Support.
+    // Setting up Custom Display Mode Support for primary monitor only.
     hmon = MonitorFromWindow(dll.hwnd, MONITOR_DEFAULTTONEAREST);
     GetMonitorInfo(hmon, (MONITORINFO *)&mi);
     if (mi.dwFlags != MONITORINFOF_PRIMARY)
@@ -238,10 +214,9 @@ DWORD ZetaLoader()
     };
 
     /*
-    1. Check if the native and specified display mode/resolution are the same, if yes then don't allow for display mode changing.
-    2. Override the Borderless Window/Fullscreen style set by the program.
-    3. Size and position the window.
-    4. Intercept the game's window procedure.
+    1. Override the Borderless Window/Fullscreen style set by the program.
+    2. Size and position the window.
+    3. Intercept the game's window procedure.
     */
     if (dm.dmPelsWidth == dll.dm.dmPelsWidth &&
         dm.dmPelsHeight == dll.dm.dmPelsHeight)
