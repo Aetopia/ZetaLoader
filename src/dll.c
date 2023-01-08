@@ -70,7 +70,6 @@ static void SwitchWndSetDM()
     do
         SwitchToThisWindow(dll.hwnd, TRUE);
     while (dll.hwnd != GetForegroundWindow());
-
     SetDM(&dll.dm);
 }
 
@@ -79,7 +78,6 @@ static void MinWndSetDM()
     do
         ShowWindow(dll.hwnd, SW_MINIMIZE);
     while (dll.hwnd == GetForegroundWindow());
-
     SetDM(0);
 }
 // This function is used to intercept any incoming window messages.
