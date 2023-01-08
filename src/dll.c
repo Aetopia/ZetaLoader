@@ -225,7 +225,6 @@ DWORD ZetaLoader()
     dll.cx = mi.rcMonitor.right - mi.rcMonitor.left;
     dll.cy = mi.rcMonitor.bottom - mi.rcMonitor.top;
     BorderlessFullscreen();
-    SetWindowLongPtr(dll.hwnd, GWLP_WNDPROC, (LONG_PTR)&WindowProc);
     TerminateThread(hthread, 0);
     CloseHandle(hthread);
     do
@@ -233,6 +232,7 @@ DWORD ZetaLoader()
     while (dll.hwnd != GetForegroundWindow());
     if (tm)
         SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, (LPVOID)&tm, 0);
+    SetWindowLongPtr(dll.hwnd, GWLP_WNDPROC, (LONG_PTR)&WindowProc);
     return TRUE;
 }
 
