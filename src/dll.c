@@ -17,46 +17,33 @@ struct DLL
     DEVMODE dm;
     char mon[CCHDEVICENAME];
     int x, y, cx, cy;
+    BOOL pri;
     WNDPROC WindowProc;
 };
 struct DLL dll = {.dm.dmSize = sizeof(dll.dm),
-                  .dm.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT};
-
-/*
-This function disables the following:
-1. Disable transition effects.
-2. Prevent window peeking.
-3. Disable live representation of the window and force a static bitmap of the window.
-*/
-static void DwmWndAttributes(HWND hwnd)
-{
-    static BOOL vAttribute = TRUE, *pvAttribute = &vAttribute;
-    DwmSetWindowAttribute(hwnd, DWMWA_TRANSITIONS_FORCEDISABLED, pvAttribute, 4);
-    DwmSetWindowAttribute(hwnd, DWMWA_DISALLOW_PEEK, pvAttribute, 4);
-    DwmSetWindowAttribute(hwnd, DWMWA_EXCLUDED_FROM_PEEK, pvAttribute, 4);
-    DwmSetWindowAttribute(hwnd, DWMWA_FORCE_ICONIC_REPRESENTATION, pvAttribute, 4);
-}
+                  .dm.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT,
+                  .pri = TRUE};
 
 // A wrapper for ChangeDisplaySettingsEx.
-static void SetDM(DEVMODE *dm)
+static inline void SetDM(DEVMODE *dm)
 {
     if (!!dll.dm.dmFields)
         ChangeDisplaySettingsEx(dll.mon, dm, NULL, CDS_FULLSCREEN, NULL);
 }
 
 // This function is uses window styles that fix Halo Infinite's borderless fullscreen..
-static void BorderlessFullscreen()
+static inline void BorderlessFullscreen()
 {
     SetWindowLongPtr(dll.hwnd, GWL_STYLE, WS_VISIBLE | WS_POPUP);
-    SetWindowLongPtr(dll.hwnd, GWL_EXSTYLE, WS_EX_APPWINDOW | WS_EX_TOPMOST);
-    SetWindowPos(dll.hwnd, 0, dll.x, dll.y, dll.cx, dll.cy, 0);
+    SetWindowLongPtr(dll.hwnd, GWL_EXSTYLE, WS_EX_APPWINDOW);
+    SetWindowPos(dll.hwnd, HWND_TOPMOST, dll.x, dll.y, dll.cx, dll.cy, SWP_NOSENDCHANGING);
 }
 
 // This function is used to bring the game window to the foreground constantly thus locking it.
 DWORD ForegroundWindowLock()
 {
     HANDLE hthread = GetCurrentThread();
-    SetThreadPriority(hthread, THREAD_PRIORITY_TIME_CRITICAL);
+    SetThreadPriority(hthread, THREAD_MODE_BACKGROUND_BEGIN);
     SetThreadPriorityBoost(hthread, FALSE);
     CloseHandle(hthread);
     do
@@ -65,19 +52,6 @@ DWORD ForegroundWindowLock()
     return TRUE;
 }
 
-static void ActiveSetDM()
-{
-    if (IsIconic(dll.hwnd))
-        SwitchToThisWindow(dll.hwnd, TRUE);
-    SetDM(&dll.dm);
-}
-
-static void InactiveSetDM()
-{
-    if (!IsIconic(dll.hwnd))
-        ShowWindow(dll.hwnd, SW_MINIMIZE);
-    SetDM(0);
-}
 // This function is used to intercept any incoming window messages.
 LRESULT WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
@@ -86,42 +60,57 @@ LRESULT WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
     case WM_DESTROY:
     case WM_CLOSE:
     case WM_QUIT:
-        InactiveSetDM();
+        ShowWindow(hwnd, SW_HIDE);
+        SetDM(0);
         break;
     case WM_ACTIVATE:
     case WM_ACTIVATEAPP:
-        switch (wparam)
-        {
-        case WA_ACTIVE:
-        case WA_CLICKACTIVE:
-            ActiveSetDM();
-            break;
-        case WA_INACTIVE:
-            InactiveSetDM();
-        };
+        if (dll.pri)
+            switch (wparam)
+            {
+            case WA_ACTIVE:
+            case WA_CLICKACTIVE:
+                if (IsIconic(hwnd))
+                    SwitchToThisWindow(hwnd, TRUE);
+                SetDM(&dll.dm);
+                break;
+            case WA_INACTIVE:
+                if (!IsIconic(hwnd))
+                    ShowWindow(hwnd, SW_MINIMIZE);
+                SetDM(0);
+            };
         break;
-    case WM_NCCALCSIZE:
+    case WM_WINDOWPOSCHANGING:
         BorderlessFullscreen();
         msg = WM_NULL;
+        break;
     };
     return CallWindowProc(dll.WindowProc, hwnd, msg, wparam, lparam);
 }
 
 /*
 1. Enumerate all windows and find the one that belongs to the process.
-2. Set the window thread priority to the time critical.
-3. Enable Thread Priority Boost.
-4. Wait for the window to be visible.
+2. Disable transition effects.
+3. Prevent window peeking.
+4. Disable live representation of the window and force a static bitmap of the window.
+5. Set the window thread priority to the time critical.
+6. Enable Thread Priority Boost.
+7. Wait for the window to be visible.
 */
+
 BOOL EnumWindowsProc(HWND hwnd, LPARAM lparam)
 {
     DWORD pid, tid = GetWindowThreadProcessId(hwnd, &pid);
+    const BOOL vAttribute = TRUE, *pvAttribute = &vAttribute;
     HANDLE hthread;
     if ((DWORD)lparam != pid)
         return TRUE;
     dll.hwnd = hwnd;
     dll.WindowProc = (WNDPROC)GetWindowLongPtr(hwnd, GWLP_WNDPROC);
-    DwmWndAttributes(hwnd);
+    DwmSetWindowAttribute(hwnd, DWMWA_TRANSITIONS_FORCEDISABLED, pvAttribute, 4);
+    DwmSetWindowAttribute(hwnd, DWMWA_DISALLOW_PEEK, pvAttribute, 4);
+    DwmSetWindowAttribute(hwnd, DWMWA_EXCLUDED_FROM_PEEK, pvAttribute, 4);
+    DwmSetWindowAttribute(hwnd, DWMWA_FORCE_ICONIC_REPRESENTATION, pvAttribute, 4);
     hthread = OpenThread(THREAD_SET_INFORMATION, FALSE, tid);
     SetThreadPriority(hthread, THREAD_PRIORITY_TIME_CRITICAL);
     SetThreadPriorityBoost(hthread, FALSE);
@@ -166,6 +155,8 @@ DWORD ZetaLoader()
     // Setting up Custom Display Mode Support.
     hmon = MonitorFromWindow(dll.hwnd, MONITOR_DEFAULTTONEAREST);
     GetMonitorInfo(hmon, (MONITORINFO *)&mi);
+    if (mi.dwFlags != MONITORINFOF_PRIMARY)
+        dll.pri = FALSE;
     strcpy(dll.mon, mi.szDevice);
     EnumDisplaySettings(mi.szDevice, ENUM_CURRENT_SETTINGS, &dm);
 
