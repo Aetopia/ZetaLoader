@@ -144,7 +144,7 @@ DWORD ZetaLoader()
     DWORD tm;
     ULONG min, max, cur;
     DWORD pid = GetCurrentProcessId();
-    HANDLE hthread = CreateThread(0, 0, ForegroundWindowLock, 0, CREATE_SUSPENDED, 0);
+    HANDLE hthread;
 
     /*
     Halo Infinite uses 1 ms by default, we can force 0.5 ms using NtSetTimerResolution.
@@ -160,7 +160,6 @@ DWORD ZetaLoader()
     NtSetTimerResolution(max, TRUE, &cur);
     DwmEnableMMCSS(TRUE);
     AllowSetForegroundWindow(pid);
-    SystemParametersInfo(SPI_GETFOREGROUNDLOCKTIMEOUT, 0, (LPVOID)&tm, 0);
 
     // Get the HWND of process' window.
     while (EnumWindows(EnumWindowsProc, (LPARAM)pid))
@@ -213,8 +212,9 @@ DWORD ZetaLoader()
     3. Size and position the window.
     4. Intercept the game's window procedure.
     */
+    SystemParametersInfo(SPI_GETFOREGROUNDLOCKTIMEOUT, 0, (LPVOID)&tm, 0);
     SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, 0, 0);
-    ResumeThread(hthread);
+    hthread = CreateThread(0, 0, ForegroundWindowLock, 0, 0, 0);
     if (dm.dmPelsWidth == dll.dm.dmPelsWidth &&
         dm.dmPelsHeight == dll.dm.dmPelsHeight)
         dll.dm.dmFields = 0;
