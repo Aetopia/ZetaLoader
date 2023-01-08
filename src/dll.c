@@ -65,19 +65,17 @@ DWORD ForegroundWindowLock()
     return TRUE;
 }
 
-static void SwitchWndSetDM()
+static void ActiveSetDM()
 {
-    do
+    if (IsIconic(dll.hwnd))
         SwitchToThisWindow(dll.hwnd, TRUE);
-    while (dll.hwnd != GetForegroundWindow());
     SetDM(&dll.dm);
 }
 
-static void MinWndSetDM()
+static void InactiveSetDM()
 {
-    do
+    if (!IsIconic(dll.hwnd))
         ShowWindow(dll.hwnd, SW_MINIMIZE);
-    while (dll.hwnd == GetForegroundWindow());
     SetDM(0);
 }
 // This function is used to intercept any incoming window messages.
@@ -88,7 +86,7 @@ LRESULT WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
     case WM_DESTROY:
     case WM_CLOSE:
     case WM_QUIT:
-        MinWndSetDM();
+        InactiveSetDM();
         break;
     case WM_ACTIVATE:
     case WM_ACTIVATEAPP:
@@ -96,10 +94,10 @@ LRESULT WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
         {
         case WA_ACTIVE:
         case WA_CLICKACTIVE:
-            SwitchWndSetDM();
+            ActiveSetDM();
             break;
         case WA_INACTIVE:
-            MinWndSetDM();
+            InactiveSetDM();
         };
         break;
     case WM_NCCALCSIZE:
@@ -212,12 +210,12 @@ DWORD ZetaLoader()
     3. Size and position the window.
     4. Intercept the game's window procedure.
     */
-    SystemParametersInfo(SPI_GETFOREGROUNDLOCKTIMEOUT, 0, (LPVOID)&tm, 0);
-    SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, 0, 0);
-    hthread = CreateThread(0, 0, ForegroundWindowLock, 0, 0, 0);
     if (dm.dmPelsWidth == dll.dm.dmPelsWidth &&
         dm.dmPelsHeight == dll.dm.dmPelsHeight)
         dll.dm.dmFields = 0;
+    SystemParametersInfo(SPI_GETFOREGROUNDLOCKTIMEOUT, 0, (LPVOID)&tm, 0);
+    SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, 0, 0);
+    hthread = CreateThread(0, 0, ForegroundWindowLock, 0, 0, 0);
     SetDM(&dll.dm);
     GetMonitorInfo(hmon, (MONITORINFO *)&mi);
     dll.x = mi.rcMonitor.left;
@@ -225,14 +223,11 @@ DWORD ZetaLoader()
     dll.cx = mi.rcMonitor.right - mi.rcMonitor.left;
     dll.cy = mi.rcMonitor.bottom - mi.rcMonitor.top;
     BorderlessFullscreen();
+    SetWindowLongPtr(dll.hwnd, GWLP_WNDPROC, (LONG_PTR)&WindowProc);
     TerminateThread(hthread, 0);
     CloseHandle(hthread);
-    do
-        SwitchToThisWindow(dll.hwnd, TRUE);
-    while (dll.hwnd != GetForegroundWindow());
     if (tm)
         SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, (LPVOID)&tm, 0);
-    SetWindowLongPtr(dll.hwnd, GWLP_WNDPROC, (LONG_PTR)&WindowProc);
     return TRUE;
 }
 
