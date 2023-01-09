@@ -36,7 +36,7 @@ static inline void BorderlessFullscreen()
 {
     SetWindowLongPtr(dll.hwnd, GWL_STYLE, WS_VISIBLE | WS_POPUP);
     SetWindowLongPtr(dll.hwnd, GWL_EXSTYLE, WS_EX_APPWINDOW);
-    SetWindowPos(dll.hwnd, HWND_TOPMOST, dll.x, dll.y, dll.cx, dll.cy, SWP_NOSENDCHANGING);
+    SetWindowPos(dll.hwnd, HWND_TOPMOST, dll.x, dll.y, dll.cx, dll.cy, SWP_NOACTIVATE | SWP_NOSENDCHANGING);
 }
 
 // This function is used to bring the game window to the foreground constantly thus locking it.
@@ -108,15 +108,10 @@ BOOL EnumWindowsProc(HWND hwnd, LPARAM lparam)
     dll.hwnd = hwnd;
     dll.WindowProc = (WNDPROC)GetWindowLongPtr(hwnd, GWLP_WNDPROC);
     DwmSetWindowAttribute(hwnd, DWMWA_TRANSITIONS_FORCEDISABLED, pvAttribute, 4);
-    DwmSetWindowAttribute(hwnd, DWMWA_DISALLOW_PEEK, pvAttribute, 4);
-    DwmSetWindowAttribute(hwnd, DWMWA_EXCLUDED_FROM_PEEK, pvAttribute, 4);
-    DwmSetWindowAttribute(hwnd, DWMWA_FORCE_ICONIC_REPRESENTATION, pvAttribute, 4);
     hthread = OpenThread(THREAD_SET_INFORMATION, FALSE, tid);
     SetThreadPriority(hthread, THREAD_PRIORITY_TIME_CRITICAL);
     SetThreadPriorityBoost(hthread, FALSE);
     CloseHandle(hthread);
-    while (!IsWindowVisible(hwnd))
-        ;
     return FALSE;
 }
 

@@ -11,7 +11,7 @@ void WinEventProc(
     __attribute__((unused)) DWORD idEventThread,
     __attribute__((unused)) DWORD dwmsEventTime)
 {
-    if (event != EVENT_OBJECT_CREATE)
+    if (event != EVENT_OBJECT_SHOW)
         return;
     if (idObject != OBJID_WINDOW ||
         idChild != CHILDID_SELF)
@@ -48,8 +48,8 @@ int main(__attribute__((unused)) int argc, char *argv[])
         return 0;
     CreateThread(0, 0, IsProcessAlive, (LPVOID)&pi, 0, 0);
 
-    SetWinEventHook(EVENT_OBJECT_CREATE,
-                    EVENT_OBJECT_CREATE, 0,
+    SetWinEventHook(EVENT_OBJECT_SHOW,
+                    EVENT_OBJECT_SHOW, 0,
                     WinEventProc,
                     pi.dwProcessId,
                     0,
