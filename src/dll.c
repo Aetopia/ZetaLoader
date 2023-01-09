@@ -42,6 +42,10 @@ static inline void BorderlessFullscreen()
 // This function is used to bring the game window to the foreground constantly thus locking it.
 DWORD ForegroundWindowLock()
 {
+    HANDLE hthread = GetCurrentThread();
+    SetThreadPriority(hthread, THREAD_MODE_BACKGROUND_BEGIN);
+    SetThreadPriorityBoost(hthread, FALSE);
+    CloseHandle(hthread);
     do
         SwitchToThisWindow(dll.hwnd, TRUE);
     while (TRUE);
