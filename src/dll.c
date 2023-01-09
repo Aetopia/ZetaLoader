@@ -128,7 +128,7 @@ DWORD ZetaLoader()
     HMONITOR hmon;
     DEVMODE dm;
     ULONG min, max, cur;
-    DWORD pid, tm = GetCurrentProcessId();
+    DWORD tm, pid = GetCurrentProcessId();
     HANDLE hthread;
 
     /*
