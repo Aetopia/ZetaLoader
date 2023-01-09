@@ -25,10 +25,8 @@ A utility to fix technical issues with Halo Infinite on PC.
     This is simply fixed by using the following styles:      
     - Window Styles: `WS_VISIBLE | WS_POPUP` 
     - Extended Window Styles: `WS_EX_APPWINDOW`
-    - Topmost Window: `HWND_TOPMOST`  
+    - Topmost Window: `HWND_TOPMOST`
 
-    
-    > You can use something like [Borderless Gaming](https://github.com/Codeusa/Borderless-Gaming) to fix this issue.
 ## Features   
 1. User Defined Display Resolution/Mode Support
 
