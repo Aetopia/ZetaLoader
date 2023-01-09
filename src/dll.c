@@ -127,9 +127,8 @@ DWORD ZetaLoader()
     MONITORINFOEX mi = {.cbSize = sizeof(mi)};
     HMONITOR hmon;
     DEVMODE dm;
-    DWORD tm;
     ULONG min, max, cur;
-    DWORD pid = GetCurrentProcessId();
+    DWORD pid, tm = GetCurrentProcessId();
     HANDLE hthread;
 
     /*
