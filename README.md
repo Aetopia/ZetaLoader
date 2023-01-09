@@ -20,7 +20,7 @@ A utility to fix technical issues with Halo Infinite on PC.
     ZetaLoader overrides Halo Infinite's borderless fullscreen/window style.            
     Halo Infinite uses the following styles `WS_VISIBLE | WS_OVERLAPPED | WS_CLIPSIBLINGS` when going borderless fullscreen.  
     
-    The window style `WS_OVERLAPPED` doesn't fill the screen are correctly if the display resolution is below `1440x810` resulting in the window to extend its client area beyond the screen area itself. 
+    The window style `WS_OVERLAPPED` doesn't fill the screen area correctly if the display resolution is below `1440x810` resulting in the window to extend its client area beyond the screen area itself. 
 
     This is simply fixed by using the following styles:      
     - Window Styles: `WS_VISIBLE | WS_POPUP` 
