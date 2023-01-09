@@ -107,6 +107,8 @@ BOOL EnumWindowsProc(HWND hwnd, LPARAM lparam)
     dll.hwnd = hwnd;
     dll.WindowProc = (WNDPROC)GetWindowLongPtr(hwnd, GWLP_WNDPROC);
     DwmSetWindowAttribute(hwnd, DWMWA_TRANSITIONS_FORCEDISABLED, pvAttribute, 4);
+    DwmSetWindowAttribute(hwnd, DWMWA_DISALLOW_PEEK, pvAttribute, 4);
+    DwmSetWindowAttribute(hwnd, DWMWA_FORCE_ICONIC_REPRESENTATION, pvAttribute, 4);
     hthread = OpenThread(THREAD_SET_INFORMATION, FALSE, tid);
     SetThreadPriority(hthread, THREAD_PRIORITY_TIME_CRITICAL);
     SetThreadPriorityBoost(hthread, FALSE);
