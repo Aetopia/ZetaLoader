@@ -97,7 +97,6 @@ LRESULT WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 6. Enable Thread Priority Boost.
 7. Wait for the window to be visible.
 */
-
 BOOL EnumWindowsProc(HWND hwnd, LPARAM lparam)
 {
     DWORD pid, tid = GetWindowThreadProcessId(hwnd, &pid);
