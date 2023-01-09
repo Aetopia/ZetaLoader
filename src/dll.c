@@ -10,6 +10,9 @@ NTSYSAPI NTSTATUS NTAPI NtQueryTimerResolution(PULONG MinimumResolution,
                                                PULONG MaximumResolution,
                                                PULONG CurrentResolution);
 
+// Check if a string is a number.
+static inline BOOL IsNumber(char *str) { return strspn(str, "0123456789") == strlen(str); }
+
 // Global Structure, used to store all the variables.
 struct DLL
 {
@@ -120,7 +123,7 @@ DWORD ZetaLoader()
 {
     FILE *f;
     int sz;
-    char *c;
+    char *c, *w, *h;
     MONITORINFOEX mi = {.cbSize = sizeof(mi)};
     HMONITOR hmon;
     DEVMODE dm;
@@ -173,8 +176,13 @@ DWORD ZetaLoader()
         c = malloc(sz);
         fread(c, 1, sz, f);
         fclose(f);
-        dll.dm.dmPelsWidth = atoi(strtok(c, "\n"));
-        dll.dm.dmPelsHeight = atoi(strtok(NULL, "\n"));
+        w = strtok(c, "\r\t\n ");
+        h = strtok(NULL, "\r\t\n ");
+        if (IsNumber(w) && IsNumber(h))
+        {
+            dll.dm.dmPelsWidth = atoi(w);
+            dll.dm.dmPelsHeight = atoi(h);
+        };
         free(c);
     };
 
