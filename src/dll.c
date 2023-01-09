@@ -103,15 +103,14 @@ LRESULT WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 BOOL EnumWindowsProc(HWND hwnd, LPARAM lparam)
 {
     DWORD pid, tid = GetWindowThreadProcessId(hwnd, &pid);
-    const BOOL vAttribute = TRUE, *pvAttribute = &vAttribute;
     HANDLE hthread;
     if ((DWORD)lparam != pid)
         return TRUE;
     dll.hwnd = hwnd;
     dll.WindowProc = (WNDPROC)GetWindowLongPtr(hwnd, GWLP_WNDPROC);
-    DwmSetWindowAttribute(hwnd, DWMWA_TRANSITIONS_FORCEDISABLED, pvAttribute, 4);
-    DwmSetWindowAttribute(hwnd, DWMWA_DISALLOW_PEEK, pvAttribute, 4);
-    DwmSetWindowAttribute(hwnd, DWMWA_FORCE_ICONIC_REPRESENTATION, pvAttribute, 4);
+    DwmSetWindowAttribute(hwnd, DWMWA_TRANSITIONS_FORCEDISABLED, &dll.pri, 4);
+    DwmSetWindowAttribute(hwnd, DWMWA_DISALLOW_PEEK, &dll.pri, 4);
+    DwmSetWindowAttribute(hwnd, DWMWA_FORCE_ICONIC_REPRESENTATION, &dll.pri, 4);
     hthread = OpenThread(THREAD_SET_INFORMATION, FALSE, tid);
     SetThreadPriority(hthread, THREAD_PRIORITY_TIME_CRITICAL);
     SetThreadPriorityBoost(hthread, FALSE);
@@ -217,7 +216,7 @@ DWORD ZetaLoader()
     dll.cx = mi.rcMonitor.right - mi.rcMonitor.left;
     dll.cy = mi.rcMonitor.bottom - mi.rcMonitor.top;
     BorderlessFullscreen();
-    SetWindowLongPtr(dll.hwnd, GWLP_WNDPROC, (LONG_PTR)&WindowProc);
+    SetWindowLongPtr(dll.hwnd, GWLP_WNDPROC, (LONG_PTR)WindowProc);
     TerminateThread(hthread, 0);
     CloseHandle(hthread);
     if (tm)
@@ -225,14 +224,14 @@ DWORD ZetaLoader()
     return TRUE;
 }
 
-BOOL WINAPI DllMain(HINSTANCE hInstDll,
-                    DWORD fwdreason,
-                    __attribute__((unused)) LPVOID lpvReserved)
+BOOL WINAPI DllMain(HINSTANCE hinstdll,
+                    DWORD fdwreason, 
+                    __attribute__((unused)) LPVOID lpvreserved)
 {
     // The dynamic link library is intitalized via the ZetaLoader() function in a thread to prevent the target application from getting locked up.
-    if (fwdreason == DLL_PROCESS_ATTACH)
+    if (fdwreason == DLL_PROCESS_ATTACH)
     {
-        DisableThreadLibraryCalls(hInstDll);
+        DisableThreadLibraryCalls(hinstdll);
         CreateThread(0, 0, ZetaLoader, NULL, 0, 0);
     };
     return TRUE;
