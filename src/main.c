@@ -3,24 +3,23 @@
 
 // In order to ensure the dynamic link library injects with a 100% success rate, listen for Window creation events and then inject.
 void WinEventProc(
-    HWINEVENTHOOK hWinEventHook,
+    HWINEVENTHOOK hwineventhook,
     DWORD event,
     __attribute__((unused)) HWND hwnd,
-    LONG idObject,
-    LONG idChild,
-    __attribute__((unused)) DWORD idEventThread,
-    __attribute__((unused)) DWORD dwmsEventTime)
+    LONG idobject,
+    LONG idchild,
+    __attribute__((unused)) DWORD ideventthread,
+    __attribute__((unused)) DWORD dwmseventtime)
 {
-    if (event != EVENT_OBJECT_SHOW)
+    if (event != EVENT_OBJECT_SHOW ||
+        idobject != OBJID_WINDOW ||
+        idchild != CHILDID_SELF)
         return;
-    if (idObject != OBJID_WINDOW ||
-        idChild != CHILDID_SELF)
-        return;
-    UnhookWinEvent(hWinEventHook);
+    UnhookWinEvent(hwineventhook);
     PostQuitMessage(0);
 }
 
-// This thread will ensure incase Halo Infinite crashes before the dynamic link library is injected, ZetaLoader will terminate itself.
+// This thread will ensure in case Halo Infinite crashes before the dynamic link library is injected, ZetaLoader will terminate itself.
 DWORD IsProcessAlive(LPVOID lparam)
 {
     PROCESS_INFORMATION *pi = (PROCESS_INFORMATION *)lparam;
@@ -33,18 +32,17 @@ DWORD IsProcessAlive(LPVOID lparam)
 
 int main(__attribute__((unused)) int argc, char *argv[])
 {
-    SetCurrentDirectory(dirname(argv[0]));
     LPVOID mem;
     char dll[MAX_PATH];
     STARTUPINFO si = {.cb = sizeof(si)};
     PROCESS_INFORMATION pi;
     MSG msg;
 
+    SetCurrentDirectory(dirname(argv[0]));
     GetFullPathName("ZetaLoader.dll", MAX_PATH, dll, NULL);
     if (GetFileAttributes(dll) == INVALID_FILE_ATTRIBUTES ||
-        GetFileAttributes("HaloInfinite.exe") == INVALID_FILE_ATTRIBUTES)
-        return 0;
-    if (!CreateProcess("HaloInfinite.exe", NULL, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
+        GetFileAttributes("HaloInfinite.exe") == INVALID_FILE_ATTRIBUTES ||
+        !CreateProcess("HaloInfinite.exe", NULL, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
         return 0;
     CreateThread(0, 0, IsProcessAlive, (LPVOID)&pi, 0, 0);
 
