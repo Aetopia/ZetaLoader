@@ -96,4 +96,4 @@ Result Video: https://www.youtube.com/watch?v=o9u0oAyv3dc
 
 1. Fixes specific techincal issues with the Halo Infinite.
 2. Designed for the Steam release of Halo Infinite.
-3. Might work with the UWP release or running under a Windows Compatibility Layer on Linux, but the source code might need to be rewritten for these platforms.
+3. Might work with the UWP release or running under a Windows Compatibility Layer on Linux but the source code might need to be rewritten for these platforms.
