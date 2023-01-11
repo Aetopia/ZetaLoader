@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <dwmapi.h>
 
-// Timer resolution related functions.
 NTSYSAPI NTSTATUS NTAPI NtSetTimerResolution(ULONG DesiredResolution,
                                              BOOLEAN SetResolution,
                                              PULONG CurrentResolution);
@@ -10,10 +9,6 @@ NTSYSAPI NTSTATUS NTAPI NtQueryTimerResolution(PULONG MinimumResolution,
                                                PULONG MaximumResolution,
                                                PULONG CurrentResolution);
 
-// Check if a string is a number.
-static inline BOOL IsNumber(char *str) { return strspn(str, "0123456789") == strlen(str); }
-
-// Global Structure, used to store all the variables.
 struct DLL
 {
     HWND hwnd;
@@ -27,14 +22,14 @@ struct DLL dll = {.dm.dmSize = sizeof(dll.dm),
                   .dm.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT,
                   .pri = TRUE};
 
-// A wrapper for ChangeDisplaySettingsEx.
+static inline BOOL IsNumber(char *str) { return strspn(str, "0123456789") == strlen(str); }
+
 static inline void SetDM(DEVMODE *dm)
 {
     if (!!dll.dm.dmFields)
         ChangeDisplaySettingsEx(dll.mon, dm, NULL, CDS_FULLSCREEN, NULL);
 }
 
-// This function is uses window styles that fix Halo Infinite's borderless fullscreen..
 static inline void BorderlessFullscreen()
 {
     SetWindowLongPtr(dll.hwnd, GWL_STYLE, WS_VISIBLE | WS_POPUP);
@@ -42,7 +37,6 @@ static inline void BorderlessFullscreen()
     SetWindowPos(dll.hwnd, HWND_TOPMOST, dll.x, dll.y, dll.cx, dll.cy, SWP_NOACTIVATE | SWP_NOSENDCHANGING);
 }
 
-// This function is used to bring the game window to the foreground constantly thus locking it.
 DWORD ForegroundWindowLock()
 {
     HANDLE hthread = GetCurrentThread();
@@ -55,7 +49,6 @@ DWORD ForegroundWindowLock()
     return TRUE;
 }
 
-// This function is used to intercept any incoming window messages.
 LRESULT WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
     switch (msg)
@@ -91,31 +84,36 @@ LRESULT WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
     return CallWindowProc(dll.WindowProc, hwnd, msg, wparam, lparam);
 }
 
-/*
-1. Enumerate all windows and find the one that belongs to the process.
-2. Disable transition effects.
-3. Prevent window peeking.
-4. Disable live representation of the window and force a static bitmap of the window.
-5. Set the window thread priority to the time critical.
-6. Enable Thread Priority Boost.
-7. Wait for the window to be visible.
-*/
-BOOL EnumWindowsProc(HWND hwnd, LPARAM lparam)
+void WinEventProc(
+    HWINEVENTHOOK hwineventhook,
+    DWORD event,
+    HWND hwnd,
+    LONG idobject,
+    LONG idchild,
+    __attribute__((unused)) DWORD ideventthread,
+    __attribute__((unused)) DWORD dwmseventtime)
 {
-    DWORD pid, tid = GetWindowThreadProcessId(hwnd, &pid);
+    if (event != EVENT_OBJECT_SHOW ||
+        idobject != OBJID_WINDOW ||
+        idchild != CHILDID_SELF)
+        return;
+    UnhookWinEvent(hwineventhook);
+
+    DWORD tid = GetWindowThreadProcessId(hwnd, NULL);
     HANDLE hthread;
-    if ((DWORD)lparam != pid)
-        return TRUE;
     dll.hwnd = hwnd;
     dll.WindowProc = (WNDPROC)GetWindowLongPtr(hwnd, GWLP_WNDPROC);
+
     DwmSetWindowAttribute(hwnd, DWMWA_TRANSITIONS_FORCEDISABLED, &dll.pri, 4);
     DwmSetWindowAttribute(hwnd, DWMWA_DISALLOW_PEEK, &dll.pri, 4);
     DwmSetWindowAttribute(hwnd, DWMWA_FORCE_ICONIC_REPRESENTATION, &dll.pri, 4);
+
     hthread = OpenThread(THREAD_SET_INFORMATION, FALSE, tid);
     SetThreadPriority(hthread, THREAD_PRIORITY_TIME_CRITICAL);
     SetThreadPriorityBoost(hthread, FALSE);
     CloseHandle(hthread);
-    return FALSE;
+
+    PostQuitMessage(0);
 }
 
 DWORD ZetaLoader()
@@ -129,41 +127,38 @@ DWORD ZetaLoader()
     ULONG min, max, cur;
     DWORD tm, pid = GetCurrentProcessId();
     HANDLE hthread;
+    MSG msg;
 
-    /*
-    Halo Infinite uses 1 ms by default, we can force 0.5 ms using NtSetTimerResolution.
-    Starting with Windows 2004, setting the timer resolution is no longer global but on a per process basis.
-    Reference: https://learn.microsoft.com/en-us/windows/win32/api/timeapi/nf-timeapi-timebeginperiod#remarks
+    SetWinEventHook(EVENT_OBJECT_SHOW,
+                    EVENT_OBJECT_SHOW, 0,
+                    WinEventProc,
+                    pid,
+                    0,
+                    WINEVENT_OUTOFCONTEXT);
+    while (GetMessage(&msg, NULL, 0, 0))
+    {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    };
 
-    Making DWM opt in for MMCSS when calling process is alive improves performance.
-    References:
-    1. https://github.com/djdallmann/GamingPCSetup/blob/master/CONTENT/RESEARCH/WINSERVICES/README.md#multimedia-class-scheduler-service-mmcss
-    2. https://www.overclock.net/threads/if-you-play-non-fullscreen-exclusive-games-you-might-get-a-boost-in-performance-with-dwmenablemmcss.1775433/
-    */
     NtQueryTimerResolution(&min, &max, &cur);
     NtSetTimerResolution(max, TRUE, &cur);
     DwmEnableMMCSS(TRUE);
     AllowSetForegroundWindow(pid);
 
-    // Get the HWND of process' window.
-    while (EnumWindows(EnumWindowsProc, (LPARAM)pid))
-        ;
-
-    // Setting up Custom Display Mode Support.
     hmon = MonitorFromWindow(dll.hwnd, MONITOR_DEFAULTTONEAREST);
     GetMonitorInfo(hmon, (MONITORINFO *)&mi);
     if (mi.dwFlags != MONITORINFOF_PRIMARY)
         dll.pri = FALSE;
     strcpy(dll.mon, mi.szDevice);
     EnumDisplaySettings(mi.szDevice, ENUM_CURRENT_SETTINGS, &dm);
-
+    dll.dm.dmPelsWidth = dm.dmPelsWidth;
+    dll.dm.dmPelsHeight = dm.dmPelsHeight;
     if (GetFileAttributes("ZetaLoader.txt") == INVALID_FILE_ATTRIBUTES)
     {
         f = fopen("ZetaLoader.txt", "w");
-        fprintf(f, "%ld\n%ld", dm.dmPelsWidth, dm.dmPelsHeight);
+        fprintf(f, "%ld\n%ld", dll.dm.dmPelsWidth, dll.dm.dmPelsHeight);
         fclose(f);
-        dll.dm.dmPelsWidth = dm.dmPelsWidth;
-        dll.dm.dmPelsHeight = dm.dmPelsHeight;
     }
     else
     {
@@ -176,19 +171,14 @@ DWORD ZetaLoader()
         fclose(f);
         w = strtok(c, "\r\t\n ");
         h = strtok(NULL, "\r\t\n ");
-        if (IsNumber(w) && IsNumber(h))
+        if (w && h && IsNumber(w) && IsNumber(h))
         {
             dll.dm.dmPelsWidth = atoi(w);
             dll.dm.dmPelsHeight = atoi(h);
-        };
+        }
         free(c);
     };
 
-    /*
-    1. Verify if the display mode is valid.
-    2. Only allow for display mode changing and borderless fullscreen fix, if the window style matches.
-    If these requirements aren't fulfilled then simply maximize the window and terminate the further initilization.
-    */
     if (!!ChangeDisplaySettingsEx(dll.mon, &dll.dm, NULL, CDS_TEST, 0) ||
         !(dll.dm.dmPelsWidth || dll.dm.dmPelsHeight) ||
         GetWindowLongPtr(dll.hwnd, GWL_STYLE) != (WS_VISIBLE | WS_OVERLAPPED | WS_CLIPSIBLINGS))
@@ -197,12 +187,6 @@ DWORD ZetaLoader()
         return TRUE;
     };
 
-    /*
-    1. Check if the native and specified display mode/resolution are the same, if yes then don't allow for display mode changing.
-    2. Override the Borderless Window/Fullscreen style set by the program.
-    3. Size and position the window.
-    4. Intercept the game's window procedure.
-    */
     if (dm.dmPelsWidth == dll.dm.dmPelsWidth &&
         dm.dmPelsHeight == dll.dm.dmPelsHeight)
         dll.dm.dmFields = 0;
@@ -224,15 +208,11 @@ DWORD ZetaLoader()
     return TRUE;
 }
 
-BOOL WINAPI DllMain(HINSTANCE hinstdll,
-                    DWORD fdwreason, 
+BOOL WINAPI DllMain(__attribute__((unused)) HINSTANCE hinstdll,
+                    DWORD fdwreason,
                     __attribute__((unused)) LPVOID lpvreserved)
 {
-    // The dynamic link library is intitalized via the ZetaLoader() function in a thread to prevent the target application from getting locked up.
     if (fdwreason == DLL_PROCESS_ATTACH)
-    {
-        DisableThreadLibraryCalls(hinstdll);
         CreateThread(0, 0, ZetaLoader, NULL, 0, 0);
-    };
     return TRUE;
 }
