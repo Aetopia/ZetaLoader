@@ -145,7 +145,7 @@ proc MainThread(lparam: LPVOID): DWORD {.stdcall.} =
         except ValueError:
             discard
 
-    if ChangeDisplaySettingsEx(dll.monitor, addr dll.dm, 0, CDS_FULLSCREEN,
+    if ChangeDisplaySettingsEx(dll.monitor, addr dll.dm, 0, CDS_TEST,
             nil) != DISP_CHANGE_SUCCESSFUL or GetWindowLongPtr(dll.hwnd,
                     GWL_STYLE) != (WS_VISIBLE or WS_OVERLAPPED or
                     WS_CLIPSIBLINGS):
