@@ -89,6 +89,11 @@ Result Video: https://www.youtube.com/watch?v=o9u0oAyv3dc
 # Building:
 1. Install `Nim` 
     > **Make sure it is in the system path!**
+2. Install `winim`.
+
+    ```
+    nimble install winim
+    ```
 2. Run `build.bat`.
 
 ## Limitations
