@@ -71,22 +71,23 @@ Result Video: https://www.youtube.com/watch?v=o9u0oAyv3dc
 5. Launch the game through or execute `ZetaLoader.exe`.
 6. If the following happens, then ZetaLoader has been successfully installed:
     1. The game window automatically maximizes when it starts up in windowed mode.
-    2. `ZetaLoader.txt` is generated in the game's installation directory.
+    2. `ZetaLoader.ini` is generated in the game's installation directory.
     3. Display resolution swaps when the game window is the foreground window.
-7.  To configure the resolution Halo Infinite uses, modify `ZetaLoader.txt`.         
+7.  To configure the resolution Halo Infinite uses, modify `ZetaLoader.ini`.         
     To launch Halo Infinite at `1280 x 720`:              
     ```
-    1280
-    720
+    [Display]
+    Width = 1280
+    Height= 720
     ```
-    Also ensure **Borderless Fullscreen is enabled** & set this as the contents of `ZetaLoader.txt`.
+    Also ensure **Borderless Fullscreen is enabled** & set this as the contents of `ZetaLoader.ini`.
 
 ## Uninstallation
 1. Set Halo Infinite's launch options to blank.
 2. Delete `ZetaLoader.exe`, `ZetaLoader.dll`, `ZetaLoader.txt` from Halo Infinite's installation directory.
 
 # Building:
-1. Install `GCC`. 
+1. Install `Nim` 
     > **Make sure it is in the system path!**
 2. Run `build.bat`.
 
