@@ -78,7 +78,7 @@ Result Video: https://www.youtube.com/watch?v=o9u0oAyv3dc
     ```
     [Display]
     Width = 1280
-    Height= 720
+    Height = 720
     ```
     Also ensure **Borderless Fullscreen is enabled** & set this as the contents of `ZetaLoader.ini`.
 
