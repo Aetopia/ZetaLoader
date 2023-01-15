@@ -94,7 +94,8 @@ Result Video: https://www.youtube.com/watch?v=o9u0oAyv3dc
     ```
     nimble install winim
     ```
-2. Run `build.bat`.
+3. Run `build.bat`.
+    > Optional UPX compression is also performed if `upx.exe` is in the system path.
 
 ## Limitations
 
