@@ -110,7 +110,7 @@ proc MainThread(lparam: LPVOID): DWORD {.stdcall.} =
         msg: MSG
     mi.cbSize = sizeof(MONITORINFOEX).DWORD
 
-    SetPriorityClass(hprocess, NORMAL_PRIORITY_CLASS)
+    SetPriorityClass(hprocess, ABOVE_NORMAL_PRIORITY_CLASS)
     SetProcessPriorityBoost(hprocess, false)
     CloseHandle(hprocess)
     NtQueryTimerResolution(unsafeAddr min, unsafeAddr max, unsafeAddr cur)
