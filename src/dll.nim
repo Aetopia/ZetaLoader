@@ -99,6 +99,7 @@ proc MainThread(lparam: LPVOID): DWORD {.stdcall.} =
     let
         timeout, pid: DWORD = GetCurrentProcessId()
         min, max, cur: ULONG = 0
+        hprocess = GetCurrentProcess()
     var
         cfg = loadConfig("ZetaLoader.ini")
         (width, height) = (cfg.getSectionValue("Display", "Width").strip(),
@@ -109,6 +110,9 @@ proc MainThread(lparam: LPVOID): DWORD {.stdcall.} =
         msg: MSG
     mi.cbSize = sizeof(MONITORINFOEX).DWORD
 
+    SetPriorityClass(hprocess, NORMAL_PRIORITY_CLASS)
+    SetProcessPriorityBoost(hprocess, false)
+    CloseHandle(hprocess)
     NtQueryTimerResolution(unsafeAddr min, unsafeAddr max, unsafeAddr cur)
     NtSetTimerResolution(max, TRUE, unsafeAddr cur)
     DwmEnableMMCSS(true)
