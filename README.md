@@ -49,7 +49,8 @@ A utility to fix technical issues with Halo Infinite on PC.
     1. https://github.com/djdallmann/GamingPCSetup/blob/master/CONTENT/RESEARCH/WINSERVICES/README.md#multimedia-class-scheduler-service-mmcss
     2. https://www.overclock.net/threads/if-you-play-non-fullscreen-exclusive-games-you-might-get-a-boost-in-performance-with-dwmenablemmcss.1775433/
 
-4. Above Normal Process Priority     
+4. Above Normal Process Priority      
+
     This feature makes Halo Infinite automatically have `Above Normal Process Priority`, this will make Windows give Halo Infinite more processor time whenever possible. 
 
     > **Why not use High Process Priority?** 
