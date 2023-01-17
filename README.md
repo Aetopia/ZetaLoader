@@ -58,7 +58,7 @@ A utility to fix technical issues with Halo Infinite on PC.
     > Using a high process priority might prevent other threads on the system from getting processor time. Microsoft recommends this process priority to be used, if only doing time critical tasks.    
     > Reference: https://learn.microsoft.com/en-us/windows/win32/procthread/scheduling-priorities
     >        
-    > Also this fix `Screen Tearing | Input Issues with External/Driver Based Framelimiters` becomes useless if the process priority is set to High.      
+    > Also this fix `Screen Tearing | Input Issues with External/Driver Based Framelimiters` becomes useless if the process priority is set to high.      
     > As for the reason, it likely maybe other threads within Halo Infinite getting a higher thread priority than before and preventing the window thread from getting enough of a timeslice, making the fix entirely useless.
 
 ## Result
