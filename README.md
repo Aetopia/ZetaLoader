@@ -60,7 +60,7 @@ Result Video: https://www.youtube.com/watch?v=o9u0oAyv3dc
 
 ## Installation:
 1. Download ZetaLoader from [GitHub Releases](https://github.com/Aetopia/ZetaLoader).
-2. Browse Halo Infinite's local files & unzip `ZetaLoader.zip` in the game's installation directory.
+2. Browse Halo Infinite's local files & place `ZetaLoader.exe` in the game's installation directory.
 3. Now `[Shift]` + `[Right Click]`, `ZetaLoader.exe` and select `[Copy As Path]`.
 4. Go into Halo Infinite's launch options and use the following as the launch command:
 
