@@ -4,13 +4,19 @@ A utility to fix technical issues with Halo Infinite on PC.
 
 ## Fixes
 
-1. Screen Tearing | Input Issues with External/Driver Based Framelimiters 
+1. Screen Tearing | Input Issues
 
     > Source: https://forums.guru3d.com/threads/msi-ab-rtss-development-news-thread.412822/page-161#post-5949434     
 
     This fix simply resolves intense screen tearing and input related issues when an external/driver based framerate limiter is being used.      
-    Setting the window thread priority to `THREAD_PRIORITY_HIGHEST | THREAD_PRIORITY_TIME_CRITICAL` fixes this issue entirely.    
-    As for the reason why this fixes the issue entirely is maybe due to the fact, the window thread doesn't get enough of a timeslice while running when an external framerate limiter is being used thus likely increasing the thread priority gives it enough of a timeslice to resolve this issue.    
+    Setting the window thread priority to `THREAD_PRIORITY_HIGHEST | THREAD_PRIORITY_TIME_CRITICAL` fixes this issue entirely.      
+
+    As for the reasons why this fixes the issue entirely:
+    1. The window thread is not getting enough of a timeslice while running is thus likely increasing the thread priority gives it enough of a timeslice to resolve this issue. 
+    2. DWM has a high process priority by default, [you can see more about process priorities here.](https://learn.microsoft.com/en-us/windows/win32/procthread/scheduling-priorities#priority-class)   
+        Due to DWM having a higher process priority than other processes running on the system, Halo Infinite's window thread doesn't get enough of processor time/timeslice. Using `THREAD_PRIORITY_TIME_CRITICAL` fixes this issue entirely since it gives the thread, a priority of `15`.
+
+
     You can verify if this works by using a lower thread priority set it using the function `SetThreadPriority` in the source code and using an external framerate limiter like [RTSS](https://www.guru3d.com/files-details/rtss-rivatuner-statistics-server-download.html).               
 
 2. Borderless Fullscreen
