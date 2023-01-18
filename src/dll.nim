@@ -144,7 +144,7 @@ proc MainThread(lparam: LPVOID): DWORD {.stdcall.} =
         try:
             dll.dm.dmPelsWidth = width.parseInt().DWORD
             dll.dm.dmPelsHeight = height.parseInt().DWORD
-            if dll.dm.dmPelsHeight == 0 or dll.dm.dmPelsWidth == 0:
+            if (dll.dm.dmPelsHeight or dll.dm.dmPelsWidth) == 0:
                 dll.dm.dmFields = 0
         except ValueError:
             discard
