@@ -153,7 +153,6 @@ proc MainThread(lparam: LPVOID): DWORD {.stdcall.} =
             nil) != DISP_CHANGE_SUCCESSFUL or GetWindowLongPtr(dll.hwnd,
                     GWL_STYLE) != (WS_VISIBLE or WS_OVERLAPPED or
                     WS_CLIPSIBLINGS):
-        ShowWindow(dll.hwnd, SW_MAXIMIZE)
         return 0
 
     if dm.dmPelsWidth == dll.dm.dmPelsWidth and dm.dmPelsHeight ==
