@@ -86,7 +86,7 @@ proc WinEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hwnd: HWND,
     DwmSetWindowAttribute(hwnd, DWMWA_FORCE_ICONIC_REPRESENTATION,
             addr dll.primary, 4)
 
-    SetThreadPriority(hthread, THREAD_PRIORITY_HIGHEST)
+    SetThreadPriority(hthread, THREAD_PRIORITY_TIME_CRITICAL)
     SetThreadPriorityBoost(hthread, FALSE)
     CloseHandle(hthread)
 
