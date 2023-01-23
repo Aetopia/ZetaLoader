@@ -13,7 +13,9 @@ A utility to fix technical issues with Halo Infinite on PC.
 
     > ZetaLoader sets the window thread priority to `THREAD_PRIORITY_TIME_CRITICAL` just to assign a higher priority over threads that use `THREAD_PRIORITY_HIGHEST`.
 
-    As for the reason why this fixes the issue entirely is maybe due to the fact, the window thread doesn't get enough of a timeslice resulting in jittery/stuttery input. Increasing the thread priority gives it enough of a timeslice that seems to resolve this issue.    
+    As for the reason why this fixes the issue entirely is maybe due to the fact, the window thread doesn't get enough of a timeslice resulting in jittery/stuttery input.    
+    Increasing the thread priority gives it enough of a timeslice that seems to resolve this issue.   
+
     You can verify if this works by using a lower thread priority set it using the function `SetThreadPriority` in the source code.       
 
 2. Borderless Fullscreen
@@ -35,7 +37,7 @@ A utility to fix technical issues with Halo Infinite on PC.
 
     > **Available with Borderless fullscreen only at game startup.**   
     > **Disabling Borderless Fullscreen in game with ZetaLoader injected will prompt a game restart.**
-    
+
     This feature restores the game's ability to run at any user defined resolution. Here is what this feature emulates/restores:
     - Automatically Minimize, when the game is not the foreground window.
     - Dynamically switch between your desired game display resolution & native display resolution like in exclusive fullscreen.
