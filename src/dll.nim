@@ -38,9 +38,6 @@ proc ForegroundWindowLock(lparam: LPVOID): DWORD {.stdcall.} =
 proc WindowProc(hwnd: HWND, msg: UINT, wparam: WPARAM,
         lparam: LPARAM): LRESULT {.stdcall.} =
     case msg:
-    of WM_DESTROY, WM_CLOSE, WM_QUIT:
-        ShowWindow(hwnd, SW_HIDE)
-        SetDM(nil)
     of WM_ACTIVATE, WM_ACTIVATEAPP:
         if dll.primary:
             case wparam:
