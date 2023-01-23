@@ -4,7 +4,7 @@ A utility to fix technical issues with Halo Infinite on PC.
 
 ## Fixes
 
-1. Jittery/Stuttery Input Issues
+1. Jittery/Stuttery Input Issues for Mouse & Keyboard
 
     > Source: https://forums.guru3d.com/threads/msi-ab-rtss-development-news-thread.412822/page-161#post-5949434     
 
