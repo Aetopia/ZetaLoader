@@ -81,6 +81,8 @@ proc WinEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hwnd: HWND,
     dll.hwnd = hwnd
     dll.WindowProc = cast[WNDPROC](GetWindowLongPtr(hwnd, GWLP_WNDPROC))
     GetWindowModuleFileName(dll.hwnd, dll.process, MAX_PATH)
+    dll.process = winstrConverterStringToLPWSTR(splitFile(
+            $dll.process).dir/"ZetaLoader.exe")
 
     DwmSetWindowAttribute(hwnd, DWMWA_TRANSITIONS_FORCEDISABLED,
             addr dll.primary, 4)
