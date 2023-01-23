@@ -37,20 +37,17 @@ proc ForegroundWindowLock(lparam: LPVOID): DWORD {.stdcall.} =
 
 proc WindowProc(hwnd: HWND, msg: UINT, wparam: WPARAM,
         lparam: LPARAM): LRESULT {.stdcall.} =
-    case msg:
-    of WM_ACTIVATE, WM_ACTIVATEAPP:
-        if dll.primary:
-            case wparam:
-            of WA_ACTIVE, WA_CLICKACTIVE:
-                if (IsIconic(hwnd)):
-                    SwitchToThisWindow(hwnd, TRUE)
-                SetDM(addr dll.dm)
-            of WA_INACTIVE:
-                if not IsIconic(hwnd):
-                    ShowWindow(hwnd, SW_MINIMIZE)
-                SetDM(nil)
-            else: discard
-    else: discard
+    if [WM_ACTIVATE, WM_ACTIVATEAPP].contains(msg) and dll.primary:
+        case wparam:
+        of WA_ACTIVE, WA_CLICKACTIVE:
+            if IsIconic(hwnd):
+                SwitchToThisWindow(hwnd, TRUE)
+            SetDM(addr dll.dm)
+        of WA_INACTIVE:
+            if not IsIconic(hwnd):
+                ShowWindow(hwnd, SW_MINIMIZE)
+            SetDM(nil)
+        else: discard
     return CallWindowProc(dll.WindowProc, hwnd, msg, wparam, lparam)
 
 proc WinEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hwnd: HWND,
