@@ -9,14 +9,12 @@ type DLL = object
     monitor: string
     x, y, cx, cy: int32
     primary, foreground, restart: bool
-    process: LPWSTR
     WindowProc: WNDPROC
     cfg: Config
 var dll: DLL
 dll.dm.dmSize = sizeof(DEVMODE).WORD
 dll.dm.dmFields = DM_PELSWIDTH or DM_PELSHEIGHT
 dll.primary = true
-dll.process = winstrConverterStringToLPWSTR(newString(MAX_PATH))
 
 proc NtSetTimerResolution(DesiredResolution: ULONG, SetResolution: BOOLEAN,
         CurrentResolution: PULONG): LONG {.stdcall, dynlib: "ntdll.dll",
@@ -47,12 +45,9 @@ proc ForegroundWindowLock(lparam: LPVOID): DWORD {.stdcall.} =
 proc WindowProc(hwnd: HWND, msg: UINT, wparam: WPARAM,
         lparam: LPARAM): LRESULT {.stdcall.} =
     case msg:
-    of WM_DESTROY, WM_CLOSE, WM_QUIT, WM_STYLECHANGING:
+    of WM_DESTROY, WM_CLOSE, WM_QUIT:
         ShowWindow(hwnd, SW_HIDE)
         SetDM(nil)
-        if msg == WM_STYLECHANGING:
-            DestroyWindow(hwnd)
-            ShellExecute(hwnd, "open", dll.process, nil, nil, SW_SHOW)
     of WM_ACTIVATE, WM_ACTIVATEAPP:
         if dll.primary:
             case wparam:
@@ -80,9 +75,6 @@ proc WinEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hwnd: HWND,
         hthread = OpenThread(THREAD_SET_INFORMATION, FALSE, tid)
     dll.hwnd = hwnd
     dll.WindowProc = cast[WNDPROC](GetWindowLongPtr(hwnd, GWLP_WNDPROC))
-    GetWindowModuleFileName(dll.hwnd, dll.process, MAX_PATH)
-    dll.process = winstrConverterStringToLPWSTR(splitFile(
-            $dll.process).dir/"ZetaLoader.exe")
 
     DwmSetWindowAttribute(hwnd, DWMWA_TRANSITIONS_FORCEDISABLED,
             addr dll.primary, 4)

@@ -36,7 +36,6 @@ A utility to fix technical issues with Halo Infinite on PC.
 1. User Defined Display Resolution/Mode Support
 
     > **Available with Borderless fullscreen only at game startup.**   
-    > **Disabling Borderless Fullscreen in game with ZetaLoader injected will prompt a game restart.**
 
     This feature restores the game's ability to run at any user defined resolution. Here is what this feature emulates/restores:
     - Automatically Minimize, when the game is not the foreground window.
