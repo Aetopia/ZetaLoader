@@ -35,7 +35,7 @@ A utility to fix technical issues with Halo Infinite on PC.
 ## Features   
 1. User Defined Display Resolution/Mode Support
 
-    > **Available with Borderless fullscreen only at game startup.**   
+    > **Available with Borderless Fullscreen only at game startup.**   
 
     This feature restores the game's ability to run at any user defined resolution. Here is what this feature emulates/restores:
     - Automatically Minimize, when the game is not the foreground window.
