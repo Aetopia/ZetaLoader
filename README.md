@@ -6,7 +6,7 @@ A utility to fix technical issues with Halo Infinite on PC.
 
 1. Jittery/Stuttery Input Issues for Mouse & Keyboard
 
-    > Source: https://forums.guru3d.com/threads/msi-ab-rtss-development-news-thread.412822/page-161#post-5949434     
+    > Reference: https://learn.microsoft.com/en-us/windows/win32/procthread/scheduling-priorities  
 
     This fix simply resolves jittery input related issues with the game.      
     Setting the window thread priority to `THREAD_PRIORITY_HIGHEST` fixes this issue entirely. 
