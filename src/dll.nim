@@ -8,14 +8,15 @@ type DLL = object
     dm: DEVMODE
     monitor: string
     x, y, cx, cy: int32
-    primary, foreground: bool
+    primary, foreground, restart: bool
+    process: LPWSTR
     WindowProc: WNDPROC
     cfg: Config
 var dll: DLL
 dll.dm.dmSize = sizeof(DEVMODE).WORD
 dll.dm.dmFields = DM_PELSWIDTH or DM_PELSHEIGHT
 dll.primary = true
-dll.foreground = false
+dll.process = winstrConverterStringToLPWSTR(newString(MAX_PATH))
 
 proc NtSetTimerResolution(DesiredResolution: ULONG, SetResolution: BOOLEAN,
         CurrentResolution: PULONG): LONG {.stdcall, dynlib: "ntdll.dll",
@@ -46,9 +47,12 @@ proc ForegroundWindowLock(lparam: LPVOID): DWORD {.stdcall.} =
 proc WindowProc(hwnd: HWND, msg: UINT, wparam: WPARAM,
         lparam: LPARAM): LRESULT {.stdcall.} =
     case msg:
-    of WM_DESTROY, WM_CLOSE, WM_QUIT:
+    of WM_DESTROY, WM_CLOSE, WM_QUIT, WM_STYLECHANGING:
         ShowWindow(hwnd, SW_HIDE)
         SetDM(nil)
+        if msg == WM_STYLECHANGING:
+            DestroyWindow(hwnd)
+            ShellExecute(hwnd, "open", dll.process, nil, nil, SW_SHOW)
     of WM_ACTIVATE, WM_ACTIVATEAPP:
         if dll.primary:
             case wparam:
@@ -61,9 +65,6 @@ proc WindowProc(hwnd: HWND, msg: UINT, wparam: WPARAM,
                     ShowWindow(hwnd, SW_MINIMIZE)
                 SetDM(nil)
             else: discard
-    of WM_WINDOWPOSCHANGING:
-        BorderlessFullscreen()
-        return 0
     else: discard
     return CallWindowProc(dll.WindowProc, hwnd, msg, wparam, lparam)
 
@@ -79,6 +80,7 @@ proc WinEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hwnd: HWND,
         hthread = OpenThread(THREAD_SET_INFORMATION, FALSE, tid)
     dll.hwnd = hwnd
     dll.WindowProc = cast[WNDPROC](GetWindowLongPtr(hwnd, GWLP_WNDPROC))
+    GetWindowModuleFileName(dll.hwnd, dll.process, MAX_PATH)
 
     DwmSetWindowAttribute(hwnd, DWMWA_TRANSITIONS_FORCEDISABLED,
             addr dll.primary, 4)
@@ -153,8 +155,7 @@ proc MainThread(lparam: LPVOID): DWORD {.stdcall.} =
             nil) != DISP_CHANGE_SUCCESSFUL or GetWindowLongPtr(dll.hwnd,
                     GWL_STYLE) != (WS_VISIBLE or WS_OVERLAPPED or
                     WS_CLIPSIBLINGS):
-        dll.dm.dmPelsWidth = dm.dmPelsWidth
-        dll.dm.dmPelsHeight = dm.dmPelsHeight
+        return 0
 
     if dm.dmPelsWidth == dll.dm.dmPelsWidth and dm.dmPelsHeight ==
             dll.dm.dmPelsHeight:
