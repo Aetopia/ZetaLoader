@@ -7,7 +7,6 @@ type DLL = object
     hwnd: HWND
     dm: DEVMODE
     monitor: string
-    x, y, cx, cy: int32
     primary, foreground, restart: bool
     WindowProc: WNDPROC
     cfg: Config
@@ -26,12 +25,6 @@ proc NtQueryTimerResolution(MinimumResolution, MaximumResolution,
 proc SetDM(dm: ptr DEVMODE) =
     if dll.dm.dmFields != 0:
         ChangeDisplaySettingsEx(dll.monitor, dm, 0, CDS_FULLSCREEN, nil)
-
-proc BorderlessFullscreen() =
-    SetWindowLongPtr(dll.hwnd, GWL_STYLE, WS_VISIBLE or WS_POPUP)
-    SetWindowLongPtr(dll.hwnd, GWL_EXSTYLE, WS_EX_APPWINDOW)
-    SetWindowPos(dll.hwnd, HWND_TOPMOST, dll.x, dll.y, dll.cx, dll.cy,
-            SWP_NOACTIVATE or SWP_NOSENDCHANGING)
 
 proc ForegroundWindowLock(lparam: LPVOID): DWORD {.stdcall.} =
     let hthread = GetCurrentThread()
@@ -159,11 +152,11 @@ proc MainThread(lparam: LPVOID): DWORD {.stdcall.} =
     CreateThread(nil, 0, ForegroundWindowLock, nil, 0, nil)
     SetDM(addr dll.dm)
     GetMonitorInfo(hmonitor, cast[ptr MONITORINFO](addr mi))
-    dll.x = mi.rcMonitor.left
-    dll.y = mi.rcMonitor.top
-    dll.cx = mi.rcMonitor.right - mi.rcMonitor.left
-    dll.cy = mi.rcMonitor.bottom - mi.rcMonitor.top
-    BorderlessFullscreen()
+    SetWindowLongPtr(dll.hwnd, GWL_STYLE, WS_VISIBLE or WS_POPUP)
+    SetWindowLongPtr(dll.hwnd, GWL_EXSTYLE, WS_EX_APPWINDOW)
+    SetWindowPos(dll.hwnd, HWND_TOPMOST, mi.rcMonitor.left, mi.rcMonitor.top,
+            mi.rcMonitor.right - mi.rcMonitor.left, mi.rcMonitor.bottom -
+            mi.rcMonitor.top, SWP_NOACTIVATE or SWP_NOSENDCHANGING)
     SetWindowLongPtr(dll.hwnd, GWLP_WNDPROC, cast[LONG_PTR](WindowProc))
     if timeout != 0:
         SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, cast[LPVOID](
