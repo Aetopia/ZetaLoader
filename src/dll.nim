@@ -201,6 +201,7 @@ proc mainThread(): DWORD {.stdcall.} =
         SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, cast[LPVOID](
                 unsafeAddr timeout), 0)
     dll.isForegroundWnd = true
+
     return 0
 
 when isMainModule:
