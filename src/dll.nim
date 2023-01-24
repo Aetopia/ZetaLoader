@@ -45,6 +45,7 @@ proc foregroundWndLock(): DWORD {.stdcall.} =
 proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
         lParam: LPARAM): LRESULT {.stdcall.} =
     case msg:
+
     of WM_ACTIVATE, WM_ACTIVATEAPP:
         # Allow for the window to be minimized automatically if it's on the primary monitor.
         if dll.isPrimaryMonitor:
@@ -68,14 +69,14 @@ proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
         wndpos.y = dll.wnd.y
         wndpos.cx = dll.wnd.cx
         wndpos.cy = dll.wnd.cy
-        return 0
+        wndpos.flags = SWP_NOACTIVATE or SWP_NOSENDCHANGING
 
     of WM_STYLECHANGING:
         if wParam == GWL_STYLE:
             cast[ptr STYLESTRUCT](lParam).styleNew = WS_VISIBLE or WS_POPUP
         elif wParam == GWL_EXSTYLE:
             cast[ptr STYLESTRUCT](lParam).styleNew = WS_EX_APPWINDOW
-        return 0
+
     else: discard
 
     return CallWindowProc(dll.wndProc, hwnd, msg, wParam, lParam)
