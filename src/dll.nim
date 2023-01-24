@@ -106,6 +106,9 @@ proc WinEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
 
 # Entry point for ZetaLoader
 proc mainThread(): DWORD {.stdcall.} =
+    if not fileExists("ZetaLoader.ini"):
+        writeFile("ZetaLoader.ini", "")
+
     let
         timeout, pid: DWORD = GetCurrentProcessId()
         min, max, cur: ULONG = 0
@@ -200,6 +203,4 @@ proc mainThread(): DWORD {.stdcall.} =
     return 0
 
 when isMainModule:
-    if not fileExists("ZetaLoader.ini"):
-        writeFile("ZetaLoader.ini", "")
     CreateThread(nil, 0, cast[PTHREAD_START_ROUTINE](mainThread), nil, 0, nil)
