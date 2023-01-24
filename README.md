@@ -105,7 +105,7 @@ Result Video: https://www.youtube.com/watch?v=o9u0oAyv3dc
 2. Delete `ZetaLoader.exe`, `ZetaLoader.dll`, `ZetaLoader.txt` from Halo Infinite's installation directory.
 
 # Building:
-1. Install `Nim` 
+1. Install `Nim`.   
     > **Make sure it is in the system path!**
 2. Install `winim`.
 
