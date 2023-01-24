@@ -45,7 +45,6 @@ proc foregroundWndLock(): DWORD {.stdcall.} =
 proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
         lParam: LPARAM): LRESULT {.stdcall.} =
     case msg:
-
     of WM_ACTIVATE, WM_ACTIVATEAPP:
         # Allow for the window to be minimized automatically if it's on the primary monitor.
         if dll.isPrimaryMonitor:
@@ -59,7 +58,6 @@ proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
                     ShowWindow(hWnd, SW_MINIMIZE)
                 setDM(nil)
             else: discard
-
     # Processing WM_WINDOWPOSCHANGING & WM_STYLECHANGING to prevent Halo Infinite's borderless fullscreen from getting disabled.
     of WM_WINDOWPOSCHANGING:
         var wndpos = cast[ptr WINDOWPOS](lParam)
@@ -70,15 +68,12 @@ proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
         wndpos.cx = dll.wnd.cx
         wndpos.cy = dll.wnd.cy
         wndpos.flags = SWP_NOACTIVATE or SWP_NOSENDCHANGING
-
     of WM_STYLECHANGING:
         if wParam == GWL_STYLE:
             cast[ptr STYLESTRUCT](lParam).styleNew = WS_VISIBLE or WS_POPUP
         elif wParam == GWL_EXSTYLE:
             cast[ptr STYLESTRUCT](lParam).styleNew = WS_EX_APPWINDOW
-
     else: discard
-
     return CallWindowProc(dll.wndProc, hwnd, msg, wParam, lParam)
 
 proc WinEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
