@@ -60,7 +60,6 @@ proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
             else: discard
 
     # Processing WM_WINDOWPOSCHANGING & WM_STYLECHANGING to prevent Halo Infinite's borderless fullscreen from getting disabled.
-    # Also the window procedure doesn't pass the messages to the game's actual window procedure.
     of WM_WINDOWPOSCHANGING:
         var wndpos = cast[ptr WINDOWPOS](lParam)
         wndpos.hwnd = hwnd
@@ -70,13 +69,11 @@ proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
         wndpos.cx = dll.wnd.cx
         wndpos.cy = dll.wnd.cy
         wndpos.flags = SWP_NOACTIVATE or SWP_NOSENDCHANGING
-        return 0
     of WM_STYLECHANGING:
         if wParam == GWL_STYLE:
             cast[ptr STYLESTRUCT](lParam).styleNew = WS_VISIBLE or WS_POPUP
         elif wParam == GWL_EXSTYLE:
             cast[ptr STYLESTRUCT](lParam).styleNew = WS_EX_APPWINDOW
-        return 0
     else: discard
 
     return CallWindowProc(dll.wndProc, hwnd, msg, wParam, lParam)
