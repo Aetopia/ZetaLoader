@@ -68,7 +68,6 @@ proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
         wndpos.y = dll.wnd.y
         wndpos.cx = dll.wnd.cx
         wndpos.cy = dll.wnd.cy
-        wndpos.flags = SWP_NOACTIVATE or SWP_NOSENDCHANGING
         return 0
 
     of WM_STYLECHANGING:
