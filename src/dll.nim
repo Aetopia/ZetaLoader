@@ -1,19 +1,23 @@
-import winim/[lean, shell]
-import os
-import strutils
-import parsecfg
+import winim/[lean, shell], os, strutils, parsecfg
+
+type WINDOW = object
+    x, y, cx, cy: int32
 
 type DLL = object
-    hwnd: HWND
-    dm: DEVMODE
+    hWnd: HWND
+    devMode: DEVMODE
+    pDevMode: ptr DEVMODE
     monitor: string
-    primary, foreground, restart: bool
-    WindowProc: WNDPROC
+    wnd: WINDOW
+    isPrimaryMonitor, isForegroundWnd: bool
+    wndProc: WNDPROC
     cfg: Config
+
 var dll: DLL
-dll.dm.dmSize = sizeof(DEVMODE).WORD
-dll.dm.dmFields = DM_PELSWIDTH or DM_PELSHEIGHT
-dll.primary = true
+dll.pDevMode = addr dll.devMode
+dll.devMode.dmSize = sizeof(DEVMODE).WORD
+dll.devMode.dmFields = DM_PELSWIDTH or DM_PELSHEIGHT
+dll.isPrimaryMonitor = true
 
 proc NtSetTimerResolution(DesiredResolution: ULONG, SetResolution: BOOLEAN,
         CurrentResolution: PULONG): LONG {.stdcall, dynlib: "ntdll.dll",
@@ -22,35 +26,62 @@ proc NtQueryTimerResolution(MinimumResolution, MaximumResolution,
         CurrentResolution: PULONG): LONG {.stdcall, dynlib: "ntdll.dll",
         importc, discardable.}
 
-proc SetDM(dm: ptr DEVMODE) =
-    if dll.dm.dmFields != 0:
+# Wrapper around ChangeDisplaySettingsEx.
+proc setDM(dm: ptr DEVMODE) =
+    if dll.devMode.dmFields != 0:
         ChangeDisplaySettingsEx(dll.monitor, dm, 0, CDS_FULLSCREEN, nil)
 
-proc ForegroundWindowLock(lparam: LPVOID): DWORD {.stdcall.} =
+# Constantly bring the game window into the foreground.
+proc foregroundWndLock(): DWORD {.stdcall.} =
     let hthread = GetCurrentThread()
     SetThreadPriority(hthread, THREAD_MODE_BACKGROUND_BEGIN)
     SetThreadPriorityBoost(hthread, false)
     CloseHandle(hthread)
-    while not dll.foreground:
-        SwitchToThisWindow(dll.hwnd, true)
+    while not dll.isForegroundWnd:
+        SwitchToThisWindow(dll.hWnd, true)
     return 0
 
-proc WindowProc(hwnd: HWND, msg: UINT, wparam: WPARAM,
-        lparam: LPARAM): LRESULT {.stdcall.} =
-    if [WM_ACTIVATE, WM_ACTIVATEAPP].contains(msg) and dll.primary:
-        case wparam:
-        of WA_ACTIVE, WA_CLICKACTIVE:
-            if IsIconic(hwnd):
-                SwitchToThisWindow(hwnd, TRUE)
-            SetDM(addr dll.dm)
-        of WA_INACTIVE:
-            if not IsIconic(hwnd):
-                ShowWindow(hwnd, SW_MINIMIZE)
-            SetDM(nil)
-        else: discard
-    return CallWindowProc(dll.WindowProc, hwnd, msg, wparam, lparam)
+# ZetaLoader's Window Procedure.
+proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
+        lParam: LPARAM): LRESULT {.stdcall.} =
+    case msg:
+    of WM_ACTIVATE, WM_ACTIVATEAPP:
+        # Allow for the window to be minimized automatically if it's on the primary monitor.
+        if dll.isPrimaryMonitor:
+            case wParam:
+            of WA_ACTIVE, WA_CLICKACTIVE:
+                if IsIconic(hWnd):
+                    SwitchToThisWindow(hWnd, TRUE)
+                setDM(dll.pDevMode)
+            of WA_INACTIVE:
+                if not IsIconic(hWnd):
+                    ShowWindow(hWnd, SW_MINIMIZE)
+                setDM(nil)
+            else: discard
 
-proc WinEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hwnd: HWND,
+    # Processing WM_WINDOWPOSCHANGING & WM_STYLECHANGING to prevent Halo Infinite's borderless fullscreen from getting disabled.
+    # Also the window procedure doesn't pass the messages to the game's actual window procedure.
+    of WM_WINDOWPOSCHANGING:
+        var wndpos = cast[ptr WINDOWPOS](lParam)
+        wndpos.hwnd = hwnd
+        wndpos.hwndInsertAfter = HWND_TOPMOST
+        wndpos.x = dll.wnd.x
+        wndpos.y = dll.wnd.y
+        wndpos.cx = dll.wnd.cx
+        wndpos.cy = dll.wnd.cy
+        wndpos.flags = SWP_NOACTIVATE or SWP_NOSENDCHANGING
+        return 0
+    of WM_STYLECHANGING:
+        if wParam == GWL_STYLE:
+            cast[ptr STYLESTRUCT](lParam).styleNew = WS_VISIBLE or WS_POPUP
+        elif wParam == GWL_EXSTYLE:
+            cast[ptr STYLESTRUCT](lParam).styleNew = WS_EX_APPWINDOW
+        return 0
+    else: discard
+
+    return CallWindowProc(dll.wndProc, hwnd, msg, wParam, lParam)
+
+proc WinEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
         idObject: LONG, idChild: LONG, idEventThread: DWORD,
         dwmsEventTime: DWORD) {.stdcall.} =
     if event != EVENT_OBJECT_SHOW and idobject != OBJID_WINDOW and idchild != CHILDID_SELF:
@@ -59,43 +90,49 @@ proc WinEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hwnd: HWND,
 
     let
         tid = GetWindowThreadProcessId(hwnd, nil)
-        hthread = OpenThread(THREAD_SET_INFORMATION, FALSE, tid)
-    dll.hwnd = hwnd
-    dll.WindowProc = cast[WNDPROC](GetWindowLongPtr(hwnd, GWLP_WNDPROC))
+        hThread = OpenThread(THREAD_SET_INFORMATION, FALSE, tid)
+    dll.hWnd = hWnd
+    dll.wndProc = cast[WNDPROC](GetWindowLongPtr(hWnd, GWLP_WNDPROC))
 
-    DwmSetWindowAttribute(hwnd, DWMWA_TRANSITIONS_FORCEDISABLED,
-            addr dll.primary, 4)
-    DwmSetWindowAttribute(hwnd, DWMWA_DISALLOW_PEEK, addr dll.primary, 4);
+    # Disable the window transitions, disable the peek feature, and force the iconic representation of the window.
+    DwmSetWindowAttribute(hWnd, DWMWA_TRANSITIONS_FORCEDISABLED,
+            addr dll.isPrimaryMonitor, 4)
+    DwmSetWindowAttribute(hwnd, DWMWA_DISALLOW_PEEK, addr dll.isPrimaryMonitor,
+            4);
     DwmSetWindowAttribute(hwnd, DWMWA_FORCE_ICONIC_REPRESENTATION,
-            addr dll.primary, 4)
+            addr dll.isPrimaryMonitor, 4)
 
-    SetThreadPriority(hthread, THREAD_PRIORITY_TIME_CRITICAL)
-    SetThreadPriorityBoost(hthread, FALSE)
-    CloseHandle(hthread)
+    # Set the window thread priority to time critical which resolves jittery/stuttery input for Mouse & Keyboard.
+    SetThreadPriority(hThread, THREAD_PRIORITY_TIME_CRITICAL)
+    SetThreadPriorityBoost(hThread, FALSE)
+    CloseHandle(hThread)
 
     PostQuitMessage(0)
 
-proc MainThread(lparam: LPVOID): DWORD {.stdcall.} =
-    if not fileExists("ZetaLoader.ini"):
-        writeFile("ZetaLoader.ini", "")
-
+# Entry point for ZetaLoader
+proc mainThread(): DWORD {.stdcall.} =
     let
         timeout, pid: DWORD = GetCurrentProcessId()
         min, max, cur: ULONG = 0
-        hprocess = GetCurrentProcess()
+        hProcess = GetCurrentProcess()
     var
         cfg = loadConfig("ZetaLoader.ini")
         (width, height) = (cfg.getSectionValue("Display", "Width").strip(),
                 cfg.getSectionValue("Display", "Height").strip())
-        hmonitor: HMONITOR
+        hMonitor: HMONITOR
         mi: MONITORINFOEX
         dm: DEVMODE
         msg: MSG
     mi.cbSize = sizeof(MONITORINFOEX).DWORD
 
-    SetPriorityClass(hprocess, ABOVE_NORMAL_PRIORITY_CLASS)
-    SetProcessPriorityBoost(hprocess, false)
-    CloseHandle(hprocess)
+    # 1. Set the process priority to above normal.
+    # 2. Set the timer resolution to 0.5 ms.
+    # 3. Enable Multimedia Class Scheduler Service (MMCSS) for Halo Infinite.
+    # 4. Allow Halo Infinite to set the foreground window.
+    # 5. Disable the foreground lock timeout.
+    SetPriorityClass(hProcess, ABOVE_NORMAL_PRIORITY_CLASS)
+    SetProcessPriorityBoost(hProcess, false)
+    CloseHandle(hProcess)
     NtQueryTimerResolution(unsafeAddr min, unsafeAddr max, unsafeAddr cur)
     NtSetTimerResolution(max, TRUE, unsafeAddr cur)
     DwmEnableMMCSS(true)
@@ -103,62 +140,70 @@ proc MainThread(lparam: LPVOID): DWORD {.stdcall.} =
     SystemParametersInfo(SPI_GETFOREGROUNDLOCKTIMEOUT, 0, cast[LPVOID](
             unsafeAddr timeout), 0)
 
+    # Wait until Halo Infinite shows its window.
     SetWinEventHook(EVENT_OBJECT_SHOW, EVENT_OBJECT_SHOW, 0, WinEventProc, pid,
             0, WINEVENT_OUTOFCONTEXT)
     while GetMessage(addr msg, 0, 0, 0):
         TranslateMessage(addr msg)
         DispatchMessage(addr msg)
 
-    hmonitor = MonitorFromWindow(dll.hwnd, MONITOR_DEFAULTTONEAREST)
-    GetMonitorInfo(hmonitor, cast[ptr MONITORINFO](addr mi))
-    for c in mi.szDevice:
-        if c != 0: dll.monitor.add(cast[char](c))
+    # Get the monitor, the game's window is on.
+    hMonitor = MonitorFromWindow(dll.hwnd, MONITOR_DEFAULTTONEAREST)
+    GetMonitorInfo(hMonitor, cast[ptr MONITORINFO](addr mi))
+    for i in mi.szDevice:
+        if i != 0: dll.monitor.add(cast[char](i))
+    # Disable any features of ZetaLoader that are only available if the game is running on the primary monitor.
     if mi.dwFlags != MONITORINFOF_PRIMARY:
-        dll.primary = false
+        dll.isPrimaryMonitor = false
     EnumDisplaySettings(dll.monitor, ENUM_CURRENT_SETTINGS, addr dm)
 
+    # Fetch user specified resolution or use the current resolution.
     if width == "" or height == "":
         cfg.setSectionKey("Display", "Width", $dm.dmPelsWidth)
         cfg.setSectionKey("Display", "Height", $dm.dmPelsHeight)
         writeConfig(cfg, "ZetaLoader.ini")
-        dll.dm.dmPelsWidth = dm.dmPelsWidth
-        dll.dm.dmPelsHeight = dm.dmPelsHeight
+        dll.devMode.dmPelsWidth = dm.dmPelsWidth
+        dll.devMode.dmPelsHeight = dm.dmPelsHeight
     else:
         try:
-            dll.dm.dmPelsWidth = width.parseInt().DWORD
-            dll.dm.dmPelsHeight = height.parseInt().DWORD
-            if (dll.dm.dmPelsHeight or dll.dm.dmPelsWidth) == 0:
-                dll.dm.dmFields = 0
+            dll.devMode.dmPelsWidth = width.parseInt().DWORD
+            dll.devMode.dmPelsHeight = height.parseInt().DWORD
+            if (dll.devMode.dmPelsHeight or dll.devMode.dmPelsWidth) == 0:
+                dll.devMode.dmFields = 0
         except ValueError:
             discard
 
-    if ChangeDisplaySettingsEx(dll.monitor, addr dll.dm, 0, CDS_TEST,
+    # Test if the user specified resolution is supported by the monitor or if the game is in borderless fullscreen.
+    if ChangeDisplaySettingsEx(dll.monitor, dll.pDevMode, 0, CDS_TEST,
             nil) != DISP_CHANGE_SUCCESSFUL or GetWindowLongPtr(dll.hwnd,
                     GWL_STYLE) != (WS_VISIBLE or WS_OVERLAPPED or
                     WS_CLIPSIBLINGS):
         return 0
 
-    if dm.dmPelsWidth == dll.dm.dmPelsWidth and dm.dmPelsHeight ==
-            dll.dm.dmPelsHeight:
-        dll.dm.dmFields = 0
-
+    # Use WS_VISIBLE | WS_POPUP and WS_EX_APPWINDOW for the game's borderless fullscreen.
+    if dm.dmPelsWidth == dll.devMode.dmPelsWidth and dm.dmPelsHeight ==
+            dll.devMode.dmPelsHeight:
+        dll.devMode.dmFields = 0
     SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, cast[LPVOID](0), 0)
-    CreateThread(nil, 0, ForegroundWindowLock, nil, 0, nil)
-    SetDM(addr dll.dm)
-    GetMonitorInfo(hmonitor, cast[ptr MONITORINFO](addr mi))
+    CreateThread(nil, 0, cast[PTHREAD_START_ROUTINE](foregroundWndLock), nil, 0, nil)
+    setDM(dll.pDevMode)
+    GetMonitorInfo(hMonitor, cast[ptr MONITORINFO](addr mi))
     SetWindowLongPtr(dll.hwnd, GWL_STYLE, WS_VISIBLE or WS_POPUP)
     SetWindowLongPtr(dll.hwnd, GWL_EXSTYLE, WS_EX_APPWINDOW)
-    SetWindowPos(dll.hwnd, HWND_TOPMOST, mi.rcMonitor.left, mi.rcMonitor.top,
-            mi.rcMonitor.right - mi.rcMonitor.left, mi.rcMonitor.bottom -
-            mi.rcMonitor.top, SWP_NOACTIVATE or SWP_NOSENDCHANGING)
-    SetWindowLongPtr(dll.hwnd, GWLP_WNDPROC, cast[LONG_PTR](WindowProc))
+    dll.wnd.x = mi.rcMonitor.left
+    dll.wnd.y = mi.rcMonitor.top
+    dll.wnd.cx = mi.rcMonitor.right - mi.rcMonitor.left
+    dll.wnd.cy = mi.rcMonitor.bottom - mi.rcMonitor.top
+    SetWindowPos(dll.hwnd, HWND_TOPMOST, dll.wnd.x, dll.wnd.y, dll.wnd.cx,
+            dll.wnd.cy, SWP_NOACTIVATE or SWP_NOSENDCHANGING)
+    SetWindowLongPtr(dll.hwnd, GWLP_WNDPROC, cast[LONG_PTR](wndProc))
     if timeout != 0:
         SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, cast[LPVOID](
                 unsafeAddr timeout), 0)
-    dll.foreground = true
+    dll.isForegroundWnd = true
     return 0
 
 when isMainModule:
     if not fileExists("ZetaLoader.ini"):
         writeFile("ZetaLoader.ini", "")
-    CreateThread(nil, 0, MainThread, nil, 0, nil)
+    CreateThread(nil, 0, cast[PTHREAD_START_ROUTINE](mainThread), nil, 0, nil)
