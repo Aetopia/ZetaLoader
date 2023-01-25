@@ -76,7 +76,7 @@ proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
     else: discard
     return CallWindowProc(dll.wndProc, hwnd, msg, wParam, lParam)
 
-proc WinEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
+proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
         idObject: LONG, idChild: LONG, idEventThread: DWORD,
         dwmsEventTime: DWORD) {.stdcall.} =
     if event != EVENT_OBJECT_SHOW and idobject != OBJID_WINDOW and idchild != CHILDID_SELF:
@@ -139,7 +139,7 @@ proc mainThread(): DWORD {.stdcall.} =
             unsafeAddr timeout), 0)
 
     # Wait until Halo Infinite shows its window.
-    SetWinEventHook(EVENT_OBJECT_SHOW, EVENT_OBJECT_SHOW, 0, WinEventProc, pid,
+    SetWinEventHook(EVENT_OBJECT_SHOW, EVENT_OBJECT_SHOW, 0, winEventProc, pid,
             0, WINEVENT_OUTOFCONTEXT)
     while GetMessage(addr msg, 0, 0, 0):
         TranslateMessage(addr msg)
