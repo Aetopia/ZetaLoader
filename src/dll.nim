@@ -45,19 +45,24 @@ proc foregroundWndLock(): DWORD {.stdcall.} =
 proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
         lParam: LPARAM): LRESULT {.stdcall.} =
     case msg:
+    # Revert the resolution back to the desktop resolution when the game is being closed.
+    of WM_CLOSE, WM_DESTROY, WM_QUIT:
+        ShowWindow(hWnd, SW_MINIMIZE)
+        if not dll.isPrimaryMonitor:
+            setDM(nil)
+
+    # Processing WM_ACTIVATE & WM_ACTIVATEAPP to allow the game's window to automatically minimize and reset the resolution for multitasking on the primary monitor.
     of WM_ACTIVATE, WM_ACTIVATEAPP:
-        # Allow for the window to be minimized automatically if it's on the primary monitor.
         if dll.isPrimaryMonitor:
             case wParam:
             of WA_ACTIVE, WA_CLICKACTIVE:
-                if IsIconic(hWnd):
-                    SwitchToThisWindow(hWnd, TRUE)
+                if IsIconic(hWnd): ShowWindow(hWnd, SW_RESTORE)
                 setDM(dll.pDevMode)
             of WA_INACTIVE:
-                if not IsIconic(hWnd):
-                    ShowWindow(hWnd, SW_MINIMIZE)
+                if not IsIconic(hWnd): ShowWindow(hWnd, SW_MINIMIZE)
                 setDM(nil)
             else: discard
+
     # Processing WM_WINDOWPOSCHANGING & WM_STYLECHANGING to prevent Halo Infinite's borderless fullscreen from getting disabled.
     of WM_WINDOWPOSCHANGING:
         var wndpos = cast[ptr WINDOWPOS](lParam)
@@ -74,6 +79,7 @@ proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
         elif wParam == GWL_EXSTYLE:
             cast[ptr STYLESTRUCT](lParam).styleNew = WS_EX_APPWINDOW
     else: discard
+
     return CallWindowProc(dll.wndProc, hwnd, msg, wParam, lParam)
 
 proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
