@@ -47,7 +47,7 @@ proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
     case msg:
     # Revert the resolution back to the desktop resolution when the game is being closed.
     of WM_CLOSE, WM_DESTROY, WM_QUIT:
-        ShowWindow(hWnd, SW_HIDE)
+        ShowWindow(hWnd, SW_MINIMIZE)
         if not dll.isPrimaryMonitor:
             setDM(nil)
 
