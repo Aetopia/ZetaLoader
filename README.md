@@ -79,10 +79,12 @@ Result Video: https://www.youtube.com/watch?v=o9u0oAyv3dc
 ## Installation:
 1. Download `DumpTool.exe` from [GitHub Releases](https://github.com/Aetopia/ZetaLoader).   
 
-2. Browse Halo Infinite's local files.
+2. Browse Halo Infinite's local files.  
+
     ![Properties](https://i.imgur.com/8HKvH4U.png)
 
-3. Replace the file called `DumpTool.exe` with ZetaLoader's `DumpTool.exe`.
+3. Replace the file called `DumpTool.exe` with ZetaLoader's `DumpTool.exe`.   
+
     ![Replace `DumpTool.exe`](https://i.imgur.com/h0wKBBk.png)
 
 4. - Launch Halo Infinite. 
