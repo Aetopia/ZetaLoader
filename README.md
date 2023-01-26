@@ -76,7 +76,7 @@ A utility to fix technical issues with Halo Infinite on PC.
 **Note: My minimum framerate is set to 960 FPS in the linked video.**      
 Result Video: https://www.youtube.com/watch?v=o9u0oAyv3dc
 
-## Installation:
+## Installation
 1. Download `DumpTool.exe` from [GitHub Releases](https://github.com/Aetopia/ZetaLoader).   
 
 2. Browse Halo Infinite's local files.  
