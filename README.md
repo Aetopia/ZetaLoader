@@ -100,9 +100,10 @@ Result Video: https://www.youtube.com/watch?v=o9u0oAyv3dc
     Also ensure **Borderless Fullscreen is enabled** & set this as the contents of `ZetaLoader.ini`.
 
 ## Uninstallation
-Delete `DumpTool.exe`, `ZetaLoader.dll`, `ZetaLoader.txt` from Halo Infinite's installation directory and then verify integrity of game files to restore the original `DumpTool.exe`.
+1. Delete `DumpTool.exe`, `ZetaLoader.dll`, `ZetaLoader.txt` from Halo Infinite's installation directory.
+2. Verify integrity of the game files to restore the original `DumpTool.exe`.
 
-# Building:
+# Building
 1. Install `Nim`.   
     > **Make sure it is in the system path!**
 2. Install `winim`.
@@ -113,7 +114,7 @@ Delete `DumpTool.exe`, `ZetaLoader.dll`, `ZetaLoader.txt` from Halo Infinite's i
 3. Run `build.bat`.
     > Optional UPX compression is also performed if `upx.exe` is in the system path.
 
-## Limitations
+# Limitations
 
 **Here are a few things you should note about ZetaLoader.**
 
