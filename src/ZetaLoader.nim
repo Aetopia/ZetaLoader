@@ -1,14 +1,11 @@
 import winim/[lean, shell], os, strutils, parsecfg
 
-type WINDOW = object
-    x, y, cx, cy: int32
-
 type DLL = object
     hWnd: HWND
     devMode: DEVMODE
     pDevMode: ptr DEVMODE
     monitor: string
-    wnd: WINDOW
+    x, y, cx, cy: int32
     isPrimaryMonitor, isForegroundWnd: bool
     wndProc: WNDPROC
     cfg: Config
@@ -66,10 +63,10 @@ proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
     of WM_WINDOWPOSCHANGING:
         let wndPos = cast[ptr WINDOWPOS](lParam)
         wndPos.hwndInsertAfter = HWND_TOPMOST
-        wndPos.x = dll.wnd.x
-        wndPos.y = dll.wnd.y
-        wndPos.cx = dll.wnd.cx
-        wndPos.cy = dll.wnd.cy
+        wndPos.x = dll.x
+        wndPos.y = dll.y
+        wndPos.cx = dll.cx
+        wndPos.cy = dll.cy
     of WM_STYLECHANGING:
         if wParam == GWL_STYLE:
             cast[ptr STYLESTRUCT](lParam).styleNew = WS_VISIBLE or WS_POPUP
@@ -191,12 +188,12 @@ proc mainThread(): DWORD {.stdcall.} =
     GetMonitorInfo(hMonitor, cast[ptr MONITORINFO](addr mi))
     SetWindowLongPtr(dll.hwnd, GWL_STYLE, WS_VISIBLE or WS_POPUP)
     SetWindowLongPtr(dll.hwnd, GWL_EXSTYLE, WS_EX_APPWINDOW)
-    dll.wnd.x = mi.rcMonitor.left
-    dll.wnd.y = mi.rcMonitor.top
-    dll.wnd.cx = mi.rcMonitor.right - mi.rcMonitor.left
-    dll.wnd.cy = mi.rcMonitor.bottom - mi.rcMonitor.top
-    SetWindowPos(dll.hwnd, HWND_TOPMOST, dll.wnd.x, dll.wnd.y, dll.wnd.cx,
-            dll.wnd.cy, SWP_NOACTIVATE or SWP_NOSENDCHANGING)
+    dll.x = mi.rcMonitor.left
+    dll.y = mi.rcMonitor.top
+    dll.cx = mi.rcMonitor.right - mi.rcMonitor.left
+    dll.cy = mi.rcMonitor.bottom - mi.rcMonitor.top
+    SetWindowPos(dll.hwnd, HWND_TOPMOST, dll.x, dll.y, dll.cx,
+            dll.cy, SWP_NOACTIVATE or SWP_NOSENDCHANGING)
     SetWindowLongPtr(dll.hwnd, GWLP_WNDPROC, cast[LONG_PTR](wndProc))
     if timeout != 0:
         SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, cast[LPVOID](
