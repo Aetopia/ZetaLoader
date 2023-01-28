@@ -13,10 +13,9 @@ game.devMode.dmFields = DM_PELSWIDTH or DM_PELSHEIGHT
 game.isPrimaryMonitor = true
 
 proc getSectionValue(cfg: OrderedTableRef[string, OrderedTableRef[string, string]], section, key: string): string =
-    let s_section = section.strip()
-    if cfg.hasKey(s_section):
-        if cfg[s_section].hasKey(key):
-            return cfg[s_section][key.strip()]
+    if cfg.hasKey(section):
+        if cfg[section].hasKey(key):
+            return cfg[section][key]
     return ""
 
 proc readCfg(filename: string): OrderedTableRef[string, OrderedTableRef[string, string]] =
@@ -183,7 +182,7 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
     SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, cast[LPVOID](0), 0)
     CreateThread(nil, 0, cast[PTHREAD_START_ROUTINE](foregroundWndLock), cast[LPVOID](hWnd), 0, nil)
 
-    # Use WS_VISIBLE | WS_POPUP and WS_EX_APPWINDOW for the game's borderless fullscreen.
+    # Use WS_VISIBLE | WS_POPUP and WS_EX_APPWINDOW for the game's borderless fullscreen and apply the user specified resolution.
     setDM(addr game.devMode)
     GetMonitorInfo(hMonitor, cast[ptr MONITORINFO](addr mi))
     SetWindowLongPtr(hWnd, GWL_STYLE, WS_VISIBLE or WS_POPUP)
@@ -192,7 +191,7 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
     SetWindowPos(hWnd, HWND_TOPMOST, game.x, game.y, game.cx,
             game.cy, SWP_NOACTIVATE or SWP_NOSENDCHANGING)
     
-    # Redirect the game's window procedure to our ZetaLoader's window procedure & cleanup.
+    # Redirect the game's window procedure to ZetaLoader's window procedure & cleanup.
     SetWindowLongPtr(hWnd, GWLP_WNDPROC, cast[LONG_PTR](wndProc))
     if timeout != 0:
         SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, cast[LPVOID](
