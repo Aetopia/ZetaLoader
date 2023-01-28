@@ -180,28 +180,34 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
             LPVOID](hWnd), 0, nil)
 
     # Execute the `if` block if the game is using borderless fullscreen.
-    # 1. Disable the window transitions, disable the peek feature, and force the iconic representation of the window.
-    # 2. Apply the user specified resolution.
-    # 3. Use WS_VISIBLE | WS_POPUP and WS_EX_APPWINDOW for the game's borderless fullscreen.
-    # 4. Redirect the game's window procedure to ZetaLoader's window procedure.
     if GetWindowLongPtr(hWnd, GWL_STYLE) == (WS_VISIBLE or WS_OVERLAPPED or
             WS_CLIPSIBLINGS):
+        # 1. Disable the window transitions, disable the peek feature, and force the iconic representation of the window.
         DwmSetWindowAttribute(hWnd, DWMWA_TRANSITIONS_FORCEDISABLED,
                 unsafeAddr vAttribute, 4)
         DwmSetWindowAttribute(hWnd, DWMWA_DISALLOW_PEEK, unsafeAddr vAttribute, 4)
         DwmSetWindowAttribute(hWnd, DWMWA_FORCE_ICONIC_REPRESENTATION,
                 unsafeAddr vAttribute, 4)
+
+        # 2. Apply the user specified resolution.
         setDM(addr game.devMode)
         GetMonitorInfo(hMonitor, cast[ptr MONITORINFO](addr mi))
-        SetWindowLongPtr(hWnd, GWL_STYLE, WS_VISIBLE or WS_POPUP)
-        SetWindowLongPtr(hWnd, GWL_EXSTYLE, WS_EX_APPWINDOW)
         (game.x, game.y, game.cx, game.cy) = (mi.rcMonitor.left,
                 mi.rcMonitor.top, mi.rcMonitor.right - mi.rcMonitor.left,
                 mi.rcMonitor.bottom -
                 mi.rcMonitor.top)
+
+        # 3. Setup ZetaLoader's Borderless Fullscreen implementation.
+        # - Use WS_VISIBLE | WS_POPUP and WS_EX_APPWINDOW for the game's borderless fullscreen
+        # - Resize the game's window to match the user defined resolution.
+        # - Redirect the game's window procedure to ZetaLoader's window procedure.
+        SetWindowLongPtr(hWnd, GWL_STYLE, WS_VISIBLE or WS_POPUP)
+        SetWindowLongPtr(hWnd, GWL_EXSTYLE, WS_EX_APPWINDOW)
         SetWindowPos(hWnd, HWND_TOPMOST, game.x, game.y, game.cx, game.cy,
                 SWP_NOACTIVATE or SWP_NOSENDCHANGING)
         SetWindowLongPtr(hWnd, GWLP_WNDPROC, cast[LONG_PTR](wndProc))
+
+        # 4. Revert the Foreground lock timeout to default and unlock the foreground window.
         if timeout != 0:
             SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, cast[LPVOID](
                     unsafeAddr timeout), 0)
