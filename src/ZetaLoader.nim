@@ -12,12 +12,14 @@ game.devMode.dmSize = sizeof(DEVMODE).WORD
 game.devMode.dmFields = DM_PELSWIDTH or DM_PELSHEIGHT
 game.isPrimaryMonitor = true
 
+# Get the value of a key in a section of the configuration file.
 proc getSectionValue(cfg: OrderedTableRef[string, OrderedTableRef[string, string]], section, key: string): string =
     if cfg.hasKey(section):
         if cfg[section].hasKey(key):
             return cfg[section][key]
     return ""
 
+# Read the configuration file.
 proc readCfg(filename: string): OrderedTableRef[string, OrderedTableRef[string, string]] =
     var
         cfg = newOrderedTable[string, OrderedTableRef[string, string]]()
