@@ -93,7 +93,6 @@ Result Video: https://www.youtube.com/watch?v=o9u0oAyv3dc
 7.  To configure the resolution ZetaLoader applies to Halo Infinite, modify `ZetaLoader.ini`.         
     To launch Halo Infinite at `1280 x 720`:              
     ```
-    [Display]
     Width = 1280
     Height = 720
     ```
