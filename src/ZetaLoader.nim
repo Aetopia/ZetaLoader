@@ -179,7 +179,7 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
     CreateThread(nil, 0, cast[PTHREAD_START_ROUTINE](foregroundWndLock), cast[
             LPVOID](hWnd), 0, nil)
 
-    # Proceed only if the game is in borderless fullscreen.
+    # Execute the `if` block if the game is using borderless fullscreen.
     # 1. Disable the window transitions, disable the peek feature, and force the iconic representation of the window.
     # 2. Apply the user specified resolution.
     # 3. Use WS_VISIBLE | WS_POPUP and WS_EX_APPWINDOW for the game's borderless fullscreen.
