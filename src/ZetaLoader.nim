@@ -202,7 +202,6 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
         SetWindowPos(hWnd, HWND_TOPMOST, game.x, game.y, game.cx, game.cy,
                 SWP_NOACTIVATE or SWP_NOSENDCHANGING)
         SetWindowLongPtr(hWnd, GWLP_WNDPROC, cast[LONG_PTR](wndProc))
-
         if timeout != 0:
             SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, cast[LPVOID](
                     unsafeAddr timeout), 0)
