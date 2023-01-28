@@ -166,11 +166,6 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
         writeFile("ZetaLoader.ini", "Width = " & $dm.dmPelsWidth &
                 "\nHeight = " & $dm.dmPelsHeight)
 
-    # Check if the game is in borderless fullscreen.
-    if GetWindowLongPtr(hWnd, GWL_STYLE) != (WS_VISIBLE or WS_OVERLAPPED or
-            WS_CLIPSIBLINGS):
-        PostQuitMessage(0)
-
     # Check if the user specified resolution is not supported by the monitor, is the native resolution or if the user specified resolution is 0.
     if ChangeDisplaySettingsEx(game.monitor, addr game.devMode, 0, CDS_TEST,
             nil) != DISP_CHANGE_SUCCESSFUL or
@@ -184,31 +179,34 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
     CreateThread(nil, 0, cast[PTHREAD_START_ROUTINE](foregroundWndLock), cast[
             LPVOID](hWnd), 0, nil)
 
+    # Proceed only if the game is in borderless fullscreen.
     # 1. Disable the window transitions, disable the peek feature, and force the iconic representation of the window.
     # 2. Apply the user specified resolution.
     # 3. Use WS_VISIBLE | WS_POPUP and WS_EX_APPWINDOW for the game's borderless fullscreen.
     # 4. Redirect the game's window procedure to ZetaLoader's window procedure.
-    DwmSetWindowAttribute(hWnd, DWMWA_TRANSITIONS_FORCEDISABLED,
-            unsafeAddr vAttribute, 4)
-    DwmSetWindowAttribute(hWnd, DWMWA_DISALLOW_PEEK, unsafeAddr vAttribute, 4)
-    DwmSetWindowAttribute(hWnd, DWMWA_FORCE_ICONIC_REPRESENTATION,
-            unsafeAddr vAttribute, 4)
-    setDM(addr game.devMode)
-    GetMonitorInfo(hMonitor, cast[ptr MONITORINFO](addr mi))
-    SetWindowLongPtr(hWnd, GWL_STYLE, WS_VISIBLE or WS_POPUP)
-    SetWindowLongPtr(hWnd, GWL_EXSTYLE, WS_EX_APPWINDOW)
-    (game.x, game.y, game.cx, game.cy) = (mi.rcMonitor.left, mi.rcMonitor.top,
-            mi.rcMonitor.right - mi.rcMonitor.left, mi.rcMonitor.bottom -
-            mi.rcMonitor.top)
-    SetWindowPos(hWnd, HWND_TOPMOST, game.x, game.y, game.cx, game.cy,
-            SWP_NOACTIVATE or SWP_NOSENDCHANGING)
-    SetWindowLongPtr(hWnd, GWLP_WNDPROC, cast[LONG_PTR](wndProc))
+    if GetWindowLongPtr(hWnd, GWL_STYLE) == (WS_VISIBLE or WS_OVERLAPPED or
+            WS_CLIPSIBLINGS):
+        DwmSetWindowAttribute(hWnd, DWMWA_TRANSITIONS_FORCEDISABLED,
+                unsafeAddr vAttribute, 4)
+        DwmSetWindowAttribute(hWnd, DWMWA_DISALLOW_PEEK, unsafeAddr vAttribute, 4)
+        DwmSetWindowAttribute(hWnd, DWMWA_FORCE_ICONIC_REPRESENTATION,
+                unsafeAddr vAttribute, 4)
+        setDM(addr game.devMode)
+        GetMonitorInfo(hMonitor, cast[ptr MONITORINFO](addr mi))
+        SetWindowLongPtr(hWnd, GWL_STYLE, WS_VISIBLE or WS_POPUP)
+        SetWindowLongPtr(hWnd, GWL_EXSTYLE, WS_EX_APPWINDOW)
+        (game.x, game.y, game.cx, game.cy) = (mi.rcMonitor.left,
+                mi.rcMonitor.top, mi.rcMonitor.right - mi.rcMonitor.left,
+                mi.rcMonitor.bottom -
+                mi.rcMonitor.top)
+        SetWindowPos(hWnd, HWND_TOPMOST, game.x, game.y, game.cx, game.cy,
+                SWP_NOACTIVATE or SWP_NOSENDCHANGING)
+        SetWindowLongPtr(hWnd, GWLP_WNDPROC, cast[LONG_PTR](wndProc))
 
-    # Cleanup.
-    if timeout != 0:
-        SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, cast[LPVOID](
-                unsafeAddr timeout), 0)
-    game.isForegroundWnd = true
+        if timeout != 0:
+            SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, cast[LPVOID](
+                    unsafeAddr timeout), 0)
+        game.isForegroundWnd = true
 
     PostQuitMessage(0)
 
