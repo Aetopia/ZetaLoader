@@ -170,9 +170,9 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
     except ValueError:
         writeFile("ZetaLoader.ini", "Width = " & $dm.dmPelsWidth & "\nHeight = " & $dm.dmPelsHeight)
 
-    # Test if the user specified resolution is supported by the monitor or if the game is in borderless fullscreen.
+    # Check if the game is in borderless fullscreen.
     if GetWindowLongPtr(hWnd, GWL_STYLE) != (WS_VISIBLE or WS_OVERLAPPED or WS_CLIPSIBLINGS):
-         PostQuitMessage(0)
+        PostQuitMessage(0)
 
     # Check if the user specified resolution is not supported by the monitor, is the native resolution or if the user specified resolution is 0.
     if ChangeDisplaySettingsEx(game.monitor, addr game.devMode, 0, CDS_TEST, nil) != DISP_CHANGE_SUCCESSFUL or 
