@@ -25,7 +25,7 @@ proc readCfg(filename: string): OrderedTableRef[string, OrderedTableRef[string, 
         cfg = newOrderedTable[string, OrderedTableRef[string, string]]()
         section: string
     cfg[""] = newOrderedTable[string, string]()
-    for i in readFile(filename).splitLines():
+    for i in readFile(filename).strip(chars={'\n', ' '}).splitLines():
         let line = i.strip()
         if line.len == 0: continue
         elif [line[0], line[^1]] == ['[', ']']:
