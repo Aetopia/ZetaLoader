@@ -174,20 +174,21 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
         (game.devMode.dmPelsHeight or game.devMode.dmPelsWidth) == 0:
         game.devMode.dmFields = 0
 
-    # Set the Foreground Lock Timeout to 0 and lock the foreground window to the game's window.
-    SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, cast[LPVOID](0), 0)
-    CreateThread(nil, 0, cast[PTHREAD_START_ROUTINE](foregroundWndLock), cast[
-            LPVOID](hWnd), 0, nil)
-
     # Execute the `if` block if the game is using borderless fullscreen.
     if GetWindowLongPtr(hWnd, GWL_STYLE) == (WS_VISIBLE or WS_OVERLAPPED or
             WS_CLIPSIBLINGS):
+        
+        # Set the Foreground lock timeout to 0 and lock the foreground window to the game's window.
+        SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, cast[LPVOID](0), 0)
+        CreateThread(nil, 0, cast[PTHREAD_START_ROUTINE](foregroundWndLock), cast[LPVOID](hWnd), 0, nil)
+
         # 1. Disable the window transitions, disable the peek feature, and force the iconic representation of the window.
         DwmSetWindowAttribute(hWnd, DWMWA_TRANSITIONS_FORCEDISABLED,
                 unsafeAddr vAttribute, 4)
         DwmSetWindowAttribute(hWnd, DWMWA_DISALLOW_PEEK, unsafeAddr vAttribute, 4)
         DwmSetWindowAttribute(hWnd, DWMWA_FORCE_ICONIC_REPRESENTATION,
                 unsafeAddr vAttribute, 4)
+
 
         # 2. Apply the user specified resolution.
         setDM(addr game.devMode)
