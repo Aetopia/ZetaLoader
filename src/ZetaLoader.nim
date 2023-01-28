@@ -166,7 +166,7 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
         writeFile("ZetaLoader.ini", "Width = " & $dm.dmPelsWidth &
                 "\nHeight = " & $dm.dmPelsHeight)
 
-    # Check if the user specified resolution is not supported by the monitor, is the native resolution or if the user specified resolution is 0.
+    # Check if the user specified resolution is not supported by the monitor or is the native resolution..
     if ChangeDisplaySettingsEx(game.monitor, addr game.devMode, 0, CDS_TEST,
             nil) != DISP_CHANGE_SUCCESSFUL or
         (dm.dmPelsWidth == game.devMode.dmPelsWidth and dm.dmPelsHeight ==
@@ -174,13 +174,14 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
         (game.devMode.dmPelsHeight or game.devMode.dmPelsWidth) == 0:
         game.devMode.dmFields = 0
 
-    # Execute the `if` block if the game is using borderless fullscreen.
+    # ZetaLoader Borderless Fullscreen + User Defined Resolution Support
     if GetWindowLongPtr(hWnd, GWL_STYLE) == (WS_VISIBLE or WS_OVERLAPPED or
             WS_CLIPSIBLINGS):
-        
+
         # Set the Foreground lock timeout to 0 and lock the foreground window to the game's window.
         SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, cast[LPVOID](0), 0)
-        CreateThread(nil, 0, cast[PTHREAD_START_ROUTINE](foregroundWndLock), cast[LPVOID](hWnd), 0, nil)
+        CreateThread(nil, 0, cast[PTHREAD_START_ROUTINE](foregroundWndLock),
+                cast[LPVOID](hWnd), 0, nil)
 
         # 1. Disable the window transitions, disable the peek feature, and force the iconic representation of the window.
         DwmSetWindowAttribute(hWnd, DWMWA_TRANSITIONS_FORCEDISABLED,
