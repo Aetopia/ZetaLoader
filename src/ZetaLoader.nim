@@ -1,4 +1,4 @@
-import winim/[lean, shell], os, strutils, tables
+import winim/[lean, inc/dwmapi], os, strutils, tables
 
 type Game = object
     devMode: DEVMODE
@@ -127,8 +127,6 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
     # 1. Set the process priority to above normal.
     # 2. Set the timer resolution to 0.5 ms.
     # 3. Enable Multimedia Class Scheduler Service (MMCSS) for Halo Infinite.
-    # 4. Allow Halo Infinite to set the foreground window.
-    # 5. Disable the foreground lock timeout.
     SetPriorityClass(hProcess, ABOVE_NORMAL_PRIORITY_CLASS)
     SetProcessPriorityBoost(hProcess, false)
     CloseHandle(hProcess)
@@ -137,14 +135,6 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
     DwmEnableMMCSS(true)
     SystemParametersInfo(SPI_GETFOREGROUNDLOCKTIMEOUT, 0, cast[LPVOID](
             unsafeAddr timeout), 0)
-
-    # Disable the window transitions, disable the peek feature, and force the iconic representation of the window.
-    DwmSetWindowAttribute(hWnd, DWMWA_TRANSITIONS_FORCEDISABLED,
-            addr game.isPrimaryMonitor, 4)
-    DwmSetWindowAttribute(hWnd, DWMWA_DISALLOW_PEEK, addr game.isPrimaryMonitor,
-            4);
-    DwmSetWindowAttribute(hWnd, DWMWA_FORCE_ICONIC_REPRESENTATION,
-            addr game.isPrimaryMonitor, 4)
 
     # Set the window thread priority to time critical which resolves jittery/stuttery input for Mouse & Keyboard.
     SetThreadPriority(hThread, THREAD_PRIORITY_TIME_CRITICAL)
