@@ -13,7 +13,8 @@ game.devMode.dmFields = DM_PELSWIDTH or DM_PELSHEIGHT
 game.isPrimaryMonitor = true
 
 # Get the value of a key in a section of a configuration file.
-proc getSectionValue(cfg: OrderedTableRef[string, OrderedTableRef[string, string]], section, key: string): string =
+proc getSectionValue(cfg: OrderedTableRef[string, OrderedTableRef[string,
+        string]], section, key: string): string =
     if cfg.hasKey(section):
         if cfg[section].hasKey(key):
             return cfg[section][key]
@@ -25,7 +26,7 @@ proc readCfg(filename: string): OrderedTableRef[string, OrderedTableRef[string, 
         cfg = newOrderedTable[string, OrderedTableRef[string, string]]()
         section: string
     cfg[""] = newOrderedTable[string, string]()
-    for i in readFile(filename).strip(chars={'\n', ' '}).splitLines():
+    for i in readFile(filename).strip(chars = {'\n', ' '}).splitLines():
         let line = i.strip()
         if line.len == 0: continue
         elif [line[0], line[^1]] == ['[', ']']:
@@ -36,7 +37,7 @@ proc readCfg(filename: string): OrderedTableRef[string, OrderedTableRef[string, 
                 keyvalue = line.split("=", 1)
                 key = keyvalue[0].strip().toLower()
                 value = keyvalue[1].strip()
-            if key != "" and value != "": 
+            if key != "" and value != "":
                 cfg[section][key.toLower()] = value
     return cfg
 
@@ -48,11 +49,12 @@ proc NtQueryTimerResolution(MinimumResolution, MaximumResolution,
         importc, discardable.}
 
 # Wrapper around ChangeDisplaySettingsEx.
-proc setDM(dm: ptr DEVMODE) {.inline.} = ChangeDisplaySettingsEx(game.monitor, dm, 0, CDS_FULLSCREEN, nil)
+proc setDM(dm: ptr DEVMODE) {.inline.} = ChangeDisplaySettingsEx(game.monitor,
+        dm, 0, CDS_FULLSCREEN, nil)
 
 # Constantly bring the game window into the foreground.
 proc foregroundWndLock(lParam: LPVOID): DWORD {.stdcall.} =
-    let 
+    let
         hThread = GetCurrentThread()
         hWnd = cast[HWND](lParam)
     SetThreadPriority(hThread, THREAD_MODE_BACKGROUND_BEGIN)
@@ -109,15 +111,18 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
 
     setCurrentDir(getAppDir())
     if not fileExists("ZetaLoader.ini"):
-            writeFile("ZetaLoader.ini", "")
+        writeFile("ZetaLoader.ini", "")
     let
         timeout: DWORD = 0
         min, max, cur: ULONG = 0
         hProcess = GetCurrentProcess()
-        hThread = OpenThread(THREAD_SET_INFORMATION, FALSE, GetWindowThreadProcessId(hWnd, nil))
+        hThread = OpenThread(THREAD_SET_INFORMATION, FALSE,
+                GetWindowThreadProcessId(hWnd, nil))
+        vAttribute = TRUE
     var
         cfg = readCfg("ZetaLoader.ini")
-        (width, height) = (cfg.getSectionValue("", "width"), cfg.getSectionValue("", "height"))
+        (width, height) = (cfg.getSectionValue("", "width"),
+                cfg.getSectionValue("", "height"))
         hMonitor: HMONITOR
         mi: MONITORINFOEX
         dm: DEVMODE
@@ -158,33 +163,48 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
         game.devMode.dmPelsWidth = width.parseInt().DWORD
         game.devMode.dmPelsHeight = height.parseInt().DWORD
     except ValueError:
-        writeFile("ZetaLoader.ini", "Width = " & $dm.dmPelsWidth & "\nHeight = " & $dm.dmPelsHeight)
+        writeFile("ZetaLoader.ini", "Width = " & $dm.dmPelsWidth &
+                "\nHeight = " & $dm.dmPelsHeight)
 
     # Check if the game is in borderless fullscreen.
-    if GetWindowLongPtr(hWnd, GWL_STYLE) != (WS_VISIBLE or WS_OVERLAPPED or WS_CLIPSIBLINGS):
+    if GetWindowLongPtr(hWnd, GWL_STYLE) != (WS_VISIBLE or WS_OVERLAPPED or
+            WS_CLIPSIBLINGS):
         PostQuitMessage(0)
 
     # Check if the user specified resolution is not supported by the monitor, is the native resolution or if the user specified resolution is 0.
-    if ChangeDisplaySettingsEx(game.monitor, addr game.devMode, 0, CDS_TEST, nil) != DISP_CHANGE_SUCCESSFUL or 
-        (dm.dmPelsWidth == game.devMode.dmPelsWidth and dm.dmPelsHeight == game.devMode.dmPelsHeight) or 
+    if ChangeDisplaySettingsEx(game.monitor, addr game.devMode, 0, CDS_TEST,
+            nil) != DISP_CHANGE_SUCCESSFUL or
+        (dm.dmPelsWidth == game.devMode.dmPelsWidth and dm.dmPelsHeight ==
+                game.devMode.dmPelsHeight) or
         (game.devMode.dmPelsHeight or game.devMode.dmPelsWidth) == 0:
         game.devMode.dmFields = 0
-    
+
     # Set the Foreground Lock Timeout to 0 and lock the foreground window to the game's window.
     SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, cast[LPVOID](0), 0)
-    CreateThread(nil, 0, cast[PTHREAD_START_ROUTINE](foregroundWndLock), cast[LPVOID](hWnd), 0, nil)
+    CreateThread(nil, 0, cast[PTHREAD_START_ROUTINE](foregroundWndLock), cast[
+            LPVOID](hWnd), 0, nil)
 
-    # Use WS_VISIBLE | WS_POPUP and WS_EX_APPWINDOW for the game's borderless fullscreen and apply the user specified resolution.
+    # 1. Disable the window transitions, disable the peek feature, and force the iconic representation of the window.
+    # 2. Apply the user specified resolution.
+    # 3. Use WS_VISIBLE | WS_POPUP and WS_EX_APPWINDOW for the game's borderless fullscreen.
+    # 4. Redirect the game's window procedure to ZetaLoader's window procedure.
+    DwmSetWindowAttribute(hWnd, DWMWA_TRANSITIONS_FORCEDISABLED,
+            unsafeAddr vAttribute, 4)
+    DwmSetWindowAttribute(hWnd, DWMWA_DISALLOW_PEEK, unsafeAddr vAttribute, 4)
+    DwmSetWindowAttribute(hWnd, DWMWA_FORCE_ICONIC_REPRESENTATION,
+            unsafeAddr vAttribute, 4)
     setDM(addr game.devMode)
     GetMonitorInfo(hMonitor, cast[ptr MONITORINFO](addr mi))
     SetWindowLongPtr(hWnd, GWL_STYLE, WS_VISIBLE or WS_POPUP)
     SetWindowLongPtr(hWnd, GWL_EXSTYLE, WS_EX_APPWINDOW)
-    (game.x, game.y, game.cx, game.cy) = (mi.rcMonitor.left, mi.rcMonitor.top, mi.rcMonitor.right - mi.rcMonitor.left, mi.rcMonitor.bottom - mi.rcMonitor.top)
-    SetWindowPos(hWnd, HWND_TOPMOST, game.x, game.y, game.cx,
-            game.cy, SWP_NOACTIVATE or SWP_NOSENDCHANGING)
-    
-    # Redirect the game's window procedure to ZetaLoader's window procedure & cleanup.
+    (game.x, game.y, game.cx, game.cy) = (mi.rcMonitor.left, mi.rcMonitor.top,
+            mi.rcMonitor.right - mi.rcMonitor.left, mi.rcMonitor.bottom -
+            mi.rcMonitor.top)
+    SetWindowPos(hWnd, HWND_TOPMOST, game.x, game.y, game.cx, game.cy,
+            SWP_NOACTIVATE or SWP_NOSENDCHANGING)
     SetWindowLongPtr(hWnd, GWLP_WNDPROC, cast[LONG_PTR](wndProc))
+
+    # Cleanup.
     if timeout != 0:
         SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, cast[LPVOID](
                 unsafeAddr timeout), 0)
@@ -194,8 +214,8 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
 
 proc mainThread(): DWORD {.stdcall.} =
     var msg: MSG
-    SetWinEventHook(EVENT_OBJECT_SHOW, EVENT_OBJECT_SHOW, 0, winEventProc, GetCurrentProcessId(),
-            0, WINEVENT_OUTOFCONTEXT)
+    SetWinEventHook(EVENT_OBJECT_SHOW, EVENT_OBJECT_SHOW, 0, winEventProc,
+            GetCurrentProcessId(), 0, WINEVENT_OUTOFCONTEXT)
     while GetMessage(addr msg, 0, 0, 0):
         TranslateMessage(addr msg)
         DispatchMessage(addr msg)
