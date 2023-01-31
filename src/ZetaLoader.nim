@@ -4,7 +4,7 @@ type Game = object
     devMode: DEVMODE
     monitor: string
     x, y, cx, cy: int32
-    isPrimaryMonitor, isForegroundWnd: bool
+    isPrimaryMonitor: bool
     wndProc: WNDPROC
     cfg: OrderedTableRef[string, OrderedTableRef[string, string]]
 var game: Game
@@ -60,8 +60,7 @@ proc foregroundWndLock(lParam: LPVOID): DWORD {.stdcall.} =
     SetThreadPriority(hThread, THREAD_MODE_BACKGROUND_BEGIN)
     SetThreadPriorityBoost(hThread, false)
     CloseHandle(hThread)
-    while not game.isForegroundWnd:
-        SwitchToThisWindow(hWnd, true)
+    while true: SwitchToThisWindow(hWnd, true)
     return 0
 
 # ZetaLoader's Window Procedure.
@@ -116,13 +115,13 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
         timeout: DWORD = 0
         min, max, cur: ULONG = 0
         hProcess = GetCurrentProcess()
-        hThread = OpenThread(THREAD_SET_INFORMATION, FALSE,
-                GetWindowThreadProcessId(hWnd, nil))
         vAttribute = TRUE
     var
         cfg = readCfg("ZetaLoader.ini")
         (width, height) = (cfg.getSectionValue("", "width"),
                 cfg.getSectionValue("", "height"))
+        hThread = OpenThread(THREAD_SET_INFORMATION, FALSE,
+                GetWindowThreadProcessId(hWnd, nil))
         hMonitor: HMONITOR
         monitorInfo: MONITORINFOEX
         currentDevMode: DEVMODE
@@ -167,7 +166,7 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
         writeFile("ZetaLoader.ini", "Width = " & $currentDevMode.dmPelsWidth &
                 "\nHeight = " & $currentDevMode.dmPelsHeight)
 
-    # Check if the user specified resolution is not supported by the monitor or is the native resolution..
+    # Check if the user specified resolution is not supported by the monitor or is the native resolution.
     if ChangeDisplaySettingsEx(game.monitor, addr game.devMode, 0, CDS_TEST,
             nil) != DISP_CHANGE_SUCCESSFUL or
         (currentDevMode.dmPelsWidth == game.devMode.dmPelsWidth and
@@ -181,8 +180,8 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
 
         # Set the Foreground lock timeout to 0 and lock the foreground window to the game's window.
         SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, cast[LPVOID](0), 0)
-        CreateThread(nil, 0, cast[PTHREAD_START_ROUTINE](foregroundWndLock),
-                cast[LPVOID](hWnd), 0, nil)
+        hThread = CreateThread(nil, 0, cast[PTHREAD_START_ROUTINE](
+                foregroundWndLock), cast[LPVOID](hWnd), 0, nil)
 
         # 1. Disable the window transitions, disable the peek feature, and force the iconic representation of the window.
         DwmSetWindowAttribute(hWnd, DWMWA_TRANSITIONS_FORCEDISABLED,
@@ -215,7 +214,8 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
         if timeout != 0:
             SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, cast[LPVOID](
                     unsafeAddr timeout), 0)
-        game.isForegroundWnd = true
+        TerminateThread(hThread, 0)
+        CloseHandle(hThread)
 
     PostQuitMessage(0)
 
