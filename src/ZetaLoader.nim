@@ -124,9 +124,9 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
         (width, height) = (cfg.getSectionValue("", "width"),
                 cfg.getSectionValue("", "height"))
         hMonitor: HMONITOR
-        mi: MONITORINFOEX
-        dm: DEVMODE
-    mi.cbSize = sizeof(MONITORINFOEX).DWORD
+        monitorInfo: MONITORINFOEX
+        currentDevMode: DEVMODE
+    monitorInfo.cbSize = sizeof(MONITORINFOEX).DWORD
     game.wndProc = cast[WNDPROC](GetWindowLongPtr(hWnd, GWLP_WNDPROC))
 
     # 1. Set the process priority to above normal.
@@ -148,29 +148,30 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
 
     # Get the monitor, the game's window is on.
     hMonitor = MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST)
-    GetMonitorInfo(hMonitor, cast[ptr MONITORINFO](addr mi))
-    for i in mi.szDevice:
+    GetMonitorInfo(hMonitor, cast[ptr MONITORINFO](addr monitorInfo))
+    for i in monitorInfo.szDevice:
         if i != 0: game.monitor.add(cast[char](i))
     # Disable any features of ZetaLoader that are only available if the game is running on the primary monitor.
-    if mi.dwFlags != MONITORINFOF_PRIMARY:
+    if monitorInfo.dwFlags != MONITORINFOF_PRIMARY:
         game.isPrimaryMonitor = false
-    EnumDisplaySettings(game.monitor, ENUM_CURRENT_SETTINGS, addr dm)
-    game.devMode.dmPelsWidth = dm.dmPelsWidth
-    game.devMode.dmPelsHeight = dm.dmPelsHeight
+    EnumDisplaySettings(game.monitor, ENUM_CURRENT_SETTINGS,
+            addr currentDevMode)
+    game.devMode.dmPelsWidth = currentDevMode.dmPelsWidth
+    game.devMode.dmPelsHeight = currentDevMode.dmPelsHeight
 
     # Fetch user specified resolution or use the current resolution.
     try:
         game.devMode.dmPelsWidth = width.parseInt().DWORD
         game.devMode.dmPelsHeight = height.parseInt().DWORD
     except ValueError:
-        writeFile("ZetaLoader.ini", "Width = " & $dm.dmPelsWidth &
-                "\nHeight = " & $dm.dmPelsHeight)
+        writeFile("ZetaLoader.ini", "Width = " & $currentDevMode.dmPelsWidth &
+                "\nHeight = " & $currentDevMode.dmPelsHeight)
 
     # Check if the user specified resolution is not supported by the monitor or is the native resolution..
     if ChangeDisplaySettingsEx(game.monitor, addr game.devMode, 0, CDS_TEST,
             nil) != DISP_CHANGE_SUCCESSFUL or
-        (dm.dmPelsWidth == game.devMode.dmPelsWidth and dm.dmPelsHeight ==
-                game.devMode.dmPelsHeight) or
+        (currentDevMode.dmPelsWidth == game.devMode.dmPelsWidth and
+                currentDevMode.dmPelsHeight == game.devMode.dmPelsHeight) or
         (game.devMode.dmPelsHeight or game.devMode.dmPelsWidth) == 0:
         game.devMode.dmFields = 0
 
@@ -193,11 +194,12 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
 
         # 2. Apply the user specified resolution.
         setDM(addr game.devMode)
-        GetMonitorInfo(hMonitor, cast[ptr MONITORINFO](addr mi))
-        (game.x, game.y, game.cx, game.cy) = (mi.rcMonitor.left,
-                mi.rcMonitor.top, mi.rcMonitor.right - mi.rcMonitor.left,
-                mi.rcMonitor.bottom -
-                mi.rcMonitor.top)
+        GetMonitorInfo(hMonitor, cast[ptr MONITORINFO](addr monitorInfo))
+        (game.x, game.y, game.cx, game.cy) = (monitorInfo.rcMonitor.left,
+                monitorInfo.rcMonitor.top, monitorInfo.rcMonitor.right -
+                monitorInfo.rcMonitor.left,
+                monitorInfo.rcMonitor.bottom -
+                monitorInfo.rcMonitor.top)
 
         # 3. Setup ZetaLoader's Borderless Fullscreen implementation.
         # - Use WS_VISIBLE | WS_POPUP and WS_EX_APPWINDOW for the game's borderless fullscreen
