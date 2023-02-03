@@ -1,7 +1,7 @@
 import winim/[lean, inc/dwmapi], os, strutils, tables
 
 type Game = object
-    devMode, monitorDevMode: DEVMODE
+    devMode: DEVMODE
     monitor: string
     x, y, cx, cy: int32
     isPrimaryMonitor, userDefinedResolution: bool
@@ -72,7 +72,7 @@ proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
     # Revert the resolution back to the desktop resolution when the game is being closed.
     of WM_CLOSE, WM_DESTROY, WM_QUIT:
         if not game.isPrimaryMonitor:
-            setDM(game.monitorDevMode)
+            setDM(nil)
 
     # Processing WM_ACTIVATE & WM_ACTIVATEAPP to allow the game's window to automatically minimize and reset the resolution for multitasking on the primary monitor.
     of WM_ACTIVATE, WM_ACTIVATEAPP:
@@ -83,7 +83,7 @@ proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
                 setDM(addr game.devMode)
             of WA_INACTIVE:
                 if not IsIconic(hWnd): ShowWindow(hWnd, SW_MINIMIZE)
-                setDM(game.monitorDevMode)
+                setDM(nil)
             else: discard
 
     # Processing WM_WINDOWPOSCHANGING & WM_STYLECHANGING to prevent Halo Infinite's borderless fullscreen from getting disabled.
@@ -124,6 +124,7 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
                 cfg.getSectionValue("", "height"))
         hThread = OpenThread(THREAD_SET_INFORMATION, FALSE,
                 GetWindowThreadProcessId(hWnd, nil))
+        devMode: DEVMODE
         hMonitor: HMONITOR
         monitorInfo: MONITORINFOEX
     monitorInfo.cbSize = sizeof(MONITORINFOEX).DWORD
@@ -155,9 +156,9 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
     if monitorInfo.dwFlags != MONITORINFOF_PRIMARY:
         game.isPrimaryMonitor = false
     EnumDisplaySettings(game.monitor, ENUM_CURRENT_SETTINGS,
-            addr game.monitorDevMode)
-    game.devMode.dmPelsWidth = game.monitorDevMode.dmPelsWidth
-    game.devMode.dmPelsHeight = game.monitorDevMode.dmPelsHeight
+            addr devMode)
+    game.devMode.dmPelsWidth = devMode.dmPelsWidth
+    game.devMode.dmPelsHeight = devMode.dmPelsHeight
 
     # Fetch user specified resolution or use the current resolution.
     try:
@@ -165,14 +166,14 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
         game.devMode.dmPelsHeight = height.parseInt().DWORD
     except ValueError:
         writeFile("ZetaLoader.ini", "Width = " &
-                $game.monitorDevMode.dmPelsWidth & "\nHeight = " &
-                $game.monitorDevMode.dmPelsHeight)
+                $devMode.dmPelsWidth & "\nHeight = " &
+                $devMode.dmPelsHeight)
 
     # Check if the user specified resolution is not supported by the monitor or is the native resolution.
     if ChangeDisplaySettingsEx(game.monitor, addr game.devMode, 0, CDS_TEST,
             nil) != DISP_CHANGE_SUCCESSFUL or
-        (game.monitorDevMode.dmPelsWidth == game.devMode.dmPelsWidth and
-                game.monitorDevMode.dmPelsHeight ==
+        (devMode.dmPelsWidth == game.devMode.dmPelsWidth and
+                devMode.dmPelsHeight ==
                 game.devMode.dmPelsHeight) or
         (game.devMode.dmPelsHeight or game.devMode.dmPelsWidth) == 0:
         game.userDefinedResolution = false
