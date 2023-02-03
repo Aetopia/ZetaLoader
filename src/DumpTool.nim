@@ -14,8 +14,6 @@ when isMainModule:
 
         if not fileExists(dir/"ZetaLoader.dll"):
             writeFile(dir/"ZetaLoader.dll", ZetaLoader)
-        elif readFile(dir/"ZetaLoader.dll") != ZetaLoader:
-            writeFile(dir/"ZetaLoader.dll", ZetaLoader)
 
         mem = VirtualAllocEx(hProcess, nil, MAX_PATH, MEM_COMMIT or MEM_RESERVE, PAGE_EXECUTE_READWRITE)
         WriteProcessMemory(hProcess, mem, cast[LPCVOID](dll), MAX_PATH, nil)
