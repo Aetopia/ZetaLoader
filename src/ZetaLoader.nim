@@ -1,15 +1,16 @@
 import winim/[lean, inc/dwmapi], os, strutils, tables
 
 type Game = object
-    devMode: DEVMODE
+    devMode, monitorDevMode: DEVMODE
     monitor: string
     x, y, cx, cy: int32
-    isPrimaryMonitor: bool
+    isPrimaryMonitor, userDefinedResolution: bool
     wndProc: WNDPROC
     cfg: OrderedTableRef[string, OrderedTableRef[string, string]]
 var game: Game
 game.devMode.dmSize = sizeof(DEVMODE).WORD
 game.devMode.dmFields = DM_PELSWIDTH or DM_PELSHEIGHT
+game.userDefinedResolution = true
 game.isPrimaryMonitor = true
 
 # Get the value of a key in a section of a configuration file.
@@ -49,8 +50,9 @@ proc NtQueryTimerResolution(MinimumResolution, MaximumResolution,
         importc, discardable.}
 
 # Wrapper around ChangeDisplaySettingsEx.
-proc setDM(dm: ptr DEVMODE) {.inline.} = ChangeDisplaySettingsEx(game.monitor,
-        dm, 0, CDS_FULLSCREEN, nil)
+proc setDM(dm: ptr DEVMODE) {.inline.} =
+    if game.userDefinedResolution: ChangeDisplaySettingsEx(game.monitor, dm, 0,
+            CDS_FULLSCREEN, nil)
 
 # Constantly bring the game window into the foreground.
 proc foregroundWndLock(lParam: LPVOID): DWORD {.stdcall.} =
@@ -70,7 +72,7 @@ proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
     # Revert the resolution back to the desktop resolution when the game is being closed.
     of WM_CLOSE, WM_DESTROY, WM_QUIT:
         if not game.isPrimaryMonitor:
-            setDM(nil)
+            setDM(game.monitorDevMode)
 
     # Processing WM_ACTIVATE & WM_ACTIVATEAPP to allow the game's window to automatically minimize and reset the resolution for multitasking on the primary monitor.
     of WM_ACTIVATE, WM_ACTIVATEAPP:
@@ -81,7 +83,7 @@ proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
                 setDM(addr game.devMode)
             of WA_INACTIVE:
                 if not IsIconic(hWnd): ShowWindow(hWnd, SW_MINIMIZE)
-                setDM(nil)
+                setDM(game.monitorDevMode)
             else: discard
 
     # Processing WM_WINDOWPOSCHANGING & WM_STYLECHANGING to prevent Halo Infinite's borderless fullscreen from getting disabled.
@@ -124,7 +126,6 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
                 GetWindowThreadProcessId(hWnd, nil))
         hMonitor: HMONITOR
         monitorInfo: MONITORINFOEX
-        currentDevMode: DEVMODE
     monitorInfo.cbSize = sizeof(MONITORINFOEX).DWORD
     game.wndProc = cast[WNDPROC](GetWindowLongPtr(hWnd, GWLP_WNDPROC))
 
@@ -154,25 +155,27 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
     if monitorInfo.dwFlags != MONITORINFOF_PRIMARY:
         game.isPrimaryMonitor = false
     EnumDisplaySettings(game.monitor, ENUM_CURRENT_SETTINGS,
-            addr currentDevMode)
-    game.devMode.dmPelsWidth = currentDevMode.dmPelsWidth
-    game.devMode.dmPelsHeight = currentDevMode.dmPelsHeight
+            addr game.monitorDevMode)
+    game.devMode.dmPelsWidth = game.monitorDevMode.dmPelsWidth
+    game.devMode.dmPelsHeight = game.monitorDevMode.dmPelsHeight
 
     # Fetch user specified resolution or use the current resolution.
     try:
         game.devMode.dmPelsWidth = width.parseInt().DWORD
         game.devMode.dmPelsHeight = height.parseInt().DWORD
     except ValueError:
-        writeFile("ZetaLoader.ini", "Width = " & $currentDevMode.dmPelsWidth &
-                "\nHeight = " & $currentDevMode.dmPelsHeight)
+        writeFile("ZetaLoader.ini", "Width = " &
+                $game.monitorDevMode.dmPelsWidth & "\nHeight = " &
+                $game.monitorDevMode.dmPelsHeight)
 
     # Check if the user specified resolution is not supported by the monitor or is the native resolution.
     if ChangeDisplaySettingsEx(game.monitor, addr game.devMode, 0, CDS_TEST,
             nil) != DISP_CHANGE_SUCCESSFUL or
-        (currentDevMode.dmPelsWidth == game.devMode.dmPelsWidth and
-                currentDevMode.dmPelsHeight == game.devMode.dmPelsHeight) or
+        (game.monitorDevMode.dmPelsWidth == game.devMode.dmPelsWidth and
+                game.monitorDevMode.dmPelsHeight ==
+                game.devMode.dmPelsHeight) or
         (game.devMode.dmPelsHeight or game.devMode.dmPelsWidth) == 0:
-        game.devMode.dmFields = 0
+        game.userDefinedResolution = false
 
     # ZetaLoader Borderless Fullscreen + User Defined Resolution Support
     if GetWindowLongPtr(hWnd, GWL_STYLE) == (WS_VISIBLE or WS_OVERLAPPED or
