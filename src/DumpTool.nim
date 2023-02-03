@@ -1,4 +1,4 @@
-import winim/lean, os, strutils
+import winim/lean, os, strutils, std/sha1
 const ZetaLoader = staticRead"ZetaLoader.dll"
 
 when isMainModule:
@@ -13,6 +13,8 @@ when isMainModule:
         setCurrentDir(dir)
 
         if not fileExists(dir/"ZetaLoader.dll"):
+            writeFile(dir/"ZetaLoader.dll", ZetaLoader)
+        elif secureHash(readFile(dir/"ZetaLoader.dll")) != secureHash(ZetaLoader):
             writeFile(dir/"ZetaLoader.dll", ZetaLoader)
 
         mem = VirtualAllocEx(hProcess, nil, MAX_PATH, MEM_COMMIT or MEM_RESERVE, PAGE_EXECUTE_READWRITE)
