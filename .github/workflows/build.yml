@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    paths:
+      - src/**
+    branches: [ "main" ]
+    tags:
+      - '*'
+
+jobs:
+  build:
+    permissions: write-all
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Install Nim
+        uses: iffy/install-nim@v4.5.0
+        with:
+          version: stable
+
+      - name: Format Code with NimPretty
+        run: |
+          nimpretty src/ZetaLoader.nim src/DumpTool.nim
+
+      - name: Install winim and Compile
+        uses: skynet-core/nim@v1.2
+        with:
+          command: |
+            nimble install -y winim
+            nim c --gcc.exe:gcc --gcc.linkerexe:gcc --passL:-static -d:release -d:strip -o:src/ZetaLoader.dll src/ZetaLoader.nim
+            nim c --gcc.exe:gcc --gcc.linkerexe:gcc --passL:-static -d:release -d:strip -o:src/DumpTool.exe src/DumpTool.nim
+            
+      - name: Create Release
+        uses: ncipollo/release-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          artifacts: "src/DumpTool.exe"
+          name: "ZetaLoader"
