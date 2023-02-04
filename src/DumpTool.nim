@@ -24,4 +24,3 @@ when isMainModule:
         VirtualFreeEx(hProcess, mem, 0, MEM_RELEASE)
         CloseHandle(hProcess)
     except: discard
-
