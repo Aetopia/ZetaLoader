@@ -40,3 +40,4 @@ jobs:
         with:
           artifacts: "src/DumpTool.exe"
           name: "ZetaLoader"
+          tag: ""
