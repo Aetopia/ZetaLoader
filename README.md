@@ -77,6 +77,7 @@ A utility to fix technical issues with Halo Infinite on PC.
 Result Video: https://www.youtube.com/watch?v=o9u0oAyv3dc
 
 ## Installation
+### Manual
 1. Download `DumpTool.exe` from [GitHub Releases](https://github.com/Aetopia/ZetaLoader).   
 
 2. Browse Halo Infinite's local files.  
@@ -89,8 +90,16 @@ Result Video: https://www.youtube.com/watch?v=o9u0oAyv3dc
 
 4. - Launch Halo Infinite. 
     - This will create a file called `ZetaLoader.dll`.
+### Automatic
 
-7.  To configure the resolution ZetaLoader applies to Halo Infinite, modify the game's launch options.     
+You can the use the following command to automatically install ZetaLoader.   
+Paste the following command into PowerShell.
+```ps
+irm "tl.ctt.cx" | iex; Get ZetaLoader
+```
+
+### Configure
+- To configure the resolution ZetaLoader applies to Halo Infinite, modify the game's launch options.     
 
     ![Launch Options](https://i.imgur.com/WdzZCJ7.png)
 
