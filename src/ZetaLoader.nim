@@ -1,4 +1,4 @@
-import winim/[lean, inc/dwmapi], os, strutils, tables
+import winim/[lean, inc/dwmapi], os, strutils
 
 type Game = object
     devMode: DEVMODE
@@ -6,41 +6,11 @@ type Game = object
     x, y, cx, cy: int32
     isPrimaryMonitor, userDefinedResolution: bool
     wndProc: WNDPROC
-    cfg: OrderedTableRef[string, OrderedTableRef[string, string]]
 var game: Game
 game.devMode.dmSize = sizeof(DEVMODE).WORD
-game.devMode.dmFields = DM_PELSWIDTH or DM_PELSHEIGHT
+game.devMode.dmFields = DM_PELSWIDTH or DM_PELSHEIGHT or DM_DISPLAYFREQUENCY
 game.userDefinedResolution = true
 game.isPrimaryMonitor = true
-
-# Get the value of a key in a section of a configuration file.
-proc getSectionValue(cfg: OrderedTableRef[string, OrderedTableRef[string,
-        string]], section, key: string): string =
-    if cfg.hasKey(section):
-        if cfg[section].hasKey(key):
-            return cfg[section][key]
-    return ""
-
-# Read a configuration file.
-proc readCfg(filename: string): OrderedTableRef[string, OrderedTableRef[string, string]] =
-    var
-        cfg = newOrderedTable[string, OrderedTableRef[string, string]]()
-        section: string
-    cfg[""] = newOrderedTable[string, string]()
-    for i in readFile(filename).strip(chars = {'\n', ' '}).splitLines():
-        let line = i.strip()
-        if line.len == 0: continue
-        elif [line[0], line[^1]] == ['[', ']']:
-            section = line.strip(chars = {'[', ']', ' '}).toLower()
-            cfg[section] = newOrderedTable[string, string]()
-        else:
-            let
-                keyvalue = line.split("=", 1)
-                key = keyvalue[0].strip().toLower()
-                value = keyvalue[1].strip()
-            if key != "" and value != "":
-                cfg[section][key.toLower()] = value
-    return cfg
 
 proc NtSetTimerResolution(DesiredResolution: ULONG, SetResolution: BOOLEAN,
         CurrentResolution: PULONG): LONG {.stdcall, dynlib: "ntdll.dll",
@@ -110,18 +80,14 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
         return
     UnhookWinEvent(hWinEventHook)
 
-    setCurrentDir(getAppDir())
-    if not fileExists("ZetaLoader.ini"):
-        writeFile("ZetaLoader.ini", "")
     let
         timeout: DWORD = 0
         min, max, cur: ULONG = 0
         hProcess = GetCurrentProcess()
         vAttribute = TRUE
+        cmdline = commandLineParams()
     var
-        cfg = readCfg("ZetaLoader.ini")
-        (width, height) = (cfg.getSectionValue("", "width"),
-                cfg.getSectionValue("", "height"))
+        argdisplayMode: bool
         hThread = OpenThread(THREAD_SET_INFORMATION, FALSE,
                 GetWindowThreadProcessId(hWnd, nil))
         devMode: DEVMODE
@@ -129,6 +95,21 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
         monitorInfo: MONITORINFOEX
     monitorInfo.cbSize = sizeof(MONITORINFOEX).DWORD
     game.wndProc = cast[WNDPROC](GetWindowLongPtr(hWnd, GWLP_WNDPROC))
+
+    for i in 0..cmdline.len-1:
+        let arg = cmdline[i].toLower().strip()
+        case arg:
+        of "/dm", "/displaymode":
+            if argdisplayMode: continue
+            argdisplayMode = true
+            try:
+                let
+                    param = cmdline[i+1].toLower().split("_", 1)
+                    resolution = param[0].strip().split("x", 1)
+                game.devMode.dmPelsWidth = resolution[0].strip().parseInt.DWORD
+                game.devMode.dmPelsHeight = resolution[1].strip().parseInt.DWORD
+                game.devMode.dmDisplayFrequency = param[1].strip().parseInt.DWORD
+            except ValueError, IndexDefect: discard
 
     # 1. Set the process priority to above normal.
     # 2. Set the timer resolution to 0.5 ms.
@@ -157,25 +138,16 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
         game.isPrimaryMonitor = false
     EnumDisplaySettings(game.monitor, ENUM_CURRENT_SETTINGS,
             addr devMode)
-    game.devMode.dmPelsWidth = devMode.dmPelsWidth
-    game.devMode.dmPelsHeight = devMode.dmPelsHeight
-
-    # Fetch user specified resolution or use the current resolution.
-    try:
-        game.devMode.dmPelsWidth = width.parseInt().DWORD
-        game.devMode.dmPelsHeight = height.parseInt().DWORD
-    except ValueError:
-        writeFile("ZetaLoader.ini", "Width = " &
-                $devMode.dmPelsWidth & "\nHeight = " &
-                $devMode.dmPelsHeight)
 
     # Check if the user specified resolution is not supported by the monitor or is the native resolution.
     if ChangeDisplaySettingsEx(game.monitor, addr game.devMode, 0, CDS_TEST,
             nil) != DISP_CHANGE_SUCCESSFUL or
         (devMode.dmPelsWidth == game.devMode.dmPelsWidth and
                 devMode.dmPelsHeight ==
-                game.devMode.dmPelsHeight) or
-        (game.devMode.dmPelsHeight or game.devMode.dmPelsWidth) == 0:
+                game.devMode.dmPelsHeight and devMode.dmDisplayFrequency ==
+                game.devMode.dmDisplayFrequency) or
+        (game.devMode.dmPelsHeight or game.devMode.dmPelsWidth or
+                game.devMode.dmDisplayFrequency) == 0:
         game.userDefinedResolution = false
 
     # ZetaLoader Borderless Fullscreen + User Defined Resolution Support
