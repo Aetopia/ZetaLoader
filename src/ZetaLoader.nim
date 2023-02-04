@@ -51,7 +51,7 @@ proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
     of WM_ACTIVATE, WM_ACTIVATEAPP:
         case wParam:
         of WA_ACTIVE, WA_CLICKACTIVE:
-            if IsIconic(hWnd): ShowWindow(hWnd, SW_RESTORE)
+            if IsIconic(hWnd): SwitchToThisWindow(hWnd, TRUE)
             setDM(addr game.devMode)
         of WA_INACTIVE:
             var
