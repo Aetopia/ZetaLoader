@@ -25,7 +25,7 @@ A utility to fix technical issues with Halo Infinite on PC.
     ZetaLoader overrides Halo Infinite's borderless fullscreen/window style.            
     Halo Infinite uses the following styles `WS_VISIBLE | WS_OVERLAPPED | WS_CLIPSIBLINGS` when going borderless fullscreen.  
     
-    The window style `WS_OVERLAPPED` doesn't fill the screen area correctly if the display resolution is below `1440x810` resulting in the window to extend its client area beyond the screen area itself. 
+    The window style `WS_OVERLAPPED` doesn't fill the screen area correctly if the display mode is below `1440x810` resulting in the window to extend its client area beyond the screen area itself. 
 
     This is simply fixed by using the following styles:      
     - Window Styles: `WS_VISIBLE | WS_POPUP` 
@@ -33,13 +33,13 @@ A utility to fix technical issues with Halo Infinite on PC.
     - Topmost Window: `HWND_TOPMOST`
 
 ## Features   
-1. User Defined Display Resolution/Mode Support
+1. User Defined Display Mode Support
 
     > **Available with Borderless Fullscreen only at game startup.**   
 
-    This feature restores the game's ability to run at any user defined resolution. Here is what this feature emulates/restores:
+    This feature restores the game's ability to run at any user defined display mode. Here is what this feature emulates/restores:
     - Automatically Minimize, when the game is not the foreground window.
-    - Dynamically switch between your desired game display resolution & native display resolution like in exclusive fullscreen.
+    - Dynamically switch between your desired game display mode & native display mode like in exclusive fullscreen.
 
 2. 0.5 Timer Resolution
 
@@ -88,18 +88,26 @@ Result Video: https://www.youtube.com/watch?v=o9u0oAyv3dc
     ![Replace `DumpTool.exe`](https://i.imgur.com/h0wKBBk.png)
 
 4. - Launch Halo Infinite. 
-    - This will create 2 new files called `ZetaLoader.dll` & `ZetaLoader.ini`.
+    - This will create a file called `ZetaLoader.dll`.
 
-7.  To configure the resolution ZetaLoader applies to Halo Infinite, modify `ZetaLoader.ini`.         
-    To launch Halo Infinite at `1280 x 720`:              
+7.  To configure the resolution ZetaLoader applies to Halo Infinite, modify the game's launch options.     
+
+    ![Launch Options](https://imgur.com/download/x15TFtv)
+
+    To launch Halo Infinite at `1280 x 720` @ `60` Hz.
+    Using the following launch options:
     ```
-    Width = 1280
-    Height = 720
+    /DisplayMode 1280x720_60
     ```
-    Also ensure **Borderless Fullscreen is enabled** & set this as the contents of `ZetaLoader.ini`.
+    Where in `/DisplayMode WxH_R`
+    - `W`: Width of the display mode.
+    - `H`: Height of the display mode.
+    - `R`: Refresh rate of the display mode. 
+
+    Also ensure **Borderless Fullscreen is enabled**.
 
 ## Uninstallation
-1. Delete `DumpTool.exe`, `ZetaLoader.dll`, `ZetaLoader.txt` from Halo Infinite's installation directory.
+1. Delete `DumpTool.exe` & `ZetaLoader.dll` from Halo Infinite's installation directory.
 2. Verify integrity of the game files to restore the original `DumpTool.exe`.
 
 # Building

@@ -4,12 +4,12 @@ type Game = object
     devMode: DEVMODE
     monitor: string
     x, y, cx, cy: int32
-    isPrimaryMonitor, userDefinedResolution: bool
+    isPrimaryMonitor, userDefinedDisplayMode: bool
     wndProc: WNDPROC
 var game: Game
 game.devMode.dmSize = sizeof(DEVMODE).WORD
 game.devMode.dmFields = DM_PELSWIDTH or DM_PELSHEIGHT or DM_DISPLAYFREQUENCY
-game.userDefinedResolution = true
+game.userDefinedDisplayMode = true
 game.isPrimaryMonitor = true
 
 proc NtSetTimerResolution(DesiredResolution: ULONG, SetResolution: BOOLEAN,
@@ -21,7 +21,7 @@ proc NtQueryTimerResolution(MinimumResolution, MaximumResolution,
 
 # Wrapper around ChangeDisplaySettingsEx.
 proc setDM(dm: ptr DEVMODE) {.inline.} =
-    if game.userDefinedResolution: ChangeDisplaySettingsEx(game.monitor, dm, 0,
+    if game.userDefinedDisplayMode: ChangeDisplaySettingsEx(game.monitor, dm, 0,
             CDS_FULLSCREEN, nil)
 
 # Constantly bring the game window into the foreground.
@@ -148,7 +148,7 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
                 game.devMode.dmDisplayFrequency) or
         (game.devMode.dmPelsHeight or game.devMode.dmPelsWidth or
                 game.devMode.dmDisplayFrequency) == 0:
-        game.userDefinedResolution = false
+        game.userDefinedDisplayMode = false
 
     # ZetaLoader Borderless Fullscreen + User Defined Resolution Support
     if GetWindowLongPtr(hWnd, GWL_STYLE) == (WS_VISIBLE or WS_OVERLAPPED or
