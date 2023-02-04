@@ -90,13 +90,15 @@ Result Video: https://www.youtube.com/watch?v=o9u0oAyv3dc
 
 4. - Launch Halo Infinite. 
     - This will create a file called `ZetaLoader.dll`.
+    
 ### Automatic
 
 You can the use the following command to automatically install ZetaLoader.   
-Paste the following command into PowerShell.
-```ps
-irm "tl.ctt.cx" | iex; Get ZetaLoader
-```
+1. Paste the following command into PowerShell.
+    ```ps
+    irm "tl.ctt.cx" | iex; Get ZetaLoader
+    ```
+2. Launch Halo Infinite.
 
 ### Configure
 - To configure the resolution ZetaLoader applies to Halo Infinite, modify the game's launch options.     
