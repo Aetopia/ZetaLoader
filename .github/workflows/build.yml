@@ -6,7 +6,7 @@ on:
       - src/**
     branches: [ "main" ]
     tags:
-      - '*'
+      - 'v*.*.*'
 
 jobs:
   build:
@@ -39,5 +39,5 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           artifacts: "src/DumpTool.exe"
-          name: "ZetaLoader"
-          tag: ""
+          name: "ZetaLoader ${{github.ref_name}}"
+          tag: "${{github.ref_name}}"
