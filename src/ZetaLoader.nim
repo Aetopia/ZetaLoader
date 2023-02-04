@@ -45,11 +45,6 @@ converter wCharArrayToString(wCharArray: array[CCHDEVICENAME, WCHAR]): string =
 proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
         lParam: LPARAM): LRESULT {.stdcall.} =
     case msg:
-    # Revert the resolution back to the desktop resolution when the game is being closed.
-    of WM_CLOSE, WM_DESTROY, WM_QUIT:
-        if game.userDefinedDisplayMode:
-            setDM(nil)
-
     # Processing WM_ACTIVATE & WM_ACTIVATEAPP
     # - Allow the game to be tabbed in from any monitor.
     # - Allow the game to tabbed out from the monitor, the game is running on.
