@@ -81,9 +81,10 @@ Result Video: https://www.youtube.com/watch?v=o9u0oAyv3dc
 ### Automatic
 
 You can the use the following command to automatically install ZetaLoader.    
-**Install Script Source Code: https://github.com/couleur-tweak-tips/TweakList/blob/master/modules/Installers/Install-ZetaLoader.ps1**           
+**[View Install Script Source Code.](https://github.com/couleur-tweak-tips/TweakList/blob/master/modules/Installers/Install-ZetaLoader.ps1)**           
  
 1. Paste the following command into PowerShell.
+
     ```ps
     irm "tl.ctt.cx" | iex; Get ZetaLoader
     ```
