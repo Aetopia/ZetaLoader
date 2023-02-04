@@ -4,13 +4,12 @@ type Game = object
     devMode: DEVMODE
     monitor: string
     x, y, cx, cy: int32
-    isPrimaryMonitor, userDefinedDisplayMode: bool
+    multiMonitorSetup, userDefinedDisplayMode: bool
     wndProc: WNDPROC
 var game: Game
 game.devMode.dmSize = sizeof(DEVMODE).WORD
 game.devMode.dmFields = DM_PELSWIDTH or DM_PELSHEIGHT or DM_DISPLAYFREQUENCY
 game.userDefinedDisplayMode = true
-game.isPrimaryMonitor = true
 
 proc NtSetTimerResolution(DesiredResolution: ULONG, SetResolution: BOOLEAN,
         CurrentResolution: PULONG): LONG {.stdcall, dynlib: "ntdll.dll",
@@ -41,12 +40,12 @@ proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
     case msg:
     # Revert the resolution back to the desktop resolution when the game is being closed.
     of WM_CLOSE, WM_DESTROY, WM_QUIT:
-        if not game.isPrimaryMonitor:
+        if game.multiMonitorSetup:
             setDM(nil)
 
     # Processing WM_ACTIVATE & WM_ACTIVATEAPP to allow the game's window to automatically minimize and reset the resolution for multitasking on the primary monitor.
     of WM_ACTIVATE, WM_ACTIVATEAPP:
-        if game.isPrimaryMonitor:
+        if not game.multiMonitorSetup:
             case wParam:
             of WA_ACTIVE, WA_CLICKACTIVE:
                 if IsIconic(hWnd): ShowWindow(hWnd, SW_RESTORE)
@@ -133,9 +132,9 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
     GetMonitorInfo(hMonitor, cast[ptr MONITORINFO](addr monitorInfo))
     for i in monitorInfo.szDevice:
         if i != 0: game.monitor.add(cast[char](i))
-    # Disable any features of ZetaLoader that are only available if the game is running on the primary monitor.
-    if monitorInfo.dwFlags != MONITORINFOF_PRIMARY:
-        game.isPrimaryMonitor = false
+    # Disable any features of ZetaLoader that are only available for single monitor setups.
+    if not [0, 1].contains(GetSystemMetrics(SM_CMONITORS)):
+        game.multiMonitorSetup = true
     EnumDisplaySettings(game.monitor, ENUM_CURRENT_SETTINGS,
             addr devMode)
 
