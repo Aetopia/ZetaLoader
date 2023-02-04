@@ -4,7 +4,7 @@ type Game = object
     devMode: DEVMODE
     monitor: string
     x, y, cx, cy: int32
-    multiMonitorSetup, userDefinedDisplayMode: bool
+    userDefinedDisplayMode: bool
     wndProc: WNDPROC
 var game: Game
 game.devMode.dmSize = sizeof(DEVMODE).WORD
@@ -34,26 +34,42 @@ proc foregroundWndLock(lParam: LPVOID): DWORD {.stdcall.} =
     while true: SwitchToThisWindow(hWnd, true)
     return 0
 
+converter wCharArrayToString(wCharArray: array[CCHDEVICENAME, WCHAR]): string =
+    var str: string
+    for c in wCharArray:
+        if c != 0: str.add(cast[char](c))
+    return str
+
+
 # ZetaLoader's Window Procedure.
 proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
         lParam: LPARAM): LRESULT {.stdcall.} =
     case msg:
     # Revert the resolution back to the desktop resolution when the game is being closed.
     of WM_CLOSE, WM_DESTROY, WM_QUIT:
-        if game.multiMonitorSetup:
+        if game.userDefinedDisplayMode:
             setDM(nil)
 
-    # Processing WM_ACTIVATE & WM_ACTIVATEAPP to allow the game's window to automatically minimize and reset the resolution for multitasking on the primary monitor.
+    # Processing WM_ACTIVATE & WM_ACTIVATEAPP
+    # - Allow the game to be tabbed in from any monitor.
+    # - Allow the game to tabbed out from the monitor, the game is running on.
     of WM_ACTIVATE, WM_ACTIVATEAPP:
-        if not game.multiMonitorSetup:
-            case wParam:
-            of WA_ACTIVE, WA_CLICKACTIVE:
-                if IsIconic(hWnd): ShowWindow(hWnd, SW_RESTORE)
-                setDM(addr game.devMode)
-            of WA_INACTIVE:
+        case wParam:
+        of WA_ACTIVE, WA_CLICKACTIVE:
+            if IsIconic(hWnd): ShowWindow(hWnd, SW_RESTORE)
+            setDM(addr game.devMode)
+        of WA_INACTIVE:
+            var
+                pt: POINT
+                monitorInfo: MONITORINFOEX
+            monitorInfo.cbSize = sizeof(MONITORINFOEX).DWORD
+            GetCursorPos(addr pt)
+            GetMonitorInfo(MonitorFromPoint(pt, MONITOR_DEFAULTTONEAREST), cast[
+                    ptr MONITORINFO](addr monitorInfo))
+            if monitorInfo.szDevice.wCharArrayToString == game.monitor:
                 if not IsIconic(hWnd): ShowWindow(hWnd, SW_MINIMIZE)
                 setDM(nil)
-            else: discard
+        else: discard
 
     # Processing WM_WINDOWPOSCHANGING & WM_STYLECHANGING to prevent Halo Infinite's borderless fullscreen from getting disabled.
     of WM_WINDOWPOSCHANGING:
@@ -130,11 +146,7 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
     # Get the monitor, the game's window is on.
     hMonitor = MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST)
     GetMonitorInfo(hMonitor, cast[ptr MONITORINFO](addr monitorInfo))
-    for i in monitorInfo.szDevice:
-        if i != 0: game.monitor.add(cast[char](i))
-    # Disable any features of ZetaLoader that are only available for single monitor setups.
-    if not [0, 1].contains(GetSystemMetrics(SM_CMONITORS)):
-        game.multiMonitorSetup = true
+    game.monitor = monitorInfo.szDevice.wCharArrayToString
     EnumDisplaySettings(game.monitor, ENUM_CURRENT_SETTINGS,
             addr devMode)
 
