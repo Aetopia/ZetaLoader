@@ -45,7 +45,8 @@ converter wCharArrayToString(wCharArray: array[CCHDEVICENAME, WCHAR]): string =
 proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
         lParam: LPARAM): LRESULT {.stdcall.} =
     case msg:
-    # Processing WM_ACTIVATE & WM_ACTIVATEAPP
+    of WM_DESTROY: setDM(nil)
+    # Processing WM_ACTIVATE.
     # - Allow the game to be tabbed in from any monitor.
     # - Allow the game to tabbed out from the monitor, the game is running on.
     of WM_ACTIVATE:
