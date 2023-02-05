@@ -34,7 +34,7 @@ proc foregroundWndLock(lParam: LPVOID): DWORD {.stdcall.} =
     while true: SwitchToThisWindow(hWnd, true)
     return 0
 
-converter wCharArrayToString(wCharArray: array[CCHDEVICENAME, WCHAR]): string =
+converter wCharArrayToString(wCharArray: openarray[WCHAR]): string =
     var str: string
     for c in wCharArray:
         if c != 0: str.add(cast[char](c))
