@@ -46,10 +46,10 @@ proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
         lParam: LPARAM): LRESULT {.stdcall.} =
     case msg:
     of WM_DESTROY: setDM(nil)
-    # Processing WM_ACTIVATE.
+    # Processing WM_ACTIVATE & WM_ACTIVATEAPP.
     # - Allow the game to be tabbed in from any monitor.
     # - Allow the game to tabbed out from the monitor as long as the window becoming the foreground window is on the monitor, the game is running on.
-    of WM_ACTIVATE:
+    of WM_ACTIVATE, WM_ACTIVATEAPP:
         case wParam:
         of WA_ACTIVE, WA_CLICKACTIVE:
             if IsIconic(hWnd): SwitchToThisWindow(hWnd, TRUE)
