@@ -45,10 +45,10 @@ converter wCharArrayToString(wCharArray: array[CCHDEVICENAME, WCHAR]): string =
 proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
         lParam: LPARAM): LRESULT {.stdcall.} =
     case msg:
-    of WM_DESTROY: setDM(nil)
-    # Processing WM_ACTIVATE & WM_ACTIVATEAPP.
+    # Processing WM_ACTIVATE, WM_ACTIVATEAPP & WM_DESTROY.
     # - Allow the game to be tabbed in from any monitor.
     # - Allow the game to tabbed out from the monitor as long as the window becoming the foreground window is on the monitor, the game is running on.
+    # - Reset the resolution when the game window receives WM_DESTROY.
     of WM_ACTIVATE, WM_ACTIVATEAPP:
         case wParam:
         of WA_ACTIVE, WA_CLICKACTIVE:
@@ -64,6 +64,7 @@ proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
                 if not IsIconic(hWnd): ShowWindow(hWnd, SW_MINIMIZE)
                 setDM(nil)
         else: discard
+    of WM_DESTROY: setDM(nil)
 
     # Processing WM_WINDOWPOSCHANGING & WM_STYLECHANGING to prevent Halo Infinite's borderless fullscreen from getting disabled.
     of WM_WINDOWPOSCHANGING:
