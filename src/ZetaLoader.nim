@@ -57,7 +57,7 @@ proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
         of WA_INACTIVE:
             var monitorInfo: MONITORINFOEX
             monitorInfo.cbSize = sizeof(MONITORINFOEX).DWORD
-            GetMonitorInfo(MonitorFromWindow(lParam.HWND,
+            GetMonitorInfo(MonitorFromWindow(GetForegroundWindow(),
                     MONITOR_DEFAULTTONEAREST), cast[ptr MONITORINFO](
                             addr monitorInfo))
             if monitorInfo.szDevice.wCharArrayToString == game.monitor:
