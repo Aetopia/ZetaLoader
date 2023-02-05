@@ -1,5 +1,5 @@
-cd "%~dp0"
 @echo off
+cd "%~dp0"
 
 :: Format source code files with Nimpretty.
 nimpretty src/ZetaLoader.nim src/DumpTool.nim>nul 2>&1
