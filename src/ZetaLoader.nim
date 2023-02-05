@@ -45,27 +45,30 @@ converter wCharArrayToString(wCharArray: array[CCHDEVICENAME, WCHAR]): string =
 proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
         lParam: LPARAM): LRESULT {.stdcall.} =
     case msg:
-    # Processing WM_ACTIVATE, WM_ACTIVATEAPP & WM_DESTROY
+    # Processing WM_ACTIVATE & WM_ACTIVATEAPP
     # - Allow the game to be tabbed in from any monitor.
     # - Allow the game to tabbed out from the monitor, the game is running on.
-    # - Reset the resolution when WM_DESTROY is received.
-
-    of WM_ACTIVATE, WM_ACTIVATEAPP:
+    of WM_ACTIVATE:
         case wParam:
         of WA_ACTIVE, WA_CLICKACTIVE:
             if IsIconic(hWnd): SwitchToThisWindow(hWnd, TRUE)
             setDM(addr game.devMode)
         of WA_INACTIVE:
-            var monitorInfo: MONITORINFOEX
+            var
+                pt: POINT
+                monitorInfo: MONITORINFOEX
             monitorInfo.cbSize = sizeof(MONITORINFOEX).DWORD
-            GetMonitorInfo(MonitorFromWindow(lParam.HWND,
-                    MONITOR_DEFAULTTONEAREST), cast[ptr MONITORINFO](
-                    addr monitorInfo))
+            GetCursorPos(addr pt)
+            GetMonitorInfo(MonitorFromPoint(pt, MONITOR_DEFAULTTONEAREST), cast[
+                    ptr MONITORINFO](addr monitorInfo))
             if monitorInfo.szDevice.wCharArrayToString == game.monitor:
                 if not IsIconic(hWnd): ShowWindow(hWnd, SW_MINIMIZE)
                 setDM(nil)
         else: discard
-    of WM_DESTROY: setDM(nil)
+    of WM_ACTIVATEAPP:
+        if wParam == FALSE:
+            if not IsIconic(hWnd): ShowWindow(hWnd, SW_MINIMIZE)
+            setDM(nil)
 
     # Processing WM_WINDOWPOSCHANGING & WM_STYLECHANGING to prevent Halo Infinite's borderless fullscreen from getting disabled.
     of WM_WINDOWPOSCHANGING:
