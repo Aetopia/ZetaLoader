@@ -64,7 +64,7 @@ proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
                 if not IsIconic(hWnd): ShowWindow(hWnd, SW_MINIMIZE)
                 setDM(nil)
         else: discard
-    of WM_DESTROY: setDM(nil)
+    of WM_CLOSE, WM_DESTROY: setDM(nil)
 
     # Processing WM_WINDOWPOSCHANGING & WM_STYLECHANGING to prevent Halo Infinite's borderless fullscreen from getting disabled.
     of WM_WINDOWPOSCHANGING:
