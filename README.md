@@ -11,7 +11,7 @@ A utility to fix technical issues with Halo Infinite on PC.
     > 2. https://forums.guru3d.com/threads/msi-ab-rtss-development-news-thread.412822/page-161#post-5949434
     > 3. https://www.reddit.com/r/halo/comments/puq7ks/psa_rtss_causes_excessive_screen_tearing_in_halo/
 
-    This fix simply resolves the following when External Framerate Limiter is being used.:
+    This fix simply resolves the following when External Framerate Limiter is being used:
     1. Intense Screen Tearing.
     2. Jittery/Stuttery Mouse Input.    
     
