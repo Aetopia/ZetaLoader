@@ -4,19 +4,26 @@ A utility to fix technical issues with Halo Infinite on PC.
 
 ## Fixes
 
-1. Jittery/Stuttery Input Issues for Mouse & Keyboard
+1. External Framerate Limiter Mitigations.
 
-    > Reference: https://learn.microsoft.com/en-us/windows/win32/procthread/scheduling-priorities  
+    > References: 
+    > 1. https://learn.microsoft.com/en-us/windows/win32/procthread/scheduling-priorities  
+    > 2. https://forums.guru3d.com/threads/msi-ab-rtss-development-news-thread.412822/page-161#post-5949434
+    > 3. https://www.reddit.com/r/halo/comments/puq7ks/psa_rtss_causes_excessive_screen_tearing_in_halo/
 
-    This fix simply resolves jittery input related issues with the game.      
-    Setting the window thread priority to `THREAD_PRIORITY_HIGHEST` fixes this issue entirely. 
+    This fix simply resolves the following when External Framerate Limiter is being used.:
+    1. Intense Screen Tearing.
+    2. Jittery/Stuttery Mouse Input.    
+    
+    Setting the window thread priority to `THREAD_PRIORITY_HIGHEST` fixes this issue entirely.   
+    **This issue is also resolved if one uses [Special K's Sleepless Window Thread](https://wiki.special-k.info) thread option.**             
+    Special K's Sleepless Window Thread detours any Win32 Synchronize functions to make them "sleepless" when the detour functions are executed.               
+    This provides an indication for some or the other reason whatever synchronize functions are being used under the game's window thread seem to have issues when an external framerate limiter is being used.          
+    So either detouring the synchronize functions to make them sleepless or setting the window thread priority to `THREAD_PRIORITY_HIGHEST` resolves the mentioned issues.
 
-    > ZetaLoader sets the window thread priority to `THREAD_PRIORITY_TIME_CRITICAL` just to assign a higher priority over threads that use `THREAD_PRIORITY_HIGHEST`.
+    > ZetaLoader sets the window thread priority to `THREAD_PRIORITY_TIME_CRITICAL` just to assign a higher priority over threads that use `THREAD_PRIORITY_HIGHEST`.  
 
-    As for the reason why this fixes the issue entirely is maybe due to the fact, the window thread doesn't get enough of a timeslice resulting in jittery/stuttery input.    
-    Increasing the thread priority gives it enough of a timeslice that seems to resolve this issue.   
-
-    You can verify if this works by using a lower thread priority set it using the function `SetThreadPriority` in the source code.       
+    You can verify if this works by using a lower thread priority set it using the function `SetThreadPriority` in the source code or setting the game's process priority to `High` via Task Manager.   
 
 2. Borderless Fullscreen
 
@@ -58,14 +65,6 @@ A utility to fix technical issues with Halo Infinite on PC.
 4. Above Normal Process Priority      
 
     This feature makes Halo Infinite automatically have `Above Normal Process Priority`, this will make Windows give Halo Infinite more processor time whenever possible. 
-
-    > **Why not use High Process Priority?** 
-    > 
-    > Using a high process priority might prevent other threads on the system from getting processor time. Microsoft recommends this process priority to be used, if only doing time critical tasks.    
-    > Reference: https://learn.microsoft.com/en-us/windows/win32/procthread/scheduling-priorities
-    >        
-    > Also this fix `Screen Tearing | Input Issues with External/Driver Based Framelimiters` becomes useless if the process priority is set to high.      
-    > As for the reason, it likely maybe other threads within Halo Infinite getting a higher thread priority than before and preventing the window thread from getting enough of a timeslice, making the fix entirely useless.
 
 ## Result
 > Specifications:     
