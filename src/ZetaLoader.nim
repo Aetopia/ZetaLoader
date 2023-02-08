@@ -40,7 +40,6 @@ converter wCharArrayToString(wCharArray: openarray[WCHAR]): string =
         if c != 0: str.add(cast[char](c))
     return str
 
-
 # ZetaLoader's Window Procedure.
 proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
         lParam: LPARAM): LRESULT {.stdcall.} =
@@ -84,8 +83,8 @@ proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
     return CallWindowProc(game.wndProc, hwnd, msg, wParam, lParam)
 
 proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
-        idObject: LONG, idChild: LONG, idEventThread: DWORD,
-        dwmsEventTime: DWORD) {.stdcall.} =
+        idObject, idChild: LONG, idEventThread,
+                dwmsEventTime: DWORD) {.stdcall.} =
     if event != EVENT_OBJECT_SHOW and idobject != OBJID_WINDOW and idchild != CHILDID_SELF:
         return
     UnhookWinEvent(hWinEventHook)
@@ -98,8 +97,7 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
         cmdline = commandLineParams()
     var
         argdisplayMode: bool
-        hThread = OpenThread(THREAD_SET_INFORMATION, FALSE,
-                GetWindowThreadProcessId(hWnd, nil))
+        hThread = OpenThread(THREAD_SET_INFORMATION, FALSE, idEventThread)
         devMode: DEVMODE
         hMonitor: HMONITOR
         monitorInfo: MONITORINFOEX
