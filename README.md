@@ -16,7 +16,7 @@ A utility to fix technical issues with Halo Infinite on PC.
     2. Jittery/Stuttery Mouse Input.    
     
     Setting the window thread priority to `THREAD_PRIORITY_HIGHEST` fixes this issue entirely.  
-    **Note: Using a high process priority makes this mitigation useless!**  
+    **Note: Using high process priority with Halo Infinite, makes this mitigation useless!**  
 
     **This issue is also resolved if one uses [Special K's Sleepless Window Thread](https://wiki.special-k.info) thread option.**             
     Special K's Sleepless Window Thread detours any Win32 Synchronize functions to make them "sleepless" when the detour functions are executed.               
