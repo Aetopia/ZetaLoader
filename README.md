@@ -4,7 +4,7 @@ A utility to fix technical issues with Halo Infinite on PC.
 
 ## Fixes
 
-1. External Framerate Limiter Mitigations.
+1. External Framerate Limiter Game Window Thread Mitigation.
 
     > References: 
     > 1. https://learn.microsoft.com/en-us/windows/win32/procthread/scheduling-priorities  
@@ -15,11 +15,14 @@ A utility to fix technical issues with Halo Infinite on PC.
     1. Intense Screen Tearing.
     2. Jittery/Stuttery Mouse Input.    
     
-    Setting the window thread priority to `THREAD_PRIORITY_HIGHEST` fixes this issue entirely.   
+    Setting the window thread priority to `THREAD_PRIORITY_HIGHEST` fixes this issue entirely.  
+    **Note: Using a high process priority makes this mitigation useless!**  
+
     **This issue is also resolved if one uses [Special K's Sleepless Window Thread](https://wiki.special-k.info) thread option.**             
     Special K's Sleepless Window Thread detours any Win32 Synchronize functions to make them "sleepless" when the detour functions are executed.               
     This provides an indication for some or the other reason whatever synchronize functions are being used under the game's window thread seem to have issues when an external framerate limiter is being used.          
     So either detouring the synchronize functions to make them sleepless or setting the window thread priority to `THREAD_PRIORITY_HIGHEST` resolves the mentioned issues by giving the window thread enough of a timeslice.
+
 
     > ZetaLoader sets the window thread priority to `THREAD_PRIORITY_TIME_CRITICAL` just to assign a higher priority over threads that use `THREAD_PRIORITY_HIGHEST`.  
 
