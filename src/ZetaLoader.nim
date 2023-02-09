@@ -50,19 +50,17 @@ proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
     # - Reset the resolution when the game window receives WM_CLOSE or WM_DESTROY.
     of WM_ACTIVATE, WM_ACTIVATEAPP:
         case wParam:
-        of WA_ACTIVE, WA_CLICKACTIVE:
-            ShowWindow(hWnd, SW_RESTORE)
+        of WA_ACTIVE, WA_CLICKACTIVE: ShowWindow(hWnd, SW_RESTORE)
         of WA_INACTIVE:
             var monitorInfo: MONITORINFOEX
             monitorInfo.cbSize = sizeof(MONITORINFOEX).DWORD
             GetMonitorInfo(MonitorFromWindow(GetForegroundWindow(),
                     MONITOR_DEFAULTTONEAREST), cast[ptr MONITORINFO](
-                            addr monitorInfo))
+                    addr monitorInfo))
             if monitorInfo.szDevice.wCharArrayToString == game.monitor:
                 ShowWindow(hWnd, SW_MINIMIZE)
         else: discard
-    of WM_CLOSE, WM_DESTROY:
-        ShowWindow(hWnd, SW_MINIMIZE)
+    of WM_CLOSE, WM_DESTROY: ShowWindow(hWnd, SW_MINIMIZE)
     of WM_SIZE:
         case wParam:
         of SIZE_RESTORED: setDM(addr game.devMode)
