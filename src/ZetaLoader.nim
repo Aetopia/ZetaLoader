@@ -123,7 +123,7 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
 
     # 1. Set the process priority to above normal.
     # 2. Set the timer resolution to 0.5 ms.
-    # 3. Enable Multimedia Class Scheduler Service (MMCSS) for Halo Infinite.
+    # 3. Enable Multimedia Class Schedule Service Scheduling (MMCSS) for Halo Infinite.
     SetPriorityClass(hProcess, ABOVE_NORMAL_PRIORITY_CLASS)
     SetProcessPriorityBoost(hProcess, false)
     CloseHandle(hProcess)
