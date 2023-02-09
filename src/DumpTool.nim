@@ -4,11 +4,10 @@ const ZetaLoader = staticRead"ZetaLoader.dll"
 when isMainModule:
     try:
         let
-            cmdline = commandLineParams()
             dir = getAppDir()
-            dll = winstrConverterStringToLPWSTR(dir/"ZetaLoader.dll\0")
-            hProcess: HANDLE = OpenProcess(PROCESS_ALL_ACCESS, false, cmdline[
-                    0].split("-pid:", 1)[1].parseInt().DWORD)
+            dll = winstrConverterStringToLPWSTR(dir/"ZetaLoader.dll")
+            hProcess = OpenProcess(PROCESS_VM_WRITE or PROCESS_VM_OPERATION,
+                    false, commandLineParams()[0].split("-pid:", 1)[1].parseInt().DWORD)
         var mem: LPVOID
         setCurrentDir(dir)
 
