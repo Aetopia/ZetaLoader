@@ -51,8 +51,7 @@ proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
     of WM_ACTIVATE, WM_ACTIVATEAPP:
         case wParam:
         of WA_ACTIVE, WA_CLICKACTIVE:
-            if IsIconic(hWnd): SwitchToThisWindow(hWnd, TRUE)
-            setDM(addr game.devMode)
+            SwitchToThisWindow(hWnd, TRUE)
         of WA_INACTIVE:
             var monitorInfo: MONITORINFOEX
             monitorInfo.cbSize = sizeof(MONITORINFOEX).DWORD
@@ -60,10 +59,14 @@ proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
                     MONITOR_DEFAULTTONEAREST), cast[ptr MONITORINFO](
                             addr monitorInfo))
             if monitorInfo.szDevice.wCharArrayToString == game.monitor:
-                if not IsIconic(hWnd): ShowWindow(hWnd, SW_MINIMIZE)
-                setDM(nil)
+                ShowWindow(hWnd, SW_MINIMIZE)
         else: discard
     of WM_CLOSE, WM_DESTROY: setDM(nil)
+    of WM_SIZE:
+        case wParam:
+        of SIZE_RESTORED: setDM(addr game.devMode)
+        of SIZE_MINIMIZED: setDM(nil)
+        else: discard
 
     # Processing WM_WINDOWPOSCHANGING & WM_STYLECHANGING to prevent Halo Infinite's borderless fullscreen from getting disabled.
     of WM_WINDOWPOSCHANGING:
