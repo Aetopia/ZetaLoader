@@ -47,7 +47,7 @@ proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
     # Processing WM_ACTIVATE, WM_ACTIVATEAPP & WM_DESTROY.
     # - Allow the game to be tabbed in from any monitor.
     # - Allow the game to tabbed out from the monitor as long as the window becoming the foreground window is on the monitor, the game is running on.
-    # - Reset the resolution when the game window receives WM_DESTROY.
+    # - Reset the resolution when the game window receives WM_CLOSE or WM_DESTROY.
     of WM_ACTIVATE, WM_ACTIVATEAPP:
         case wParam:
         of WA_ACTIVE, WA_CLICKACTIVE:
