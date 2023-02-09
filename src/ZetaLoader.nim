@@ -131,7 +131,7 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
     SystemParametersInfo(SPI_GETFOREGROUNDLOCKTIMEOUT, 0, cast[LPVOID](
             unsafeAddr timeout), 0)
 
-    # Set the window thread priority to time critical which resolves jittery/stuttery input for Mouse & Keyboard.
+    # Set the window thread priority to time critical which resolves intense screen tearing and jittery/stutter mouse input when an external framerate limiter is being used.
     SetThreadPriority(hThread, THREAD_PRIORITY_TIME_CRITICAL)
     SetThreadPriorityBoost(hThread, FALSE)
     CloseHandle(hThread)
