@@ -51,7 +51,7 @@ proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
     of WM_ACTIVATE, WM_ACTIVATEAPP:
         case wParam:
         of WA_ACTIVE, WA_CLICKACTIVE:
-            ShowWindow(hWnd, SW_RESTORE)
+            SwitchToThisWindow(hWnd, true)
         of WA_INACTIVE:
             var monitorInfo: MONITORINFOEX
             monitorInfo.cbSize = sizeof(MONITORINFOEX).DWORD
@@ -65,9 +65,7 @@ proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
         ShowWindow(hWnd, SW_MINIMIZE)
     of WM_SIZE:
         case wParam:
-        of SIZE_RESTORED:
-            SetForegroundWindow(hWnd)
-            setDM(addr game.devMode)
+        of SIZE_RESTORED: setDM(addr game.devMode)
         of SIZE_MINIMIZED: setDM(nil)
         else: discard
 
