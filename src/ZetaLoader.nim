@@ -51,7 +51,7 @@ proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
     of WM_ACTIVATE, WM_ACTIVATEAPP:
         case wParam:
         of WA_ACTIVE, WA_CLICKACTIVE:
-            SwitchToThisWindow(hWnd, true)
+            ShowWindow(hWnd, SW_RESTORE)
         of WA_INACTIVE:
             var monitorInfo: MONITORINFOEX
             monitorInfo.cbSize = sizeof(MONITORINFOEX).DWORD
