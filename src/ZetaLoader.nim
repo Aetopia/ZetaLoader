@@ -61,11 +61,12 @@ proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
             if monitorInfo.szDevice.wCharArrayToString == game.monitor:
                 ShowWindow(hWnd, SW_MINIMIZE)
         else: discard
-    of WM_CLOSE, WM_DESTROY: setDM(nil)
+    of WM_CLOSE, WM_DESTROY:
+        ShowWindow(hWnd, SW_MINIMIZE)
     of WM_SIZE:
         case wParam:
         of SIZE_RESTORED:
-            SwitchToThisWindow(hWnd, TRUE)
+            SetForegroundWindow(hWnd)
             setDM(addr game.devMode)
         of SIZE_MINIMIZED: setDM(nil)
         else: discard
