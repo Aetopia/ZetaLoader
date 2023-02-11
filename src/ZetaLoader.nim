@@ -97,10 +97,9 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
         hProcess = GetCurrentProcess()
         vAttribute = true
         cmdline = commandLineParams()
-        dir = getAppDir()
     var
         mem: LPVOID
-        dlls: seq[LPWSTR]
+        dlls: seq[(string, LPWSTR)]
         argdisplayMode: bool
         hThread = OpenThread(THREAD_SET_INFORMATION, FALSE, idEventThread)
         devMode: DEVMODE
@@ -126,9 +125,9 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
 
         of "/dll":
             try:
-                let dll = winstrConverterStringToLPWSTR(absolutePath(cmdline[
-                        i+1].strip(), dir))
-                dlls.add(dll)
+                let dll = absolutePath(cmdline[i+1].strip()).toLower()
+                if splitFile(dll).ext != ".dll" and not fileExists(dll): continue
+                dlls.add((extractFilename(dll), winstrConverterStringToLPWSTR(dll)))
             except IndexDefect: discard
 
     # 1. Set the process priority to above normal.
@@ -212,10 +211,10 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
 
     # Inject any user specified DLLs.
     for dll in dlls:
-        let mutex = CreateMutex(nil, false, extractFileName($dll).toLower())
+        let mutex = CreateMutex(nil, false, dll[0])
         if mutex != 0 and GetLastError() == ERROR_ALREADY_EXISTS: continue
         mem = VirtualAllocEx(hProcess, nil, MAX_PATH, MEM_COMMIT or MEM_RESERVE, PAGE_EXECUTE_READWRITE)
-        WriteProcessMemory(hProcess, mem, cast[LPCVOID](dll), MAX_PATH, nil)
+        WriteProcessMemory(hProcess, mem, cast[LPCVOID](dll[1]), MAX_PATH, nil)
         WaitForSingleObject(CreateRemoteThread(hProcess, nil, 0, cast[
                 LPTHREAD_START_ROUTINE](LoadLibrary), mem, 0, nil), INFINITE)
         VirtualFreeEx(hProcess, mem, 0, MEM_RELEASE)
