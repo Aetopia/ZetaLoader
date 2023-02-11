@@ -117,7 +117,7 @@ You can the use the following command to automatically install ZetaLoader.
         - `H`: Height of the display mode.
         - `R`: Refresh rate of the display mode. 
     
-    - To load user specified DLLs.
+    - To load user specified DLLs.     
         Use the following launch options:     
         ```
         /DLL Example.dll
