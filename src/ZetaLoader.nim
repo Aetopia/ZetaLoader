@@ -98,8 +98,7 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
         vAttribute = true
         cmdline = commandLineParams()
     var
-        mem: LPVOID
-        dlls: seq[(string, LPWSTR)]
+        dll: string
         argdisplayMode: bool
         hThread = OpenThread(THREAD_SET_INFORMATION, FALSE, idEventThread)
         devMode: DEVMODE
@@ -125,9 +124,12 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
 
         of "/dll":
             try:
-                let dll = absolutePath(cmdline[i+1].strip()).toLower()
-                if splitFile(dll).ext != ".dll" and not fileExists(dll): continue
-                dlls.add((extractFilename(dll), winstrConverterStringToLPWSTR(dll)))
+                dll = absolutePath(cmdline[i+1].strip()).toLower()
+                if (splitFile(dll).ext != ".dll" or not fileExists(dll)) or (
+                        CreateMutex(nil, false, winstrConverterStringToLPWSTR(
+                        extractFilename(dll))) != 0 and GetLastError() ==
+                        ERROR_ALREADY_EXISTS): continue
+                LoadLibrary(winstrConverterStringToLPWSTR(dll))
             except IndexDefect: discard
 
     # 1. Set the process priority to above normal.
@@ -136,6 +138,7 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
 
     SetPriorityClass(hProcess, ABOVE_NORMAL_PRIORITY_CLASS)
     SetProcessPriorityBoost(hProcess, false)
+    CloseHandle(hProcess)
 
     NtQueryTimerResolution(unsafeAddr min, unsafeAddr max, unsafeAddr cur)
     NtSetTimerResolution(max, TRUE, unsafeAddr cur)
@@ -206,17 +209,6 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
         if timeout != 0:
             SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, cast[LPVOID](
                     unsafeAddr timeout), 0)
-
-    # Inject any user specified DLLs.
-    for dll in dlls:
-        let mutex = CreateMutex(nil, false, dll[0])
-        if mutex != 0 and GetLastError() == ERROR_ALREADY_EXISTS: continue
-        mem = VirtualAllocEx(hProcess, nil, MAX_PATH, MEM_COMMIT or MEM_RESERVE, PAGE_EXECUTE_READWRITE)
-        WriteProcessMemory(hProcess, mem, cast[LPCVOID](dll[1]), MAX_PATH, nil)
-        WaitForSingleObject(CreateRemoteThread(hProcess, nil, 0, cast[
-                LPTHREAD_START_ROUTINE](LoadLibrary), mem, 0, nil), INFINITE)
-        VirtualFreeEx(hProcess, mem, 0, MEM_RELEASE)
-    CloseHandle(hProcess)
 
     PostQuitMessage(0)
 
