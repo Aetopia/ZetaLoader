@@ -105,6 +105,8 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
         devMode: DEVMODE
         hMonitor: HMONITOR
         monitorInfo: MONITORINFOEX
+        isWindowBorderless = GetWindowLongPtr(hWnd, GWL_STYLE) == (WS_VISIBLE or
+                WS_OVERLAPPED or WS_CLIPSIBLINGS)
     monitorInfo.cbSize = sizeof(MONITORINFOEX).DWORD
     game.wndProc = cast[WNDPROC](GetWindowLongPtr(hWnd, GWLP_WNDPROC))
 
@@ -172,8 +174,7 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
             foregroundWndLock), cast[LPVOID](hWnd), 0, nil)
 
     # ZetaLoader Borderless Fullscreen + User Defined Resolution Support
-    if GetWindowLongPtr(hWnd, GWL_STYLE) == (WS_VISIBLE or WS_OVERLAPPED or
-            WS_CLIPSIBLINGS):
+    if isWindowBorderless:
 
         # 1. Disable the window transitions, disable the peek feature, and force the iconic representation of the window.
         DwmSetWindowAttribute(hWnd, DWMWA_TRANSITIONS_FORCEDISABLED,
@@ -181,7 +182,6 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
         DwmSetWindowAttribute(hWnd, DWMWA_DISALLOW_PEEK, unsafeAddr vAttribute, 4)
         DwmSetWindowAttribute(hWnd, DWMWA_FORCE_ICONIC_REPRESENTATION,
                 unsafeAddr vAttribute, 4)
-
 
         # 2. Apply the user specified resolution.
         setDM(addr game.devMode)
@@ -195,12 +195,9 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
         # 3. Setup ZetaLoader's Borderless Fullscreen implementation.
         # - Use WS_VISIBLE | WS_POPUP and WS_EX_APPWINDOW for the game's borderless fullscreen
         # - Resize the game's window to match the user defined resolution.
-        # - Redirect the game's window procedure to ZetaLoader's window procedure.
         SetWindowLongPtr(hWnd, GWL_STYLE, WS_VISIBLE or WS_POPUP)
         SetWindowLongPtr(hWnd, GWL_EXSTYLE, WS_EX_APPWINDOW)
-        SetWindowPos(hWnd, HWND_TOPMOST, game.x, game.y, game.cx, game.cy,
-                SWP_NOACTIVATE or SWP_NOSENDCHANGING)
-        SetWindowLongPtr(hWnd, GWLP_WNDPROC, cast[LONG_PTR](wndProc))
+        SetWindowPos(hWnd, HWND_TOPMOST, game.x, game.y, game.cx, game.cy, 0)
 
     # Inject any user specified DLLs.
     for dll in dlls:
@@ -213,12 +210,15 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
         VirtualFreeEx(hProcess, mem, 0, MEM_RELEASE)
     CloseHandle(hProcess)
 
-    # Revert the Foreground lock timeout to default and unlock the foreground window.
+    # 1. Revert the Foreground lock timeout to default and unlock the foreground window.
+    # 2. Redirect the game's window procedure to ZetaLoader's window procedure.
+    TerminateThread(hThread, 0)
+    CloseHandle(hThread)
     if timeout != 0:
         SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, cast[LPVOID](
                 unsafeAddr timeout), 0)
-    TerminateThread(hThread, 0)
-    CloseHandle(hThread)
+    if isWindowBorderless:
+        SetWindowLongPtr(hWnd, GWLP_WNDPROC, cast[LONG_PTR](wndProc))
 
     PostQuitMessage(0)
 
