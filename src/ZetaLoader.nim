@@ -97,7 +97,6 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
         hProcess = GetCurrentProcess()
         vAttribute = true
         cmdline = commandLineParams()
-        dir = getAppDir()
     var
         mem: LPVOID
         dlls: seq[(string, LPWSTR)]
@@ -128,7 +127,7 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
 
         of "/dll":
             try:
-                let dll = absolutePath(cmdline[i+1].strip(), dir).toLower()
+                let dll = absolutePath(cmdline[i+1].strip()).toLower()
                 if splitFile(dll).ext != ".dll" and not fileExists(dll): continue
                 dlls.add((extractFilename(dll), winstrConverterStringToLPWSTR(dll)))
             except IndexDefect: discard
