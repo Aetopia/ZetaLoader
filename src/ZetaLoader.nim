@@ -105,8 +105,6 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
         devMode: DEVMODE
         hMonitor: HMONITOR
         monitorInfo: MONITORINFOEX
-        isWindowBorderless = GetWindowLongPtr(hWnd, GWL_STYLE) == (WS_VISIBLE or
-                WS_OVERLAPPED or WS_CLIPSIBLINGS)
     monitorInfo.cbSize = sizeof(MONITORINFOEX).DWORD
     game.wndProc = cast[WNDPROC](GetWindowLongPtr(hWnd, GWLP_WNDPROC))
 
@@ -168,22 +166,23 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
                 game.devMode.dmDisplayFrequency) == 0:
         game.userDefinedDisplayMode = false
 
-    # Set the Foreground lock timeout to 0 and lock the foreground window to the game's window.
-    SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, cast[LPVOID](0), 0)
-    hThread = CreateThread(nil, 0, cast[PTHREAD_START_ROUTINE](
-            foregroundWndLock), cast[LPVOID](hWnd), 0, nil)
-
     # ZetaLoader Borderless Fullscreen + User Defined Resolution Support
-    if isWindowBorderless:
+    if GetWindowLongPtr(hWnd, GWL_STYLE) == (WS_VISIBLE or WS_OVERLAPPED or
+            WS_CLIPSIBLINGS):
 
-        # 1. Disable the window transitions, disable the peek feature, and force the iconic representation of the window.
+        # 1. Set the Foreground lock timeout to 0 and lock the foreground window to the game's window.
+        SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, cast[LPVOID](0), 0)
+        hThread = CreateThread(nil, 0, cast[PTHREAD_START_ROUTINE](
+                foregroundWndLock), cast[LPVOID](hWnd), 0, nil)
+
+        # 2. Disable the window transitions, disable the peek feature, and force the iconic representation of the window.
         DwmSetWindowAttribute(hWnd, DWMWA_TRANSITIONS_FORCEDISABLED,
                 unsafeAddr vAttribute, 4)
         DwmSetWindowAttribute(hWnd, DWMWA_DISALLOW_PEEK, unsafeAddr vAttribute, 4)
         DwmSetWindowAttribute(hWnd, DWMWA_FORCE_ICONIC_REPRESENTATION,
                 unsafeAddr vAttribute, 4)
 
-        # 2. Apply the user specified resolution.
+        # 3. Apply the user specified resolution.
         setDM(addr game.devMode)
         GetMonitorInfo(hMonitor, cast[ptr MONITORINFO](addr monitorInfo))
         (game.x, game.y, game.cx, game.cy) = (monitorInfo.rcMonitor.left,
@@ -192,12 +191,21 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
                 monitorInfo.rcMonitor.bottom -
                 monitorInfo.rcMonitor.top)
 
-        # 3. Setup ZetaLoader's Borderless Fullscreen implementation.
+        # 4. Setup ZetaLoader's Borderless Fullscreen implementation.
         # - Use WS_VISIBLE | WS_POPUP and WS_EX_APPWINDOW for the game's borderless fullscreen
         # - Resize the game's window to match the user defined resolution.
+        # - Redirect the game's window procedure to ZetaLoader's window procedure.
         SetWindowLongPtr(hWnd, GWL_STYLE, WS_VISIBLE or WS_POPUP)
         SetWindowLongPtr(hWnd, GWL_EXSTYLE, WS_EX_APPWINDOW)
         SetWindowPos(hWnd, HWND_TOPMOST, game.x, game.y, game.cx, game.cy, 0)
+        SetWindowLongPtr(hWnd, GWLP_WNDPROC, cast[LONG_PTR](wndProc))
+
+        # 5. Revert the Foreground lock timeout to default and unlock the foreground window.
+        TerminateThread(hThread, 0)
+        CloseHandle(hThread)
+        if timeout != 0:
+            SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, cast[LPVOID](
+                    unsafeAddr timeout), 0)
 
     # Inject any user specified DLLs.
     for dll in dlls:
@@ -209,16 +217,6 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
                 LPTHREAD_START_ROUTINE](LoadLibrary), mem, 0, nil), INFINITE)
         VirtualFreeEx(hProcess, mem, 0, MEM_RELEASE)
     CloseHandle(hProcess)
-
-    # 1. Revert the Foreground lock timeout to default and unlock the foreground window.
-    # 2. Redirect the game's window procedure to ZetaLoader's window procedure.
-    TerminateThread(hThread, 0)
-    CloseHandle(hThread)
-    if timeout != 0:
-        SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, cast[LPVOID](
-                unsafeAddr timeout), 0)
-    if isWindowBorderless:
-        SetWindowLongPtr(hWnd, GWLP_WNDPROC, cast[LONG_PTR](wndProc))
 
     PostQuitMessage(0)
 
