@@ -98,7 +98,6 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
         vAttribute = true
         cmdline = commandLineParams()
     var
-        dll: string
         argdisplayMode: bool
         hThread = OpenThread(THREAD_SET_INFORMATION, FALSE, idEventThread)
         devMode: DEVMODE
@@ -124,12 +123,8 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
 
         of "/dll":
             try:
-                dll = absolutePath(cmdline[i+1].strip()).toLower()
-                if (splitFile(dll).ext != ".dll" or not fileExists(dll)) or (
-                        CreateMutex(nil, false, winstrConverterStringToLPWSTR(
-                        extractFilename(dll))) != 0 and GetLastError() ==
-                        ERROR_ALREADY_EXISTS): continue
-                LoadLibrary(winstrConverterStringToLPWSTR(dll))
+                LoadLibrary(winstrConverterStringToLPWSTR(absolutePath(cmdline[
+                        i+1].strip()).toLower()))
             except IndexDefect: discard
 
     # 1. Set the process priority to above normal.
