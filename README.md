@@ -14,13 +14,11 @@ A utility to fix technical issues with Halo Infinite on PC.
     This fix simply resolves the following when External Framerate Limiter is being used:
     1. Intense Screen Tearing.
     2. Jittery/Stuttery Mouse Input.    
-    
-    Setting the window thread priority to `THREAD_PRIORITY_HIGHEST` fixes this issue entirely.  
     **Note: Using high process priority with Halo Infinite, makes this mitigation useless!**  
-    Setting the window thread priority to `THREAD_PRIORITY_HIGHEST` resolves the mentioned issues by giving the window thread enough of a timeslice.
 
+    Setting the window thread priority to `THREAD_PRIORITY_HIGHEST` resolves the mentioned issues by giving the window thread enough of a timeslice.    
 
-    > ZetaLoader sets the window thread priority to `THREAD_PRIORITY_TIME_CRITICAL` just to assign a higher priority over threads that use `THREAD_PRIORITY_HIGHEST`.  
+    > ZetaLoader sets the window thread priority to `THREAD_PRIORITY_TIME_CRITICAL` just to assign a higher priority over threads that use `THREAD_PRIORITY_HIGHEST`.    
 
     You can verify if this works by using a lower thread priority set it using the function `SetThreadPriority` in the source code or setting the game's process priority to `High` via Task Manager.   
 
