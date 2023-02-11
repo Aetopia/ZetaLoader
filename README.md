@@ -122,8 +122,8 @@ You can the use the following command to automatically install ZetaLoader.
         ```
         /DLL Example.dll
         ```
-        Where in `/DLL <DLL>`
-        - `<DLL>`: The DLL file to be injected.
+        Where in `/DLL <File>`
+        - `File`: The DLL file to be injected.
 
     Also ensure **Borderless Fullscreen is enabled**.
 
