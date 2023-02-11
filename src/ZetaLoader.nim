@@ -166,14 +166,14 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
                 game.devMode.dmDisplayFrequency) == 0:
         game.userDefinedDisplayMode = false
 
+    # Set the Foreground lock timeout to 0 and lock the foreground window to the game's window.
+    SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, cast[LPVOID](0), 0)
+    hThread = CreateThread(nil, 0, cast[PTHREAD_START_ROUTINE](
+            foregroundWndLock), cast[LPVOID](hWnd), 0, nil)
+
     # ZetaLoader Borderless Fullscreen + User Defined Resolution Support
     if GetWindowLongPtr(hWnd, GWL_STYLE) == (WS_VISIBLE or WS_OVERLAPPED or
             WS_CLIPSIBLINGS):
-
-        # Set the Foreground lock timeout to 0 and lock the foreground window to the game's window.
-        SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, cast[LPVOID](0), 0)
-        hThread = CreateThread(nil, 0, cast[PTHREAD_START_ROUTINE](
-                foregroundWndLock), cast[LPVOID](hWnd), 0, nil)
 
         # 1. Disable the window transitions, disable the peek feature, and force the iconic representation of the window.
         DwmSetWindowAttribute(hWnd, DWMWA_TRANSITIONS_FORCEDISABLED,
@@ -202,13 +202,6 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
                 SWP_NOACTIVATE or SWP_NOSENDCHANGING)
         SetWindowLongPtr(hWnd, GWLP_WNDPROC, cast[LONG_PTR](wndProc))
 
-        # 4. Revert the Foreground lock timeout to default and unlock the foreground window.
-        if timeout != 0:
-            SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, cast[LPVOID](
-                    unsafeAddr timeout), 0)
-        TerminateThread(hThread, 0)
-        CloseHandle(hThread)
-
     # Inject any user specified DLLs.
     for dll in dlls:
         let mutex = CreateMutex(nil, false, dll[0])
@@ -219,6 +212,13 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
                 LPTHREAD_START_ROUTINE](LoadLibrary), mem, 0, nil), INFINITE)
         VirtualFreeEx(hProcess, mem, 0, MEM_RELEASE)
     CloseHandle(hProcess)
+
+    # Revert the Foreground lock timeout to default and unlock the foreground window.
+    if timeout != 0:
+        SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, cast[LPVOID](
+                unsafeAddr timeout), 0)
+    TerminateThread(hThread, 0)
+    CloseHandle(hThread)
 
     PostQuitMessage(0)
 
