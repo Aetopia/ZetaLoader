@@ -108,7 +108,7 @@ You can the use the following command to automatically install ZetaLoader.
 
     ![Launch Options](https://i.imgur.com/WdzZCJ7.png)
 
-    - To launch Halo Infinite at `1280 x 720` @ `60` Hz.
+    - To launch Halo Infinite using a specified display mode.
         Using the following launch options:
         ```
         /DisplayMode 1280x720_60
