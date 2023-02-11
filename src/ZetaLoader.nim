@@ -133,11 +133,22 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
             except IndexDefect: discard
 
     # 1. Set the process priority to above normal.
-    # 2. Set the timer resolution to 0.5 ms.
-    # 3. Enable Multimedia Class Schedule Service Scheduling (MMCSS) for Halo Infinite.
+    # 2. Inject any user specified DLLs.
+    # 3. Set the timer resolution to 0.5 ms.
+    # 4. Enable Multimedia Class Schedule Service Scheduling (MMCSS) for Halo Infinite.
 
     SetPriorityClass(hProcess, ABOVE_NORMAL_PRIORITY_CLASS)
     SetProcessPriorityBoost(hProcess, false)
+    for dll in dlls:
+        mutex = CreateMutex(nil, false, extractFileName($dll).toLower())
+        if mutex != 0 and GetLastError() == ERROR_ALREADY_EXISTS: continue
+        mem = VirtualAllocEx(hProcess, nil, MAX_PATH, MEM_COMMIT or MEM_RESERVE, PAGE_EXECUTE_READWRITE)
+        WriteProcessMemory(hProcess, mem, cast[LPCVOID](dll), MAX_PATH, nil)
+        WaitForSingleObject(CreateRemoteThread(hProcess, nil, 0, cast[
+                LPTHREAD_START_ROUTINE](LoadLibrary), mem, 0, nil), INFINITE)
+        VirtualFreeEx(hProcess, mem, 0, MEM_RELEASE)
+    CloseHandle(hProcess)
+
     NtQueryTimerResolution(unsafeAddr min, unsafeAddr max, unsafeAddr cur)
     NtSetTimerResolution(max, TRUE, unsafeAddr cur)
     DwmEnableMMCSS(true)
@@ -209,17 +220,6 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
                     unsafeAddr timeout), 0)
         TerminateThread(hThread, 0)
         CloseHandle(hThread)
-
-    # Inject any user specified DLLs.
-    for dll in dlls:
-        mutex = CreateMutex(nil, false, extractFileName($dll).toLower())
-        if mutex != 0 and GetLastError() == ERROR_ALREADY_EXISTS: continue
-        mem = VirtualAllocEx(hProcess, nil, MAX_PATH, MEM_COMMIT or MEM_RESERVE, PAGE_EXECUTE_READWRITE)
-        WriteProcessMemory(hProcess, mem, cast[LPCVOID](dll), MAX_PATH, nil)
-        WaitForSingleObject(CreateRemoteThread(hProcess, nil, 0, cast[
-                LPTHREAD_START_ROUTINE](LoadLibrary), mem, 0, nil), INFINITE)
-        VirtualFreeEx(hProcess, mem, 0, MEM_RELEASE)
-    CloseHandle(hProcess)
 
     PostQuitMessage(0)
 
