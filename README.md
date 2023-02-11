@@ -65,6 +65,9 @@ A utility to fix technical issues with Halo Infinite on PC.
 
     This feature makes Halo Infinite automatically have `Above Normal Process Priority`, this will make Windows give Halo Infinite more processor time whenever possible. 
 
+5. User Specified DLLs
+    This feature allows one to load any 3rd party DLL into Halo Infinite.
+
 ## Result
 > Specifications:     
     1. i7-10700K @ 4.8 GHz HT Disabled @ 1.15V   
