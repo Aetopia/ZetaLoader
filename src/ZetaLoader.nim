@@ -5,11 +5,15 @@ type Game = object
     monitor: string
     x, y, cx, cy: int32
     userDefinedDisplayMode: bool
+    activatedWndMonitorInfo: MONITORINFOEX
     wndProc: WNDPROC
-var game: Game
+var
+    game: Game
+    WM_SHELLHOOKMESSAGE = RegisterWindowMessage("SHELLHOOK")
 game.devMode.dmSize = sizeof(DEVMODE).WORD
 game.devMode.dmFields = DM_PELSWIDTH or DM_PELSHEIGHT or DM_DISPLAYFREQUENCY
 game.userDefinedDisplayMode = true
+game.activatedWndMonitorInfo.cbSize = sizeof(MONITORINFOEX).DWORD
 
 proc NtSetTimerResolution(DesiredResolution: ULONG, SetResolution: BOOLEAN,
         CurrentResolution: PULONG): LONG {.stdcall, dynlib: "ntdll.dll",
@@ -46,20 +50,10 @@ proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
     case msg:
     # Processing WM_ACTIVATE, WM_ACTIVATEAPP & WM_DESTROY.
     # - Allow the game to be tabbed in from any monitor.
-    # - Allow the game to tabbed out from the monitor as long as the window becoming the foreground window is on the monitor, the game is running on.
     # - Reset the resolution when the game window receives WM_CLOSE or WM_DESTROY.
     of WM_ACTIVATE, WM_ACTIVATEAPP:
-        case wParam:
-        of WA_ACTIVE, WA_CLICKACTIVE: ShowWindow(hWnd, SW_RESTORE)
-        of WA_INACTIVE:
-            var monitorInfo: MONITORINFOEX
-            monitorInfo.cbSize = sizeof(MONITORINFOEX).DWORD
-            GetMonitorInfo(MonitorFromWindow(GetForegroundWindow(),
-                    MONITOR_DEFAULTTONEAREST), cast[ptr MONITORINFO](
-                    addr monitorInfo))
-            if monitorInfo.szDevice.wCharArrayToString == game.monitor:
-                ShowWindow(hWnd, SW_MINIMIZE)
-        else: discard
+        if [WA_ACTIVE, WA_CLICKACTIVE].contains(wParam.int):
+            ShowWindow(hWnd, SW_RESTORE)
     of WM_CLOSE, WM_DESTROY: ShowWindow(hWnd, SW_MINIMIZE)
     of WM_SIZE:
         case wParam:
@@ -80,7 +74,18 @@ proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
             cast[ptr STYLESTRUCT](lParam).styleNew = WS_VISIBLE or WS_POPUP
         elif wParam == GWL_EXSTYLE:
             cast[ptr STYLESTRUCT](lParam).styleNew = WS_EX_APPWINDOW
-    else: discard
+
+    else:
+        # Allow the game to tabbed out from the monitor as long as the window becoming the foreground window is on the monitor, the game is running on.
+        # Using WM_SHELLHOOKMESSAGE to detect when the foreground window changes, even when the game is not the foreground window.
+        if msg == WM_SHELLHOOKMESSAGE and [HSHELL_WINDOWACTIVATED,
+                HSHELL_RUDEAPPACTIVATED].contains(wParam.int) and lParam.HWND !=
+                hWnd and IsIconic(hWnd) == 0:
+            GetMonitorInfo(MonitorFromWindow(lParam.HWND,
+                    MONITOR_DEFAULTTONEAREST), cast[ptr MONITORINFO](
+                    addr game.activatedWndMonitorInfo))
+            if game.activatedWndMonitorInfo.szDevice.wCharArrayToString == game.monitor:
+                ShowWindow(hWnd, SW_MINIMIZE)
 
     return CallWindowProc(game.wndProc, hwnd, msg, wParam, lParam)
 
@@ -130,7 +135,7 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
     # 1. Set the process priority to above normal.
     # 2. Set the timer resolution to 0.5 ms.
     # 3. Enable Multimedia Class Schedule Service Scheduling (MMCSS) for Halo Infinite.
-
+    RegisterShellHookWindow(hWnd)
     SetPriorityClass(hProcess, ABOVE_NORMAL_PRIORITY_CLASS)
     SetProcessPriorityBoost(hProcess, false)
     CloseHandle(hProcess)
