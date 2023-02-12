@@ -109,7 +109,7 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
     monitorInfo.cbSize = sizeof(MONITORINFOEX).DWORD
     game.wndProc = cast[WNDPROC](GetWindowLongPtr(hWnd, GWLP_WNDPROC))
 
-    for kind, key, value in getOpt():
+    for kind, key, value in getopt():
         case kind:
         of cmdLongOption:
             case key.toLower():
