@@ -104,7 +104,7 @@ You can the use the following command to automatically install ZetaLoader.
     - This will create a file called `ZetaLoader.dll`.
 
 ### Configure
-![Launch Options](https://i.imgur.com/yjUArAt.png)
+![Launch Options](https://i.imgur.com/sP8cNdv.png)
 
 - To configure ZetaLoader, modify the game's launch options.     
 
