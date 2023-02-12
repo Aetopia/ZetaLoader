@@ -109,7 +109,7 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
     for i in 0..cmdline.len-1:
         let arg = cmdline[i].toLower().strip()
         case arg:
-        of "/dm", "/displaymode":
+        of "/displaymode":
             if argdisplayMode: continue
             argdisplayMode = true
             try:
