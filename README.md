@@ -106,7 +106,7 @@ You can the use the following command to automatically install ZetaLoader.
 ### Configure
 ![Launch Options](https://i.imgur.com/yjUArAt.png)
 
-- To configure ZetaLoader applies, modify the game's launch options.     
+- To configure ZetaLoader, modify the game's launch options.     
 
     1. To launch Halo Infinite using a specified display mode.
         Using the following launch option:
