@@ -7,9 +7,8 @@ type Game = object
     userDefinedDisplayMode: bool
     activatedWndMonitorInfo: MONITORINFOEX
     wndProc: WNDPROC
-var
-    game: Game
-    WM_SHELLHOOKMESSAGE = RegisterWindowMessage("SHELLHOOK")
+let WM_SHELLHOOKMESSAGE = RegisterWindowMessage("SHELLHOOK")
+var game: Game
 game.devMode.dmSize = sizeof(DEVMODE).WORD
 game.devMode.dmFields = DM_PELSWIDTH or DM_PELSHEIGHT or DM_DISPLAYFREQUENCY
 game.userDefinedDisplayMode = true
