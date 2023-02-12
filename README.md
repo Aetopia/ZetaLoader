@@ -104,26 +104,26 @@ You can the use the following command to automatically install ZetaLoader.
     - This will create a file called `ZetaLoader.dll`.
 
 ### Configure
-- To configure the resolution ZetaLoader applies to Halo Infinite, modify the game's launch options.     
+![Launch Options](https://i.imgur.com/yjUArAt.png)
 
-    ![Launch Options](https://i.imgur.com/WdzZCJ7.png)
+- To configure ZetaLoader applies, modify the game's launch options.     
 
-    - To launch Halo Infinite using a specified display mode.
-        Using the following launch options:
+    1. To launch Halo Infinite using a specified display mode.
+        Using the following launch option:
         ```
-        /DisplayMode 1280x720_60
+        --DisplayMode: 1280x720_60
         ```
-        Where in `/DisplayMode <WxH_R>`
+        Where in `--DisplayMode: <WxH_R>`
         - `W`: Width of the display mode.
         - `H`: Height of the display mode.
         - `R`: Refresh rate of the display mode. 
     
-    - To load user specified DLLs.     
-        Use the following launch options:     
+    2. To load user specified DLLs.     
+        Use the following launch option:     
         ```
-        /DLL Example.dll
+        --DLL: SpecialK64.dll
         ```
-        Where in `/DLL <File>`
+        Where in `--DLL: <File>`
         - `File`: The DLL file to be injected.
         > You may specify this argument multiple times.
 
