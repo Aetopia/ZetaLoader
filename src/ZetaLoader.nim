@@ -125,8 +125,8 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
                     game.devMode.dmDisplayFrequency = param[1].parseInt.DWORD
                 except ValueError: discard
             of "dll":
-                LoadLibraryEx(winstrConverterStringToLPWSTR(absolutePath(
-                        value).toLower()), 0, LOAD_LIBRARY_SEARCH_SYSTEM32)
+                LoadLibrary(winstrConverterStringToLPWSTR(absolutePath(
+                        value).toLower()))
         else: discard
 
     # 1. Set the process priority to above normal.
