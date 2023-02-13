@@ -197,7 +197,7 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
         # - Redirect the game's window procedure to ZetaLoader's window procedure.
         SetWindowLongPtr(hWnd, GWL_STYLE, WS_VISIBLE or WS_POPUP)
         SetWindowLongPtr(hWnd, GWL_EXSTYLE, WS_EX_APPWINDOW)
-        SetWindowPos(hWnd, HWND_TOPMOST, game.x, game.y, game.cx, game.cy, 0)
+        SetWindowPos(hWnd, HWND_TOPMOST, game.x, game.y, game.cx, game.cy, SWP_NOSENDCHANGING)
         SetWindowLongPtr(hWnd, GWLP_WNDPROC, cast[LONG_PTR](wndProc))
 
         # 5. Revert the Foreground lock timeout to default and unlock the foreground window.
