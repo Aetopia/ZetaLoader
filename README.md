@@ -63,6 +63,9 @@ A utility to fix technical issues with Halo Infinite on PC.
 
     This feature makes Halo Infinite automatically have `Above Normal Process Priority`, this will make Windows give Halo Infinite more processor time whenever possible.
 
+5. User Specified DLLs Support
+    This feature allows one to load any 3rd party DLL into Halo Infinite.
+
 ## Result
 > Specifications:     
     1. i7-10700K @ 4.8 GHz HT Disabled @ 1.15V   
@@ -98,8 +101,6 @@ You can the use the following command to automatically install ZetaLoader.
     ![ZetaLoader Installation](https://i.imgur.com/Xu1hNuN.png)
 
 ### Configure
-![Launch Options](https://i.imgur.com/Q4r4zTz.png)
-
 - To configure ZetaLoader, modify the game's launch options.     
 
     - To launch Halo Infinite using a specified display mode.
@@ -110,6 +111,13 @@ You can the use the following command to automatically install ZetaLoader.
         - `W`: Width of the display mode.
         - `H`: Height of the display mode.
         - `R`: Refresh rate of the display mode. 
+    
+    - To launch Halo Infinite with user specified DLLs.      
+        Use the following launch option: 
+        ```
+        --DLL: <File>
+        ```
+        Where `<File>` is the DLL to be loaded into the game.
 
     Also ensure **Borderless Fullscreen is enabled**.
 

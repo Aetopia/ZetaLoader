@@ -1,4 +1,4 @@
-import winim/[lean, inc/dwmapi], strutils, parseopt
+import winim/[lean, inc/dwmapi], strutils, parseopt, os
 
 type Game = object
     devMode: DEVMODE
@@ -110,8 +110,10 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
     game.wndProc = cast[WNDPROC](GetWindowLongPtr(hWnd, GWLP_WNDPROC))
 
     for kind, key, value in getopt():
-        if kind == cmdLongOption and key.toLower() == "displaymode" and
-                not argdisplayMode:
+        if kind != cmdLongOption: continue
+        case key.toLower():
+        of "displaymode":
+            if argdisplayMode: continue
             argdisplayMode = true
             try:
                 let
@@ -121,6 +123,10 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
                 game.devMode.dmPelsHeight = resolution[1].parseInt.DWORD
                 game.devMode.dmDisplayFrequency = param[1].parseInt.DWORD
             except ValueError: discard
+        of "dll":
+            LoadLibrary(winstrConverterStringToLPWSTR(absolutePath(
+                    value).toLower()))
+        else: discard
 
     # 1. Set the process priority to above normal.
     # 2. Set the timer resolution to 0.5 ms.
