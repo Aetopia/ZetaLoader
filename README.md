@@ -87,15 +87,15 @@ You can the use the following command to automatically install ZetaLoader.
 2. Launch Halo Infinite.
 
 ### Manual
-1. Download `wininet.dll` from [GitHub Releases](https://github.com/Aetopia/ZetaLoader).   
+1. Download `dinput8.dll` from [GitHub Releases](https://github.com/Aetopia/ZetaLoader).   
 
 2. Browse Halo Infinite's local files.  
 
     ![Properties](https://i.imgur.com/8HKvH4U.png)
 
-3. Place `wininet.dll` into the game's installation directory. 
+3. Place `dinput8.dll` into the game's installation directory. 
 
-    ![ZetaLoader Installation](https://i.imgur.com/r3nGbx0.png)
+    ![ZetaLoader Installation](https://i.imgur.com/Xu1hNuN.png)
 
 ### Configure
 ![Launch Options](https://i.imgur.com/Q4r4zTz.png)
@@ -114,7 +114,7 @@ You can the use the following command to automatically install ZetaLoader.
     Also ensure **Borderless Fullscreen is enabled**.
 
 ## Uninstallation
-Delete `wininet.dll` from Halo Infinite's installation directory.
+Delete `dinput8.dll` from Halo Infinite's installation directory.
 
 # Building
 1. Install `Nim`.   
