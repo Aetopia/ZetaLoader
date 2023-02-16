@@ -87,7 +87,7 @@ You can the use the following command to automatically install ZetaLoader.
 2. Launch Halo Infinite.
 
 ### Manual
-1. Download `DumpTool.exe` from [GitHub Releases](https://github.com/Aetopia/ZetaLoader).   
+1. Download `ZetaLoader.dll` from [GitHub Releases](https://github.com/Aetopia/ZetaLoader).   
 
 2. Browse Halo Infinite's local files.  
 
@@ -98,16 +98,15 @@ You can the use the following command to automatically install ZetaLoader.
     ![ZetaLoader Installation](https://i.imgur.com/r3nGbx0.png)
 
 ### Configure
-![Launch Options](https://i.imgur.com/sP8cNdv.png)
+![Launch Options](https://i.imgur.com/Q4r4zTz.png)
 
 - To configure ZetaLoader, modify the game's launch options.     
 
     - To launch Halo Infinite using a specified display mode.
         Using the following launch option:
         ```
-        --DisplayMode: 1280x720_60
+        --DisplayMode: WxH_R
         ```
-        Where in `--DisplayMode: <WxH_R>`
         - `W`: Width of the display mode.
         - `H`: Height of the display mode.
         - `R`: Refresh rate of the display mode. 
