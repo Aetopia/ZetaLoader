@@ -1,4 +1,4 @@
-import winim/[lean, inc/dwmapi], os, strutils, parseopt
+import winim/[lean, inc/dwmapi], strutils, parseopt
 
 type Game = object
     devMode: DEVMODE
@@ -110,24 +110,17 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
     game.wndProc = cast[WNDPROC](GetWindowLongPtr(hWnd, GWLP_WNDPROC))
 
     for kind, key, value in getopt():
-        case kind:
-        of cmdLongOption:
-            case key.toLower():
-            of "displaymode":
-                if argdisplayMode: continue
-                argdisplayMode = true
-                try:
-                    let
-                        param = value.split("_", 1)
-                        resolution = param[0].split("x", 1)
-                    game.devMode.dmPelsWidth = resolution[0].parseInt.DWORD
-                    game.devMode.dmPelsHeight = resolution[1].parseInt.DWORD
-                    game.devMode.dmDisplayFrequency = param[1].parseInt.DWORD
-                except ValueError: discard
-            of "dll":
-                LoadLibrary(winstrConverterStringToLPWSTR(absolutePath(
-                        value).toLower()))
-        else: discard
+        if kind == cmdLongOption and key.toLower() == "displaymode" and
+                not argdisplayMode:
+            argdisplayMode = true
+            try:
+                let
+                    param = value.split("_", 1)
+                    resolution = param[0].split("x", 1)
+                game.devMode.dmPelsWidth = resolution[0].parseInt.DWORD
+                game.devMode.dmPelsHeight = resolution[1].parseInt.DWORD
+                game.devMode.dmDisplayFrequency = param[1].parseInt.DWORD
+            except ValueError: discard
 
     # 1. Set the process priority to above normal.
     # 2. Set the timer resolution to 0.5 ms.

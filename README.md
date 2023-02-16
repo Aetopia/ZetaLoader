@@ -61,10 +61,7 @@ A utility to fix technical issues with Halo Infinite on PC.
 
 4. Above Normal Process Priority      
 
-    This feature makes Halo Infinite automatically have `Above Normal Process Priority`, this will make Windows give Halo Infinite more processor time whenever possible. 
-
-5. User Specified DLLs Support               
-    This feature allows one to load any 3rd party DLL into Halo Infinite.
+    This feature makes Halo Infinite automatically have `Above Normal Process Priority`, this will make Windows give Halo Infinite more processor time whenever possible.
 
 ## Result
 > Specifications:     
@@ -96,19 +93,16 @@ You can the use the following command to automatically install ZetaLoader.
 
     ![Properties](https://i.imgur.com/8HKvH4U.png)
 
-3. Replace the file called `DumpTool.exe` with ZetaLoader's `DumpTool.exe`.   
+3. Place `ZetaLoader.dll` into the directory and rename it to `wininet.dll`. 
 
-    ![Replace `DumpTool.exe`](https://i.imgur.com/h0wKBBk.png)
-
-4. - Launch Halo Infinite. 
-    - This will create a file called `ZetaLoader.dll`.
+    ![ZetaLoader Installation](https://i.imgur.com/r3nGbx0.png)
 
 ### Configure
 ![Launch Options](https://i.imgur.com/sP8cNdv.png)
 
 - To configure ZetaLoader, modify the game's launch options.     
 
-    1. To launch Halo Infinite using a specified display mode.
+    - To launch Halo Infinite using a specified display mode.
         Using the following launch option:
         ```
         --DisplayMode: 1280x720_60
@@ -117,21 +111,11 @@ You can the use the following command to automatically install ZetaLoader.
         - `W`: Width of the display mode.
         - `H`: Height of the display mode.
         - `R`: Refresh rate of the display mode. 
-    
-    2. To load user specified DLLs.     
-        Use the following launch option:     
-        ```
-        --DLL: SpecialK64.dll
-        ```
-        Where in `--DLL: <File>`
-        - `File`: The DLL file to be injected.
-        > You may specify this argument multiple times.
 
     Also ensure **Borderless Fullscreen is enabled**.
 
 ## Uninstallation
-1. Delete `DumpTool.exe` & `ZetaLoader.dll` from Halo Infinite's installation directory.
-2. Verify integrity of the game files to restore the original `DumpTool.exe`.
+Delete `wininet.dll` from Halo Infinite's installation directory.
 
 # Building
 1. Install `Nim`.   
