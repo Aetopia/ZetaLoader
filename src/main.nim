@@ -47,7 +47,6 @@ converter wCharArrayToString(wCharArray: openarray[WCHAR]): string =
 proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
         lParam: LPARAM): LRESULT {.stdcall.} =
     case msg:
-    # Processing WM_ACTIVATE, WM_ACTIVATEAPP & WM_DESTROY.
     # - Allow the game to be tabbed in from any monitor.
     # - Reset the resolution when the game window receives WM_CLOSE or WM_DESTROY.
     of WM_ACTIVATE, WM_ACTIVATEAPP:
