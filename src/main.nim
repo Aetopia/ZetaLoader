@@ -74,12 +74,13 @@ proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
         # Allow the game to tabbed out from the monitor as long as the window becoming the foreground window is on the monitor, the game is running on.
         # Using WM_SHELLHOOKMESSAGE to detect when the foreground window changes, even when the game is not the foreground window.
         if msg == WM_SHELLHOOKMESSAGE and [HSHELL_WINDOWACTIVATED,
-                HSHELL_RUDEAPPACTIVATED].contains(wParam.int) and lParam.HWND !=
+                HSHELL_RUDEAPPACTIVATED].contains(int(wParam)) and HWND(
+                        lParam) !=
                 hWnd and IsIconic(hWnd) == FALSE:
             GetMonitorInfo(MonitorFromWindow(lParam.HWND,
                     MONITOR_DEFAULTTONEAREST), cast[ptr MONITORINFO](
                     addr game.activatedWndMonitorInfo))
-            if game.activatedWndMonitorInfo.szDevice.wCharArrayToString ==
+            if game.activatedWndMonitorInfo.szDevice.wCharArrayToString() ==
                     game.szDevice:
                 ShowWindow(hWnd, SW_MINIMIZE)
 
@@ -147,7 +148,7 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
     # Get the monitor, the game's window is on.
     hMonitor = MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST)
     GetMonitorInfo(hMonitor, cast[ptr MONITORINFO](addr monitorInfo))
-    game.szDevice = monitorInfo.szDevice.wCharArrayToString
+    game.szDevice = monitorInfo.szDevice.wCharArrayToString()
     EnumDisplaySettings(game.szDevice, ENUM_CURRENT_SETTINGS,
             addr devMode)
 
