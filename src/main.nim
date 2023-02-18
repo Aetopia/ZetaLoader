@@ -75,7 +75,7 @@ proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
         # Using WM_SHELLHOOKMESSAGE to detect when the foreground window changes, even when the game is not the foreground window.
         if msg == WM_SHELLHOOKMESSAGE and [HSHELL_WINDOWACTIVATED,
                 HSHELL_RUDEAPPACTIVATED].contains(wParam.int) and lParam.HWND !=
-                hWnd and IsIconic(hWnd) == 0:
+                hWnd and IsIconic(hWnd) == FALSE:
             GetMonitorInfo(MonitorFromWindow(lParam.HWND,
                     MONITOR_DEFAULTTONEAREST), cast[ptr MONITORINFO](
                     addr game.activatedWndMonitorInfo))
