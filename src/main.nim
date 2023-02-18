@@ -73,9 +73,9 @@ proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
     else:
         # Allow the game to tabbed out from the monitor as long as the window becoming the foreground window is on the monitor, the game is running on.
         # Using WM_SHELLHOOKMESSAGE to detect when the foreground window changes, even when the game is not the foreground window.
-        if msg == WM_SHELLHOOKMESSAGE and wParam.int ==
-                HSHELL_WINDOWACTIVATED and lParam.HWND != hWnd and IsIconic(
-                hWnd) == FALSE:
+        if msg == WM_SHELLHOOKMESSAGE and [HSHELL_WINDOWACTIVATED,
+                HSHELL_RUDEAPPACTIVATED].contains(wParam.int) and lParam.HWND !=
+                hWnd and IsIconic(hWnd) == 0:
             GetMonitorInfo(MonitorFromWindow(lParam.HWND,
                     MONITOR_DEFAULTTONEAREST), cast[ptr MONITORINFO](
                     addr game.activatedWndMonitorInfo))
