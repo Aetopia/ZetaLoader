@@ -5,14 +5,12 @@ type Game = object
     szDevice: string
     wndX, wndY, wndCX, wndCY: int32
     userDefinedDisplayMode: bool
-    activatedWndMonitorInfo: MONITORINFOEX
     wndProc: WNDPROC
 let WM_SHELLHOOKMESSAGE = RegisterWindowMessage("SHELLHOOK")
 var game: Game
 game.devMode.dmSize = sizeof(DEVMODE).WORD
 game.devMode.dmFields = DM_PELSWIDTH or DM_PELSHEIGHT or DM_DISPLAYFREQUENCY
 game.userDefinedDisplayMode = true
-game.activatedWndMonitorInfo.cbSize = sizeof(MONITORINFOEX).DWORD
 
 proc NtSetTimerResolution(DesiredResolution: ULONG, SetResolution: BOOLEAN,
         CurrentResolution: PULONG): LONG {.stdcall, dynlib: "ntdll.dll",
@@ -37,6 +35,15 @@ converter wCharArrayToString(wCharArray: openarray[WCHAR]): string =
     for c in wCharArray:
         if c != 0: str.add(cast[char](c))
     return str
+
+proc isWndOnSameMonitor(hWnd: HWND): bool {.inline.} =
+    var monitorInfo: MONITORINFOEX
+    monitorInfo.cbSize = sizeof(MONITORINFOEX).DWORD
+    GetMonitorInfo(MonitorFromWindow(hWnd,
+            MONITOR_DEFAULTTONEAREST), cast[ptr MONITORINFO](
+            addr monitorInfo))
+    if monitorInfo.szDevice.wCharArrayToString == game.szDevice: return true
+    else: return false
 
 # ZetaLoader's Window Procedure.
 proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
@@ -75,13 +82,12 @@ proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
         # Using WM_SHELLHOOKMESSAGE to detect when the foreground window changes, even when the game is not the foreground window.
         if msg == WM_SHELLHOOKMESSAGE and [HSHELL_WINDOWACTIVATED,
                 HSHELL_RUDEAPPACTIVATED].contains(wParam.int) and lParam.HWND !=
-                hWnd and IsIconic(hWnd) == 0:
-            GetMonitorInfo(MonitorFromWindow(lParam.HWND,
-                    MONITOR_DEFAULTTONEAREST), cast[ptr MONITORINFO](
-                    addr game.activatedWndMonitorInfo))
-            if game.activatedWndMonitorInfo.szDevice.wCharArrayToString ==
-                    game.szDevice:
-                ShowWindow(hWnd, SW_MINIMIZE)
+                hWnd and IsIconic(hWnd) == 0 and isWndOnSameMonitor(lParam.HWND):
+            ShowWindow(hWnd, SW_MINIMIZE)
+        elif [WM_ACTIVATE, WM_ACTIVATEAPP].contains(msg) and wParam.int ==
+                WA_INACTIVE and isWndOnSameMonitor(GetForegroundWindow()) and
+                IsIconic(hWnd) == 0:
+            ShowWindow(hWnd, SW_MINIMIZE)
 
     return CallWindowProc(game.wndProc, hwnd, msg, wParam, lParam)
 
