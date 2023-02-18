@@ -37,11 +37,12 @@ A utility to fix technical issues with Halo Infinite on PC.
     - Topmost Window: `HWND_TOPMOST`
 
 ## Features   
-1. User Defined Display Mode Support
+1. User Specified Display Mode Support
 
     > **Available with Borderless Fullscreen only at game startup.**   
 
-    This feature restores the game's ability to run at any user defined display mode. Here is what this feature emulates/restores:
+    This feature restores the game's ability to run at any user specified display mode.                
+    Here is what this feature emulates/restores:              
     - Automatically Minimize, when the game is not the foreground window.
     - Dynamically switch between your desired game display mode & native display mode like in exclusive fullscreen.
 

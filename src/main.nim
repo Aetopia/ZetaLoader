@@ -4,14 +4,14 @@ type Game = object
     devMode: DEVMODE
     szDevice: string
     wndX, wndY, wndCX, wndCY: int32
-    userDefinedDisplayMode: bool
+    userSpecifiedDisplayMode: bool
     activatedWndMonitorInfo: MONITORINFOEX
     wndProc: WNDPROC
 let WM_SHELLHOOKMESSAGE = RegisterWindowMessage("SHELLHOOK")
 var game: Game
 game.devMode.dmSize = sizeof(DEVMODE).WORD
 game.devMode.dmFields = DM_PELSWIDTH or DM_PELSHEIGHT or DM_DISPLAYFREQUENCY
-game.userDefinedDisplayMode = true
+game.userSpecifiedDisplayMode = true
 game.activatedWndMonitorInfo.cbSize = sizeof(MONITORINFOEX).DWORD
 
 proc NtSetTimerResolution(DesiredResolution: ULONG, SetResolution: BOOLEAN,
@@ -46,7 +46,7 @@ proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
     # - Reset the resolution when the game window receives WM_CLOSE or WM_DESTROY.
     of WM_CLOSE, WM_DESTROY: ShowWindow(hWnd, SW_MINIMIZE)
     of WM_SIZE:
-        if game.userDefinedDisplayMode:
+        if game.userSpecifiedDisplayMode:
             case wParam:
             of SIZE_RESTORED:
                 ChangeDisplaySettingsEx(game.szDevice, addr game.devMode, 0,
@@ -160,7 +160,7 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
                 game.devMode.dmDisplayFrequency) or
         (game.devMode.dmPelsHeight or game.devMode.dmPelsWidth or
                 game.devMode.dmDisplayFrequency) == 0:
-        game.userDefinedDisplayMode = false
+        game.userSpecifiedDisplayMode = false
 
     # ZetaLoader Borderless Fullscreen + User Defined Resolution Support
     if GetWindowLongPtr(hWnd, GWL_STYLE) == (WS_VISIBLE or WS_OVERLAPPED or
@@ -179,7 +179,7 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
                 unsafeAddr vAttribute, 4)
 
         # 3. Apply the user specified resolution.
-        if game.userDefinedDisplayMode:
+        if game.userSpecifiedDisplayMode:
             ChangeDisplaySettingsEx(game.szDevice, addr game.devMode, 0,
                     CDS_FULLSCREEN, nil)
         GetMonitorInfo(hMonitor, cast[ptr MONITORINFO](addr monitorInfo))
