@@ -2,8 +2,8 @@ import winim/[lean, inc/dwmapi], strutils, parseopt, os
 
 type Game = object
     devMode: DEVMODE
-    monitor: string
-    x, y, cx, cy: int32
+    szDevice: string
+    wndX, wndY, wndCX, wndCY: int32
     userDefinedDisplayMode: bool
     activatedWndMonitorInfo: MONITORINFOEX
     wndProc: WNDPROC
@@ -20,11 +20,6 @@ proc NtSetTimerResolution(DesiredResolution: ULONG, SetResolution: BOOLEAN,
 proc NtQueryTimerResolution(MinimumResolution, MaximumResolution,
         CurrentResolution: PULONG): LONG {.stdcall, dynlib: "ntdll.dll",
         importc, discardable.}
-
-# Wrapper around ChangeDisplaySettingsEx.
-proc setDM(dm: ptr DEVMODE) {.inline.} =
-    if game.userDefinedDisplayMode: ChangeDisplaySettingsEx(game.monitor, dm, 0,
-            CDS_FULLSCREEN, nil)
 
 # Constantly bring the game window into the foreground.
 proc foregroundWndLock(lParam: LPVOID): DWORD {.stdcall.} =
@@ -49,24 +44,26 @@ proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
     case msg:
     # - Allow the game to be tabbed in from any monitor.
     # - Reset the resolution when the game window receives WM_CLOSE or WM_DESTROY.
-    of WM_ACTIVATE, WM_ACTIVATEAPP:
-        if [WA_ACTIVE, WA_CLICKACTIVE].contains(wParam.int):
-            ShowWindow(hWnd, SW_RESTORE)
     of WM_CLOSE, WM_DESTROY: ShowWindow(hWnd, SW_MINIMIZE)
     of WM_SIZE:
-        case wParam:
-        of SIZE_RESTORED: setDM(addr game.devMode)
-        of SIZE_MINIMIZED: setDM(nil)
-        else: discard
+        if game.userDefinedDisplayMode:
+            case wParam:
+            of SIZE_RESTORED:
+                ChangeDisplaySettingsEx(game.szDevice, addr game.devMode, 0,
+                        CDS_FULLSCREEN, nil)
+            of SIZE_MINIMIZED:
+                ChangeDisplaySettingsEx(game.szDevice, nil, 0,
+                        CDS_FULLSCREEN, nil)
+            else: discard
 
     # Processing WM_WINDOWPOSCHANGING & WM_STYLECHANGING to prevent Halo Infinite's borderless fullscreen from getting disabled.
     of WM_WINDOWPOSCHANGING:
         let wndPos = cast[ptr WINDOWPOS](lParam)
         wndPos.hwndInsertAfter = HWND_TOPMOST
-        wndPos.x = game.x
-        wndPos.y = game.y
-        wndPos.cx = game.cx
-        wndPos.cy = game.cy
+        wndPos.x = game.wndX
+        wndPos.y = game.wndY
+        wndPos.cx = game.wndCX
+        wndPos.cy = game.wndCY
     of WM_STYLECHANGING:
         if wParam == GWL_STYLE:
             cast[ptr STYLESTRUCT](lParam).styleNew = WS_VISIBLE or WS_POPUP
@@ -82,7 +79,8 @@ proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
             GetMonitorInfo(MonitorFromWindow(lParam.HWND,
                     MONITOR_DEFAULTTONEAREST), cast[ptr MONITORINFO](
                     addr game.activatedWndMonitorInfo))
-            if game.activatedWndMonitorInfo.szDevice.wCharArrayToString == game.monitor:
+            if game.activatedWndMonitorInfo.szDevice.wCharArrayToString ==
+                    game.szDevice:
                 ShowWindow(hWnd, SW_MINIMIZE)
 
     return CallWindowProc(game.wndProc, hwnd, msg, wParam, lParam)
@@ -149,12 +147,12 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
     # Get the monitor, the game's window is on.
     hMonitor = MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST)
     GetMonitorInfo(hMonitor, cast[ptr MONITORINFO](addr monitorInfo))
-    game.monitor = monitorInfo.szDevice.wCharArrayToString
-    EnumDisplaySettings(game.monitor, ENUM_CURRENT_SETTINGS,
+    game.szDevice = monitorInfo.szDevice.wCharArrayToString
+    EnumDisplaySettings(game.szDevice, ENUM_CURRENT_SETTINGS,
             addr devMode)
 
     # Check if the user specified resolution is not supported by the monitor or is the native resolution.
-    if ChangeDisplaySettingsEx(game.monitor, addr game.devMode, 0, CDS_TEST,
+    if ChangeDisplaySettingsEx(game.szDevice, addr game.devMode, 0, CDS_TEST,
             nil) != DISP_CHANGE_SUCCESSFUL or
         (devMode.dmPelsWidth == game.devMode.dmPelsWidth and
                 devMode.dmPelsHeight ==
@@ -181,9 +179,11 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
                 unsafeAddr vAttribute, 4)
 
         # 3. Apply the user specified resolution.
-        setDM(addr game.devMode)
+        if game.userDefinedDisplayMode:
+            ChangeDisplaySettingsEx(game.szDevice, addr game.devMode, 0,
+                    CDS_FULLSCREEN, nil)
         GetMonitorInfo(hMonitor, cast[ptr MONITORINFO](addr monitorInfo))
-        (game.x, game.y, game.cx, game.cy) = (monitorInfo.rcMonitor.left,
+        (game.wndX, game.wndY, game.wndCX, game.wndCY) = (monitorInfo.rcMonitor.left,
                 monitorInfo.rcMonitor.top, monitorInfo.rcMonitor.right -
                 monitorInfo.rcMonitor.left,
                 monitorInfo.rcMonitor.bottom -
@@ -195,7 +195,8 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
         # - Redirect the game's window procedure to ZetaLoader's window procedure.
         SetWindowLongPtr(hWnd, GWL_STYLE, WS_VISIBLE or WS_POPUP)
         SetWindowLongPtr(hWnd, GWL_EXSTYLE, WS_EX_APPWINDOW)
-        SetWindowPos(hWnd, HWND_TOPMOST, game.x, game.y, game.cx, game.cy, SWP_NOSENDCHANGING)
+        SetWindowPos(hWnd, HWND_TOPMOST, game.wndX, game.wndY, game.wndCX,
+                game.wndCY, SWP_NOSENDCHANGING)
         SetWindowLongPtr(hWnd, GWLP_WNDPROC, cast[LONG_PTR](wndProc))
 
         # 5. Revert the Foreground lock timeout to default and unlock the foreground window.
