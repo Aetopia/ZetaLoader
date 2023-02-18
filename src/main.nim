@@ -44,6 +44,9 @@ proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
     case msg:
     # - Allow the game to be tabbed in from any monitor.
     # - Reset the resolution when the game window receives WM_CLOSE or WM_DESTROY.
+    of WM_ACTIVATE, WM_ACTIVATEAPP:
+        if [WA_ACTIVE, WA_CLICKACTIVE].contains(wParam.int):
+            ShowWindow(hWnd, SW_RESTORE)
     of WM_CLOSE, WM_DESTROY: ShowWindow(hWnd, SW_MINIMIZE)
     of WM_SIZE:
         if game.userSpecifiedDisplayMode:
