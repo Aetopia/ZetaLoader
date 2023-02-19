@@ -5,14 +5,12 @@ type Game = object
     szDevice: string
     wndX, wndY, wndCX, wndCY: int32
     userSpecifiedDisplayMode: bool
-    activatedWndMonitorInfo: MONITORINFOEX
     wndProc: WNDPROC
 let WM_SHELLHOOKMESSAGE = RegisterWindowMessage("SHELLHOOK")
 var game: Game
 game.devMode.dmSize = sizeof(DEVMODE).WORD
 game.devMode.dmFields = DM_PELSWIDTH or DM_PELSHEIGHT or DM_DISPLAYFREQUENCY
 game.userSpecifiedDisplayMode = true
-game.activatedWndMonitorInfo.cbSize = sizeof(MONITORINFOEX).DWORD
 
 proc NtSetTimerResolution(DesiredResolution: ULONG, SetResolution: BOOLEAN,
         CurrentResolution: PULONG): LONG {.stdcall, dynlib: "ntdll.dll",
@@ -78,12 +76,13 @@ proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
         # Using WM_SHELLHOOKMESSAGE to detect when the foreground window changes, even when the game is not the foreground window.
         if msg == WM_SHELLHOOKMESSAGE and [HSHELL_WINDOWACTIVATED,
                 HSHELL_RUDEAPPACTIVATED].contains(int(wParam)) and HWND(
-                        lParam) !=
-                hWnd and IsIconic(hWnd) == FALSE:
+                lParam) != hWnd and IsIconic(hWnd) == FALSE:
+            var monitorInfo: MONITORINFOEX
+            monitorInfo.cbSize = sizeof(monitorInfo).DWORD
             GetMonitorInfo(MonitorFromWindow(lParam.HWND,
                     MONITOR_DEFAULTTONEAREST), cast[ptr MONITORINFO](
-                    addr game.activatedWndMonitorInfo))
-            if game.activatedWndMonitorInfo.szDevice.wCharArrayToString() ==
+                    addr monitorInfo))
+            if monitorInfo.szDevice.wCharArrayToString() ==
                     game.szDevice:
                 ShowWindow(hWnd, SW_MINIMIZE)
 
