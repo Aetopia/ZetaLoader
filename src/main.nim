@@ -111,7 +111,8 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
 
     for kind, key, value in getopt():
         if kind != cmdLongOption: continue
-        if key == "displaymode" and argDisplayMode:
+
+        if key == "displaymode" and not argDisplayMode:
             argDisplayMode = true
             try:
                 let
@@ -121,10 +122,10 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
                 game.devMode.dmPelsHeight = resolution[1].parseInt.DWORD
                 game.devMode.dmDisplayFrequency = param[1].parseInt.DWORD
             except ValueError: discard
+
         elif key == "dll":
             LoadLibrary(winstrConverterStringToLPWSTR(absolutePath(
                     value).toLower()))
-        else: discard
 
     # 1. Set the process priority to above normal.
     # 2. Set the timer resolution to 0.5 ms.
