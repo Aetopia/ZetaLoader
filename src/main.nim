@@ -101,7 +101,7 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
         hProcess = GetCurrentProcess()
         vAttribute = true
     var
-        argdisplayMode: bool
+        argDisplayMode: bool
         hThread = OpenThread(THREAD_SET_INFORMATION, FALSE, idEventThread)
         devMode: DEVMODE
         hMonitor: HMONITOR
@@ -111,10 +111,8 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
 
     for kind, key, value in getopt():
         if kind != cmdLongOption: continue
-        case key.toLower():
-        of "displaymode":
-            if argdisplayMode: continue
-            argdisplayMode = true
+        if key == "displaymode" and argDisplayMode:
+            argDisplayMode = true
             try:
                 let
                     param = value.split("_", 1)
@@ -123,7 +121,7 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
                 game.devMode.dmPelsHeight = resolution[1].parseInt.DWORD
                 game.devMode.dmDisplayFrequency = param[1].parseInt.DWORD
             except ValueError: discard
-        of "dll":
+        elif key == "dll":
             LoadLibrary(winstrConverterStringToLPWSTR(absolutePath(
                     value).toLower()))
         else: discard

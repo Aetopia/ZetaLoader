@@ -107,7 +107,7 @@ You can the use the following command to automatically install ZetaLoader.
     - To launch Halo Infinite using a specified display mode.
         Using the following launch option:
         ```
-        --DisplayMode: WxH_R
+        --displaymode: WxH_R
         ```
         - `W`: Width of the display mode.
         - `H`: Height of the display mode.
@@ -116,7 +116,7 @@ You can the use the following command to automatically install ZetaLoader.
     - To launch Halo Infinite with user specified DLLs.      
         Use the following launch option: 
         ```
-        --DLL: <File>
+        --dll: <File>
         ```
         Where `<File>` is the DLL to be loaded into the game.
 
