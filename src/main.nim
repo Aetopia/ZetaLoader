@@ -40,7 +40,11 @@ converter wCharArrayToString(wCharArray: openarray[WCHAR]): string =
 proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
         lParam: LPARAM): LRESULT {.stdcall.} =
     case msg:
+    # - Allow the game to be tabbed in from any monitor.
     # - Reset the resolution when the game window receives WM_CLOSE or WM_DESTROY.
+    of WM_ACTIVATE, WM_ACTIVATEAPP:
+        if [WA_ACTIVE, WA_CLICKACTIVE].contains(wParam.int):
+            ShowWindow(hWnd, SW_RESTORE)
     of WM_CLOSE, WM_DESTROY: ShowWindow(hWnd, SW_MINIMIZE)
     of WM_SIZE:
         if game.userSpecifiedDisplayMode:
@@ -73,12 +77,10 @@ proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
         if msg == WM_SHELLHOOKMESSAGE and [HSHELL_WINDOWACTIVATED,
                 HSHELL_RUDEAPPACTIVATED].contains(int(wParam)):
             let activatedhWnd = HWND(lParam)
-            if activatedhWnd == hWnd and IsIconic(hWnd) == TRUE:
-                ShowWindow(hWnd, SW_RESTORE)
-            elif activatedhWnd != hWnd and IsIconic(hWnd) == FALSE:
+            if activatedhWnd != hWnd and IsIconic(hWnd) == FALSE:
                 var monitorInfo: MONITORINFOEX
                 monitorInfo.cbSize = sizeof(monitorInfo).DWORD
-                GetMonitorInfo(MonitorFromWindow(lParam.HWND,
+                GetMonitorInfo(MonitorFromWindow(activatedhWnd,
                         MONITOR_DEFAULTTONEAREST), cast[ptr MONITORINFO](
                         addr monitorInfo))
                 if monitorInfo.szDevice.wCharArrayToString() ==
