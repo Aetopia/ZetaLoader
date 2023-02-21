@@ -40,11 +40,7 @@ converter wCharArrayToString(wCharArray: openarray[WCHAR]): string =
 proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
         lParam: LPARAM): LRESULT {.stdcall.} =
     case msg:
-    # - Allow the game to be tabbed in from any monitor.
     # - Reset the resolution when the game window receives WM_CLOSE or WM_DESTROY.
-    of WM_ACTIVATE, WM_ACTIVATEAPP:
-        if [WA_ACTIVE, WA_CLICKACTIVE].contains(wParam.int):
-            ShowWindow(hWnd, SW_RESTORE)
     of WM_CLOSE, WM_DESTROY: ShowWindow(hWnd, SW_MINIMIZE)
     of WM_SIZE:
         if game.userSpecifiedDisplayMode:
@@ -75,16 +71,19 @@ proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
         # Allow the game to tabbed out from the monitor as long as the window becoming the foreground window is on the monitor, the game is running on.
         # Using WM_SHELLHOOKMESSAGE to detect when the foreground window changes, even when the game is not the foreground window.
         if msg == WM_SHELLHOOKMESSAGE and [HSHELL_WINDOWACTIVATED,
-                HSHELL_RUDEAPPACTIVATED].contains(int(wParam)) and HWND(
-                lParam) != hWnd and IsIconic(hWnd) == FALSE:
-            var monitorInfo: MONITORINFOEX
-            monitorInfo.cbSize = sizeof(monitorInfo).DWORD
-            GetMonitorInfo(MonitorFromWindow(lParam.HWND,
-                    MONITOR_DEFAULTTONEAREST), cast[ptr MONITORINFO](
-                    addr monitorInfo))
-            if monitorInfo.szDevice.wCharArrayToString() ==
-                    game.szDevice:
-                ShowWindow(hWnd, SW_MINIMIZE)
+                HSHELL_RUDEAPPACTIVATED].contains(int(wParam)):
+            let activatedhWnd = HWND(lParam)
+            if activatedhWnd == hWnd and IsIconic(hWnd) == TRUE:
+                ShowWindow(hWnd, SW_RESTORE)
+            elif activatedhWnd != hWnd and IsIconic(hWnd) == FALSE:
+                var monitorInfo: MONITORINFOEX
+                monitorInfo.cbSize = sizeof(monitorInfo).DWORD
+                GetMonitorInfo(MonitorFromWindow(lParam.HWND,
+                        MONITOR_DEFAULTTONEAREST), cast[ptr MONITORINFO](
+                        addr monitorInfo))
+                if monitorInfo.szDevice.wCharArrayToString() ==
+                        game.szDevice:
+                    ShowWindow(hWnd, SW_MINIMIZE)
 
     return CallWindowProc(game.wndProc, hwnd, msg, wParam, lParam)
 
