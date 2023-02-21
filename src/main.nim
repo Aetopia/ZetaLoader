@@ -48,14 +48,12 @@ proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
     of WM_CLOSE, WM_DESTROY: ShowWindow(hWnd, SW_MINIMIZE)
     of WM_SIZE:
         if game.userSpecifiedDisplayMode:
-            case wParam:
-            of SIZE_RESTORED:
+            if wParam == SIZE_RESTORED:
                 ChangeDisplaySettingsEx(game.szDevice, addr game.devMode, 0,
                         CDS_FULLSCREEN, nil)
-            of SIZE_MINIMIZED:
+            elif wParam == SIZE_MINIMIZED:
                 ChangeDisplaySettingsEx(game.szDevice, nil, 0,
                         CDS_FULLSCREEN, nil)
-            else: discard
 
     # Processing WM_WINDOWPOSCHANGING & WM_STYLECHANGING to prevent Halo Infinite's borderless fullscreen from getting disabled.
     of WM_WINDOWPOSCHANGING:
@@ -74,10 +72,11 @@ proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
     else:
         # Allow the game to tabbed out from the monitor as long as the window becoming the foreground window is on the same monitor, the game is running on.
         # Using WM_SHELLHOOKMESSAGE to detect when the foreground window changes, even when the game is not the foreground window.
-        if msg == WM_SHELLHOOKMESSAGE and [HSHELL_WINDOWACTIVATED,
-                HSHELL_RUDEAPPACTIVATED].contains(int(wParam)):
+        if msg == WM_SHELLHOOKMESSAGE and
+           (wParam == HSHELL_WINDOWACTIVATED or
+           wParam == HSHELL_RUDEAPPACTIVATED):
             let activatedhWnd = HWND(lParam)
-            if activatedhWnd != hWnd and IsIconic(hWnd) == FALSE:
+            if activatedhWnd != hWnd:
                 var monitorInfo: MONITORINFOEX
                 monitorInfo.cbSize = sizeof(monitorInfo).DWORD
                 GetMonitorInfo(MonitorFromWindow(activatedhWnd,
@@ -92,8 +91,9 @@ proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
 proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
         idObject, idChild: LONG, idEventThread,
                 dwmsEventTime: DWORD) {.stdcall.} =
-    if event != EVENT_OBJECT_SHOW and idobject != OBJID_WINDOW and idchild != CHILDID_SELF:
-        return
+    if event != EVENT_OBJECT_SHOW and
+       idobject != OBJID_WINDOW and
+       idchild != CHILDID_SELF: return
     UnhookWinEvent(hWinEventHook)
 
     let
