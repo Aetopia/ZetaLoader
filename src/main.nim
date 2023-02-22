@@ -132,10 +132,25 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
                 let
                     param = value.split("_", 1)
                     resolution = param[0].split("x", 1)
-                game.devMode.dmPelsWidth = resolution[0].parseInt.DWORD
-                game.devMode.dmPelsHeight = resolution[1].parseInt.DWORD
-                game.devMode.dmDisplayFrequency = param[1].parseInt.DWORD
-            except ValueError: discard
+                    width = resolution[0].parseInt.DWORD
+                    height = resolution[1].parseInt.DWORD
+                    displayFrequency = param[1].parseInt.DWORD
+
+                if (width == game.devMode.dmPelsWidth and
+                    height == game.devMode.dmPelsHeight and
+                    displayFrequency == game.devMode.dmDisplayFrequency) or
+                    (game.devMode.dmPelsWidth or
+                     game.devMode.dmPelsHeight or
+                     game.devMode.dmDisplayFrequency) == 0:
+                    game.userSpecifiedDisplayMode = false
+
+                else:
+                    game.devMode.dmPelsWidth = width
+                    game.devMode.dmPelsHeight = height
+                    game.devMode.dmDisplayFrequency = displayFrequency
+
+            except ValueError:
+                game.userSpecifiedDisplayMode = false
 
         elif key == "dll":
             LoadLibrary(winstrConverterStringToLPWSTR(absolutePath(
@@ -154,11 +169,9 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
         DwmSetWindowAttribute(hWnd, DWMWA_FORCE_ICONIC_REPRESENTATION,
                 unsafeAddr vAttribute, 4)
 
-        if ChangeDisplaySettingsEx(game.szDevice, addr game.devMode, 0,
-                CDS_FULLSCREEN, nil) != DISP_CHANGE_SUCCESSFUL or (
-                game.devMode.dmPelsWidth or game.devMode.dmPelsHeight or
-                game.devMode.dmDisplayFrequency) == 0:
-            game.userSpecifiedDisplayMode = false
+        if game.userSpecifiedDisplayMode:
+            game.userSpecifiedDisplayMode = ChangeDisplaySettingsEx(
+                    game.szDevice, addr game.devMode, 0, CDS_FULLSCREEN, nil) == DISP_CHANGE_SUCCESSFUL
 
         GetMonitorInfo(hMonitor, cast[ptr MONITORINFO](addr monitorInfo))
         (game.wndX, game.wndY, game.wndCX, game.wndCY) = (monitorInfo.rcMonitor.left,
