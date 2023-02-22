@@ -130,7 +130,7 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
             argDisplayMode = true
             try:
                 let
-                    param = value.replace(" ", "").split("_", 1)
+                    param = value.split("_", 1)
                     resolution = param[0].split("x", 1)
                     width = resolution[0].parseInt.DWORD
                     height = resolution[1].parseInt.DWORD
