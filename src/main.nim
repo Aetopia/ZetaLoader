@@ -136,9 +136,9 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
                 let
                     param = value.split("_", 1)
                     resolution = param[0].split("x", 1)
-                game.devMode.dmPelsWidth = resolution[0].parseInt.DWORD
-                game.devMode.dmPelsHeight = resolution[1].parseInt.DWORD
-                game.devMode.dmDisplayFrequency = param[1].parseInt.DWORD
+                game.devMode.dmPelsWidth = DWORD(resolution[0].parseInt())
+                game.devMode.dmPelsHeight = DWORD(resolution[1].parseInt())
+                game.devMode.dmDisplayFrequency = DWORD(param[1].parseInt())
             except ValueError: discard
 
         elif key == "DLL":
