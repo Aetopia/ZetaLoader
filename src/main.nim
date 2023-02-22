@@ -9,6 +9,8 @@ type Game = object
     wndProc: WNDPROC
 let WM_SHELLHOOKMESSAGE = RegisterWindowMessage("SHELLHOOK")
 var game: Game
+game.devMode.dmSize = sizeof(DEVMODE).WORD
+game.devMode.dmFields = DM_PELSWIDTH or DM_PELSHEIGHT or DM_DISPLAYFREQUENCY
 game.userSpecifiedDisplayMode = true
 
 proc NtSetTimerResolution(DesiredResolution: ULONG, SetResolution: BOOLEAN,
@@ -99,6 +101,8 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
         hThread = OpenThread(THREAD_SET_INFORMATION, FALSE, idEventThread)
         hMonitor: HMONITOR = MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST)
         monitorInfo: MONITORINFOEX
+        currentDevMode: DEVMODE
+    currentDevMode.dmSize = sizeof(DEVMODE).WORD
     monitorInfo.cbSize = sizeof(MONITORINFOEX).DWORD
     game.wndProc = cast[WNDPROC](GetWindowLongPtr(hWnd, GWLP_WNDPROC))
 
@@ -106,7 +110,7 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
     GetMonitorInfo(hMonitor, cast[ptr MONITORINFO](addr monitorInfo))
     game.szDevice = monitorInfo.szDevice.wCharArrayToString()
     EnumDisplaySettings(game.szDevice, ENUM_CURRENT_SETTINGS,
-            addr game.devMode)
+            addr currentDevMode)
 
     NtQueryTimerResolution(unsafeAddr min, unsafeAddr max, unsafeAddr cur)
     NtSetTimerResolution(max, TRUE, unsafeAddr cur)
@@ -132,29 +136,21 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
                 let
                     param = value.split("_", 1)
                     resolution = param[0].split("x", 1)
-                    width = resolution[0].parseInt.DWORD
-                    height = resolution[1].parseInt.DWORD
-                    freq = param[1].parseInt.DWORD
-
-                if (width == game.devMode.dmPelsWidth and
-                    height == game.devMode.dmPelsHeight and
-                    freq == game.devMode.dmDisplayFrequency) or
-                    (game.devMode.dmPelsWidth or
-                     game.devMode.dmPelsHeight or
-                     game.devMode.dmDisplayFrequency) == 0:
-                    game.userSpecifiedDisplayMode = false
-
-                else:
-                    game.devMode.dmPelsWidth = width
-                    game.devMode.dmPelsHeight = height
-                    game.devMode.dmDisplayFrequency = freq
-
-            except ValueError:
-                game.userSpecifiedDisplayMode = false
+                game.devMode.dmPelsWidth = resolution[0].parseInt.DWORD
+                game.devMode.dmPelsHeight = resolution[1].parseInt.DWORD
+                game.devMode.dmDisplayFrequency = param[1].parseInt.DWORD
+            except ValueError: discard
 
         elif key == "DLL":
             LoadLibrary(winstrConverterStringToLPWSTR(absolutePath(
                     value).toLower()))
+
+    if (currentDevMode.dmPelsWidth == game.devMode.dmPelsWidth and
+        currentDevMode.dmPelsHeight == game.devMode.dmPelsHeight and
+        currentDevMode.dmDisplayFrequency == game.devMode.dmDisplayFrequency) or
+        (game.devMode.dmPelsWidth or game.devMode.dmPelsHeight or
+                game.devMode.dmDisplayFrequency) == 0:
+            game.userSpecifiedDisplayMode = false
 
     if GetWindowLongPtr(hWnd, GWL_STYLE) == (WS_VISIBLE or WS_OVERLAPPED or
             WS_CLIPSIBLINGS):
