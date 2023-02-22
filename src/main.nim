@@ -123,10 +123,10 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
     SystemParametersInfo(SPI_GETFOREGROUNDLOCKTIMEOUT, 0, cast[LPVOID](
             unsafeAddr timeout), 0)
 
-    for kind, key, value in getopt():
+    for kind, key, value in getopt(longNoVal = @[" "]):
         if kind != cmdLongOption: continue
 
-        if key == "displaymode" and not argDisplayMode:
+        if key == "DisplayMode" and not argDisplayMode:
             argDisplayMode = true
             try:
                 let
@@ -134,11 +134,11 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
                     resolution = param[0].split("x", 1)
                     width = resolution[0].parseInt.DWORD
                     height = resolution[1].parseInt.DWORD
-                    displayFrequency = param[1].parseInt.DWORD
+                    freq = param[1].parseInt.DWORD
 
                 if (width == game.devMode.dmPelsWidth and
                     height == game.devMode.dmPelsHeight and
-                    displayFrequency == game.devMode.dmDisplayFrequency) or
+                    freq == game.devMode.dmDisplayFrequency) or
                     (game.devMode.dmPelsWidth or
                      game.devMode.dmPelsHeight or
                      game.devMode.dmDisplayFrequency) == 0:
@@ -147,12 +147,12 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
                 else:
                     game.devMode.dmPelsWidth = width
                     game.devMode.dmPelsHeight = height
-                    game.devMode.dmDisplayFrequency = displayFrequency
+                    game.devMode.dmDisplayFrequency = freq
 
             except ValueError:
                 game.userSpecifiedDisplayMode = false
 
-        elif key == "dll":
+        elif key == "DLL":
             LoadLibrary(winstrConverterStringToLPWSTR(absolutePath(
                     value).toLower()))
 
