@@ -90,6 +90,8 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
        idobject != OBJID_WINDOW and
        idchild != CHILDID_SELF: return
     UnhookWinEvent(hWinEventHook)
+    RegisterShellHookWindow(hWnd)
+    DwmEnableMMCSS(true)
 
     let
         timeout: DWORD = 0
@@ -105,27 +107,6 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
     currentDevMode.dmSize = sizeof(DEVMODE).WORD
     monitorInfo.cbSize = sizeof(MONITORINFOEX).DWORD
     game.wndProc = cast[WNDPROC](GetWindowLongPtr(hWnd, GWLP_WNDPROC))
-
-    RegisterShellHookWindow(hWnd)
-    GetMonitorInfo(hMonitor, cast[ptr MONITORINFO](addr monitorInfo))
-    game.szDevice = monitorInfo.szDevice.wCharArrayToString()
-    EnumDisplaySettings(game.szDevice, ENUM_CURRENT_SETTINGS,
-            addr currentDevMode)
-
-    NtQueryTimerResolution(unsafeAddr min, unsafeAddr max, unsafeAddr cur)
-    NtSetTimerResolution(max, TRUE, unsafeAddr cur)
-    DwmEnableMMCSS(true)
-
-    SetPriorityClass(hProcess, ABOVE_NORMAL_PRIORITY_CLASS)
-    SetProcessPriorityBoost(hProcess, false)
-    CloseHandle(hProcess)
-
-    SetThreadPriority(hThread, THREAD_PRIORITY_TIME_CRITICAL)
-    SetThreadPriorityBoost(hThread, FALSE)
-    CloseHandle(hThread)
-
-    SystemParametersInfo(SPI_GETFOREGROUNDLOCKTIMEOUT, 0, cast[LPVOID](
-            unsafeAddr timeout), 0)
 
     for kind, key, value in getopt(longNoVal = @[" "]):
         if kind != cmdLongOption: continue
@@ -144,6 +125,25 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
         elif key == "DLL":
             LoadLibrary(winstrConverterStringToLPWSTR(absolutePath(
                     value).toLower()))
+
+    NtQueryTimerResolution(unsafeAddr min, unsafeAddr max, unsafeAddr cur)
+    NtSetTimerResolution(max, TRUE, unsafeAddr cur)
+
+    SetPriorityClass(hProcess, ABOVE_NORMAL_PRIORITY_CLASS)
+    SetProcessPriorityBoost(hProcess, false)
+    CloseHandle(hProcess)
+
+    SetThreadPriority(hThread, THREAD_PRIORITY_TIME_CRITICAL)
+    SetThreadPriorityBoost(hThread, FALSE)
+    CloseHandle(hThread)
+
+    SystemParametersInfo(SPI_GETFOREGROUNDLOCKTIMEOUT, 0, cast[LPVOID](
+            unsafeAddr timeout), 0)
+
+    GetMonitorInfo(hMonitor, cast[ptr MONITORINFO](addr monitorInfo))
+    game.szDevice = monitorInfo.szDevice.wCharArrayToString()
+    EnumDisplaySettings(game.szDevice, ENUM_CURRENT_SETTINGS,
+            addr currentDevMode)
 
     if (currentDevMode.dmPelsWidth == game.devMode.dmPelsWidth and
         currentDevMode.dmPelsHeight == game.devMode.dmPelsHeight and
