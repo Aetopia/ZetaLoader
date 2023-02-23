@@ -67,8 +67,10 @@ proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
           (wParam == HSHELL_WINDOWACTIVATED or
            wParam == HSHELL_RUDEAPPACTIVATED):
             let hAWnd = HWND(lParam)
+
             if hAWnd == hWnd and IsIconic(hWnd) == TRUE:
                 ShowWindow(hWnd, SW_RESTORE)
+                
             elif hAWnd != hWnd and IsIconic(hWnd) == FALSE:
                 var monitorInfo: MONITORINFOEX
                 monitorInfo.cbSize = sizeof(monitorInfo).DWORD
