@@ -148,8 +148,9 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
     if (currentDevMode.dmPelsWidth == game.devMode.dmPelsWidth and
         currentDevMode.dmPelsHeight == game.devMode.dmPelsHeight and
         currentDevMode.dmDisplayFrequency == game.devMode.dmDisplayFrequency) or
-        (game.devMode.dmPelsWidth or game.devMode.dmPelsHeight or
-                game.devMode.dmDisplayFrequency) == 0:
+        (game.devMode.dmPelsWidth or 
+        game.devMode.dmPelsHeight or
+        game.devMode.dmDisplayFrequency) == 0:
             game.userSpecifiedDisplayMode = false
 
     if GetWindowLongPtr(hWnd, GWL_STYLE) == (WS_VISIBLE or WS_OVERLAPPED or
