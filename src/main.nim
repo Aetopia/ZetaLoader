@@ -39,10 +39,6 @@ converter wCharArrayToString(wCharArray: openarray[WCHAR]): string =
 proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
         lParam: LPARAM): LRESULT {.stdcall.} =
     case msg:
-    of WM_ACTIVATE, WM_ACTIVATEAPP:
-        if wParam == WA_ACTIVE or
-           wParam == WA_CLICKACTIVE:
-            ShowWindow(hWnd, SW_RESTORE)
     of WM_CLOSE, WM_DESTROY: ShowWindow(hWnd, SW_MINIMIZE)
     of WM_SIZE:
         if game.userSpecifiedDisplayMode:
@@ -71,7 +67,9 @@ proc wndProc(hWnd: HWND, msg: UINT, wParam: WPARAM,
           (wParam == HSHELL_WINDOWACTIVATED or
            wParam == HSHELL_RUDEAPPACTIVATED):
             let hAWnd = HWND(lParam)
-            if hAWnd != hWnd and IsIconic(hWnd) == FALSE:
+            if hAWnd == hWnd and IsIconic(hWnd) == TRUE:
+                ShowWindow(hWnd, SW_RESTORE)
+            elif hAWnd != hWnd and IsIconic(hWnd) == FALSE:
                 var monitorInfo: MONITORINFOEX
                 monitorInfo.cbSize = sizeof(monitorInfo).DWORD
                 GetMonitorInfo(MonitorFromWindow(hAWnd,
@@ -148,7 +146,7 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
     if (currentDevMode.dmPelsWidth == game.devMode.dmPelsWidth and
         currentDevMode.dmPelsHeight == game.devMode.dmPelsHeight and
         currentDevMode.dmDisplayFrequency == game.devMode.dmDisplayFrequency) or
-        (game.devMode.dmPelsWidth or 
+        (game.devMode.dmPelsWidth or
         game.devMode.dmPelsHeight or
         game.devMode.dmDisplayFrequency) == 0:
             game.userSpecifiedDisplayMode = false
