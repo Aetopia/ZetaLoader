@@ -90,8 +90,6 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
        idobject != OBJID_WINDOW and
        idchild != CHILDID_SELF: return
     UnhookWinEvent(hWinEventHook)
-    RegisterShellHookWindow(hWnd)
-    DwmEnableMMCSS(true)
 
     let
         timeout: DWORD = 0
@@ -126,6 +124,11 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
             LoadLibrary(winstrConverterStringToLPWSTR(absolutePath(
                     value).toLower()))
 
+    RegisterShellHookWindow(hWnd)
+    DwmEnableMMCSS(true)
+    SystemParametersInfo(SPI_GETFOREGROUNDLOCKTIMEOUT, 0, cast[LPVOID](
+            unsafeAddr timeout), 0)
+
     NtQueryTimerResolution(unsafeAddr min, unsafeAddr max, unsafeAddr cur)
     NtSetTimerResolution(max, TRUE, unsafeAddr cur)
 
@@ -136,9 +139,6 @@ proc winEventProc(hWinEventHook: HWINEVENTHOOK, event: DWORD, hWnd: HWND,
     SetThreadPriority(hThread, THREAD_PRIORITY_TIME_CRITICAL)
     SetThreadPriorityBoost(hThread, FALSE)
     CloseHandle(hThread)
-
-    SystemParametersInfo(SPI_GETFOREGROUNDLOCKTIMEOUT, 0, cast[LPVOID](
-            unsafeAddr timeout), 0)
 
     GetMonitorInfo(hMonitor, cast[ptr MONITORINFO](addr monitorInfo))
     game.szDevice = monitorInfo.szDevice.wCharArrayToString()
