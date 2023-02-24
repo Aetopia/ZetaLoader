@@ -71,10 +71,20 @@ A utility to fix technical issues with Halo Infinite on PC.
 > Specifications:     
     1. i7-10700K @ 4.8 GHz HT Disabled @ 1.15V   
     2. GTX 1650 @ 2055 ~ 2070 MHz (135 MHz+ Core) & 7200 MHz (1200 MHz+ RAM) OCs   
-    3. 3467 MHz RAM (**But its mismatched!**)     
+    3. 2666 MHz RAM   
 
 **Note: My minimum framerate is set to 960 FPS in the linked video.**      
 Result Video: https://www.youtube.com/watch?v=o9u0oAyv3dc
+
+## Command Line Options
+- To configure ZetaLoader, modify the game's launch options.     
+
+    | Argument| Description |
+    |-|-|
+    |`-width, -w <width>`|Sets the display mode's width.<br>**📝: Borderless Fullscreen must be enabled.**|
+    |`-height, -h <height>`|Sets the display mode's height.<br>**📝: Borderless Fullscreen must be enabled.**|
+    |`-refresh, -r <rate>`|Sets the display mode's refresh rate.<br>**📝: Borderless Fullscreen must be enabled.**|
+    |`-dll <name.dll>`|Loads the specified DLL.|
 
 ## Installation
 
@@ -101,39 +111,14 @@ You can the use the following command to automatically install ZetaLoader.
 
     ![ZetaLoader Installation](https://i.imgur.com/Xu1hNuN.png)
 
-### Configure
-- To configure ZetaLoader, modify the game's launch options.     
-
-    - To launch Halo Infinite using a specified display mode.
-        Using the following launch option:
-        ```
-        --DisplayMode WxH_F
-        ```
-        - `W`: Width of the display mode.
-        - `H`: Height of the display mode.
-        - `F`: Refresh rate of the display mode. 
-    
-    - To launch Halo Infinite with user specified DLLs.      
-        Use the following launch option: 
-        ```
-        --DLL <File>
-        ```
-        Where `<File>` is the DLL to be loaded into the game.
-
-    Also ensure **Borderless Fullscreen is enabled**.
-
 ## Uninstallation
 Delete `dinput8.dll` from Halo Infinite's installation directory.
 
 # Building
-1. Install `Nim`.   
+1. Install `GCC`.   
     > **Make sure it is in the system path!**
-2. Install `winim`.
 
-    ```
-    nimble install winim
-    ```
-3. Run `build.bat`.
+2. Run `build.bat`.
     > Optional UPX compression is also performed if `upx.exe` is in the system path.
 
 # Limitations
