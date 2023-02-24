@@ -81,10 +81,10 @@ Result Video: https://www.youtube.com/watch?v=o9u0oAyv3dc
 
     | Argument| Description |
     |-|-|
-    |`-width, -w <width>`|Sets the display mode's width.<br>**📝: Borderless Fullscreen must be enabled.**|
-    |`-height, -h <height>`|Sets the display mode's height.<br>**📝: Borderless Fullscreen must be enabled.**|
-    |`-refresh, -r <rate>`|Sets the display mode's refresh rate.<br>**📝: Borderless Fullscreen must be enabled.**|
-    |`-dll <name.dll>`|Loads the specified DLL.|
+    |`-width, -w` `<width>`|Sets the display mode's width.<br>**📝: Borderless Fullscreen must be enabled.**|
+    |`-height, -h` `<height>`|Sets the display mode's height.<br>**📝: Borderless Fullscreen must be enabled.**|
+    |`-refresh, -r` `<rate>`|Sets the display mode's refresh rate.<br>**📝: Borderless Fullscreen must be enabled.**|
+    |`-dll` `<name.dll>`|Loads the specified DLL.|
 
 ## Installation
 
