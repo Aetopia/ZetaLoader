@@ -45,7 +45,9 @@ LRESULT WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     {
     case WM_ACTIVATE:
     case WM_ACTIVATEAPP:
-        if ((wParam == WA_ACTIVE || wParam == WA_CLICKACTIVE) && IsIconic(hWnd))
+        if ((wParam == WA_ACTIVE ||
+             wParam == WA_CLICKACTIVE) &&
+            IsIconic(hWnd))
             ShowWindow(hWnd, SW_RESTORE);
         break;
 
