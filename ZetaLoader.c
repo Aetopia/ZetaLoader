@@ -120,10 +120,10 @@ void WinEventProc(
         **wArgv = CommandLineToArgvW(GetCommandLineW(), &argc);
     char **aArgv = alloca(sizeof(char *) * argc);
     static struct option options[] = {
-        {"width", required_argument, 0, 'w'},
-        {"height", required_argument, 0, 'h'},
-        {"refresh", required_argument, 0, 'r'},
-        {"dll", required_argument, 0, 0},
+        {"width", required_argument, 0, 1},
+        {"height", required_argument, 0, 2},
+        {"refresh", required_argument, 0, 3},
+        {"dll", required_argument, 0, 4},
         {0, 0, 0, 0}};
 
     for (int i = 0; i < argc; i++)
@@ -132,20 +132,20 @@ void WinEventProc(
         aArgv[i] = alloca(size);
         wcstombs(aArgv[i], wArgv[i], size);
     };
-    while ((opt = getopt_long_only(argc, aArgv, "w:h:r:", options, 0)) != -1)
+    while ((opt = getopt_long_only(argc, aArgv, "", options, 0)) != -1)
     {
         switch (opt)
         {
-        case 'w':
+        case 1:
             game.devMode.dmPelsWidth = atoi_s(optarg);
             break;
-        case 'h':
+        case 2:
             game.devMode.dmPelsHeight = atoi_s(optarg);
             break;
-        case 'r':
+        case 3:
             game.devMode.dmDisplayFrequency = atoi_s(optarg);
             break;
-        case 0:
+        case 4:
             GetFullPathNameW(wArgv[optind - 1], MAX_PATH, dll, NULL);
             _wcslwr_s(dll, wcslen(dll) + 1);
             LoadLibraryW(dll);
