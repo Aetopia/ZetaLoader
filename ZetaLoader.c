@@ -20,9 +20,9 @@ UINT WM_SHELLHOOKMESSAGE;
 LONG NtSetTimerResolution(ULONG DesiredResolution, BOOL SetResolution, PULONG CurrentResolution);
 LONG NtQueryTimerResolution(PULONG MinimumResolution, PULONG MaximumResolution, PULONG CurrentResolution);
 
-int atoi_s(char *_Str)
+int atoi_s(const char *_Str)
 {
-    if (strspn(_Str, "0123456789") != strlen(_Str))
+    if (strspn(_Str, "0123456789-+") != strlen(_Str))
         return 0;
     return atoi(_Str);
 }
