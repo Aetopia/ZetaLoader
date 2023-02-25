@@ -151,6 +151,7 @@ void WinEventProc(
             LoadLibraryW(dll);
         };
     };
+    LocalFree(wArgv);
 
     RegisterShellHookWindow(hWnd);
     DwmEnableMMCSS(TRUE);
