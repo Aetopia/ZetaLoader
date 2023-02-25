@@ -180,7 +180,7 @@ void WinEventProc(
 
     if (GetWindowLongPtr(hWnd, GWL_STYLE) == (WS_VISIBLE | WS_OVERLAPPED | WS_CLIPSIBLINGS))
     {
-        SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, 0, 0);
+        SystemParametersInfoW(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, 0, 0);
         hThread = CreateThread(NULL, 0, ForegroundWindowLock, (LPVOID)&hWnd, 0, NULL);
 
         DwmSetWindowAttribute(hWnd, DWMWA_TRANSITIONS_FORCEDISABLED, &vAttribute, 4);
@@ -205,7 +205,7 @@ void WinEventProc(
         CloseHandle(hThread);
 
         if (timeout)
-            SystemParametersInfo(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, (LPVOID)&timeout, 0);
+            SystemParametersInfoW(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, (LPVOID)&timeout, 0);
     };
 
     PostQuitMessage(0);
