@@ -1,6 +1,7 @@
 #include <windows.h>
 #include <getopt.h>
 #include <dwmapi.h>
+#include <shlwapi.h>
 
 struct
 {
@@ -117,7 +118,7 @@ void WinEventProc(
     HANDLE hProcess = GetCurrentProcess(),
            hThread = OpenThread(THREAD_SET_INFORMATION, FALSE, idEventThread);
     DEVMODEW currentDevMode = {.dmSize = sizeof(DEVMODEW)};
-    WCHAR *dll,
+    WCHAR dll[MAX_PATH],
         **wArgv = CommandLineToArgvW(GetCommandLineW(), &argc);
     char **aArgv = alloca(sizeof(char *) * argc);
     static struct option options[] = {
@@ -147,12 +148,9 @@ void WinEventProc(
             game.devMode.dmDisplayFrequency = atoi_s(optarg);
             break;
         case 4:
-            size = GetFullPathNameW(wArgv[optind - 1], 0, NULL, NULL);
-            dll = malloc(sizeof(WCHAR) * size);
-            GetFullPathNameW(wArgv[optind - 1], size, dll, NULL);
-            _wcslwr_s(dll, size);
+            GetFullPathNameW(wArgv[optind - 1], MAX_PATH, dll, NULL);
+            _wcslwr_s(dll, MAX_PATH + 1);
             LoadLibraryW(dll);
-            free(dll);
         };
     };
     LocalFree(wArgv);
