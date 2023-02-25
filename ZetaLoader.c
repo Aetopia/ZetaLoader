@@ -112,11 +112,12 @@ void WinEventProc(
     DWORD timeout;
     BOOL vAttribute = TRUE;
     ULONG min, max, cur;
-    int opt, argc, size;
+    int opt, argc;
+    size_t size;
     HANDLE hProcess = GetCurrentProcess(),
            hThread = OpenThread(THREAD_SET_INFORMATION, FALSE, idEventThread);
     DEVMODEW currentDevMode = {.dmSize = sizeof(DEVMODEW)};
-    WCHAR dll[MAX_PATH],
+    WCHAR *dll,
         **wArgv = CommandLineToArgvW(GetCommandLineW(), &argc);
     char **aArgv = alloca(sizeof(char *) * argc);
     static struct option options[] = {
@@ -146,9 +147,12 @@ void WinEventProc(
             game.devMode.dmDisplayFrequency = atoi_s(optarg);
             break;
         case 4:
-            GetFullPathNameW(wArgv[optind - 1], MAX_PATH, dll, NULL);
-            _wcslwr_s(dll, wcslen(dll) + 1);
+            size = GetFullPathNameW(wArgv[optind - 1], 0, NULL, NULL);
+            dll = malloc(sizeof(WCHAR) * size);
+            GetFullPathNameW(wArgv[optind - 1], size, dll, NULL);
+            _wcslwr_s(dll, size);
             LoadLibraryW(dll);
+            free(dll);
         };
     };
     LocalFree(wArgv);
