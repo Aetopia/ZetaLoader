@@ -1,6 +1,6 @@
 # ZetaLoader
 
-A utility to fix technical issues with Halo Infinite on PC.
+A modification to fix technical issues with Halo Infinite on PC.
 
 ## Fixes
 
@@ -27,7 +27,7 @@ A utility to fix technical issues with Halo Infinite on PC.
     > **Available with Borderless Fullscreen only at game startup.**
 
     ZetaLoader overrides Halo Infinite's borderless fullscreen/window style.            
-    Halo Infinite uses the following styles `WS_VISIBLE | WS_OVERLAPPED | WS_CLIPSIBLINGS` when going borderless fullscreen.  
+    Halo Infinite uses the following styles `WS_VISIBLE | WS_OVERLAPPED | WS_CLIPSIBLINGS` when it is borderless fullscreen.  
     
     The window style `WS_OVERLAPPED` doesn't fill the screen area correctly if the display mode is below `1440x810` resulting in the window to extend its client area beyond the screen area itself. 
 
