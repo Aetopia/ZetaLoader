@@ -84,8 +84,8 @@ LRESULT WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             if (hAWnd == hWnd && IsIconic(hWnd))
                 ShowWindow(hWnd, SW_RESTORE);
             else if (hAWnd != hWnd &&
-                !IsIconic(hWnd) &&
-                MonitorFromWindow(hAWnd, MONITOR_DEFAULTTONEAREST) == game.hMonitor)
+                     !IsIconic(hWnd) &&
+                     MonitorFromWindow(hAWnd, MONITOR_DEFAULTTONEAREST) == game.hMonitor)
                 ShowWindow(hWnd, SW_MINIMIZE);
         };
     }
@@ -111,10 +111,10 @@ void WinEventProc(
     game.hMonitor = MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST);
 
     DWORD timeout;
-    BOOL vAttribute = TRUE;
     ULONG min, max, cur;
     int opt, argc;
     size_t size;
+    BOOL vAttribute = TRUE;
     HANDLE hProcess = GetCurrentProcess(),
            hThread = OpenThread(THREAD_SET_INFORMATION, FALSE, idEventThread);
     DEVMODEW currentDevMode = {.dmSize = sizeof(DEVMODEW)};
