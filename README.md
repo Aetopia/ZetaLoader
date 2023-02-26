@@ -59,6 +59,7 @@ A modification to fix technical issues with Halo Infinite on PC.
     > References:
     > 1. https://github.com/djdallmann/GamingPCSetup/blob/master/CONTENT/RESEARCH/WINSERVICES/README.md#multimedia-class-scheduler-service-mmcss
     > 2. https://www.overclock.net/threads/if-you-play-non-fullscreen-exclusive-games-you-might-get-a-boost-in-performance-with-dwmenablemmcss.1775433/
+    > 3. https://learn.microsoft.com/en-us/windows/win32/procthread/multimedia-class-scheduler-service
 
 4. Above Normal Process Priority      
 
