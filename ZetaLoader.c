@@ -1,7 +1,6 @@
 #include <windows.h>
 #include <getopt.h>
 #include <dwmapi.h>
-#include <shlwapi.h>
 
 struct
 {
