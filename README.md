@@ -81,9 +81,9 @@ Result Video: https://www.youtube.com/watch?v=o9u0oAyv3dc
 
     | Argument| Description |
     |-|-|
-    |`-width` `<width>`|Sets the display mode's width.<br>**📝: Borderless Fullscreen must be enabled.**|
-    |`-height` `<height>`|Sets the display mode's height.<br>**📝: Borderless Fullscreen must be enabled.**|
-    |`-refresh` `<rate>`|Sets the display mode's refresh rate.<br>**📝: Borderless Fullscreen must be enabled.**|
+    |`-width` `<width>`|Sets the display mode's width.<br>**📝 Borderless Fullscreen must be enabled.**|
+    |`-height` `<height>`|Sets the display mode's height.<br>**📝 Borderless Fullscreen must be enabled.**|
+    |`-refresh` `<rate>`|Sets the display mode's refresh rate.<br>**📝 Borderless Fullscreen must be enabled.**|
     |`-dll` `<name.dll>`|Loads the specified DLL.|
 
 ## Installation
