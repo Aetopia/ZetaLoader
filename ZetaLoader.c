@@ -118,8 +118,7 @@ void WinEventProc(
     HANDLE hProcess = GetCurrentProcess(),
            hThread = OpenThread(THREAD_SET_INFORMATION, FALSE, idEventThread);
     DEVMODEW currentDevMode = {.dmSize = sizeof(DEVMODEW)};
-    WCHAR *dll,
-        **wArgv = CommandLineToArgvW(GetCommandLineW(), &argc);
+    WCHAR **wArgv = CommandLineToArgvW(GetCommandLineW(), &argc);
     char **aArgv = alloca(sizeof(char *) * argc);
     static struct option options[] = {
         {"width", required_argument, 0, 1},
@@ -149,11 +148,10 @@ void WinEventProc(
             break;
         case 4:
             size = GetFullPathNameW(wArgv[optind - 1], 0, NULL, NULL);
-            dll = malloc(sizeof(WCHAR)*size);
+            WCHAR *dll = alloca(sizeof(WCHAR)*size);
             GetFullPathNameW(wArgv[optind - 1], size, dll, NULL);
             _wcslwr_s(dll, size);
             LoadLibraryW(dll);
-            free(dll);
         };
     };
     LocalFree(wArgv);
