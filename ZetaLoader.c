@@ -35,7 +35,7 @@ DWORD ForegroundWindowLock(LPVOID lParam)
     SetThreadPriorityBoost(hThread, TRUE);
     CloseHandle(hThread);
     while (TRUE)
-        ShowWindowAsync(hWnd, SW_RESTORE);
+        SwitchToThisWindow(hWnd, TRUE);
     return 0;
 }
 
