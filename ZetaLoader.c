@@ -181,7 +181,7 @@ void WinEventProc(
           game.devMode.dmDisplayFrequency))
         game.userSpecifiedDisplayMode = FALSE;
 
-    if (GetWindowLongPtr(hWnd, GWL_STYLE) == (WS_VISIBLE | WS_OVERLAPPED | WS_CLIPSIBLINGS))
+    if (GetWindowLongPtrW(hWnd, GWL_STYLE) == (WS_VISIBLE | WS_OVERLAPPED | WS_CLIPSIBLINGS))
     {
         SystemParametersInfoW(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, 0, 0);
         hThread = CreateThread(NULL, 0, ForegroundWindowLock, (LPVOID)&hWnd, 0, NULL);
