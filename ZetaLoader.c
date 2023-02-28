@@ -109,7 +109,6 @@ void WinEventProc(
     game.wndProc = (WNDPROC)GetWindowLongPtr(hWnd, GWLP_WNDPROC);
     game.hMonitor = MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST);
 
-    DWORD timeout;
     ULONG min, max, cur;
     int opt, argc;
     size_t size;
@@ -157,7 +156,6 @@ void WinEventProc(
 
     RegisterShellHookWindow(hWnd);
     DwmEnableMMCSS(TRUE);
-    SystemParametersInfoW(SPI_GETFOREGROUNDLOCKTIMEOUT, 0, (LPVOID)&timeout, 0);
 
     NtQueryTimerResolution(&min, &max, &cur);
     NtSetTimerResolution(max, TRUE, &cur);
@@ -183,7 +181,6 @@ void WinEventProc(
 
     if (GetWindowLongPtrW(hWnd, GWL_STYLE) == (WS_VISIBLE | WS_OVERLAPPED | WS_CLIPSIBLINGS))
     {
-        SystemParametersInfoW(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, 0, 0);
         hThread = CreateThread(NULL, 0, ForegroundWindowLock, (LPVOID)&hWnd, 0, NULL);
 
         DwmSetWindowAttribute(hWnd, DWMWA_TRANSITIONS_FORCEDISABLED, &vAttribute, 4);
@@ -206,9 +203,6 @@ void WinEventProc(
 
         TerminateThread(hThread, 0);
         CloseHandle(hThread);
-
-        if (timeout)
-            SystemParametersInfoW(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, (LPVOID)&timeout, 0);
     };
 
     PostQuitMessage(0);
