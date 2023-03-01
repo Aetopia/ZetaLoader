@@ -29,11 +29,7 @@ int atoi_s(const char *str)
 
 DWORD ForegroundWindowLock(LPVOID lParam)
 {
-    HANDLE hThread = GetCurrentThread();
     HWND hWnd = (HWND)(lParam);
-    SetThreadPriority(hThread, THREAD_MODE_BACKGROUND_BEGIN);
-    SetThreadPriorityBoost(hThread, TRUE);
-    CloseHandle(hThread);
     while (TRUE)
         ShowWindowAsync(hWnd, SW_RESTORE);
     return 0;
