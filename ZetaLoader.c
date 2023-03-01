@@ -27,14 +27,6 @@ int atoi_s(const char *str)
     return atoi(str);
 }
 
-DWORD ShowWindowRestoredLock(LPVOID lParam)
-{
-    HWND hWnd = (HWND)(lParam);
-    while (TRUE)
-        ShowWindowAsync(hWnd, SW_RESTORE);
-    return 0;
-}
-
 LRESULT WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg)
@@ -177,8 +169,6 @@ void WinEventProc(
 
     if (GetWindowLongPtrW(hWnd, GWL_STYLE) == (WS_VISIBLE | WS_OVERLAPPED | WS_CLIPSIBLINGS))
     {
-        hThread = CreateThread(NULL, 0, ShowWindowRestoredLock, (LPVOID)&hWnd, 0, NULL);
-
         DwmSetWindowAttribute(hWnd, DWMWA_TRANSITIONS_FORCEDISABLED, &vAttribute, 4);
         DwmSetWindowAttribute(hWnd, DWMWA_DISALLOW_PEEK, &vAttribute, 4);
         DwmSetWindowAttribute(hWnd, DWMWA_FORCE_ICONIC_REPRESENTATION, &vAttribute, 4);
@@ -196,9 +186,6 @@ void WinEventProc(
         SetWindowLongPtrW(hWnd, GWL_EXSTYLE, WS_EX_APPWINDOW);
         SetWindowPos(hWnd, HWND_TOPMOST, game.wndX, game.wndY, game.wndCX, game.wndCY, SWP_NOSENDCHANGING);
         SetWindowLongPtrW(hWnd, GWLP_WNDPROC, (LONG_PTR)(WndProc));
-
-        TerminateThread(hThread, 0);
-        CloseHandle(hThread);
     };
 
     PostQuitMessage(0);
