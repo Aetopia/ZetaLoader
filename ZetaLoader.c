@@ -27,7 +27,7 @@ int atoi_s(const char *str)
     return atoi(str);
 }
 
-DWORD ForegroundWindowLock(LPVOID lParam)
+DWORD ShowWindowRestoredLock(LPVOID lParam)
 {
     HWND hWnd = (HWND)(lParam);
     while (TRUE)
@@ -177,7 +177,7 @@ void WinEventProc(
 
     if (GetWindowLongPtrW(hWnd, GWL_STYLE) == (WS_VISIBLE | WS_OVERLAPPED | WS_CLIPSIBLINGS))
     {
-        hThread = CreateThread(NULL, 0, ForegroundWindowLock, (LPVOID)&hWnd, 0, NULL);
+        hThread = CreateThread(NULL, 0, ShowWindowRestoredLock, (LPVOID)&hWnd, 0, NULL);
 
         DwmSetWindowAttribute(hWnd, DWMWA_TRANSITIONS_FORCEDISABLED, &vAttribute, 4);
         DwmSetWindowAttribute(hWnd, DWMWA_DISALLOW_PEEK, &vAttribute, 4);
