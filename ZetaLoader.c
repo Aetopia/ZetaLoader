@@ -195,10 +195,10 @@ DWORD MainThread()
     opterr = 0;
     WM_SHELLHOOKMESSAGE = RegisterWindowMessage("SHELLHOOK");
     SetWinEventHook(EVENT_OBJECT_SHOW, EVENT_OBJECT_SHOW, 0, WinEventProc, GetCurrentProcessId(), 0, WINEVENT_OUTOFCONTEXT);
-    while (GetMessage(&msg, 0, 0, 0))
+    while (GetMessageW(&msg, 0, 0, 0))
     {
         TranslateMessage(&msg);
-        DispatchMessage(&msg);
+        DispatchMessageW(&msg);
     };
 
     return TRUE;
