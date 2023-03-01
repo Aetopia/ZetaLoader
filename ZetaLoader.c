@@ -7,7 +7,7 @@ struct
     DEVMODEW devMode;
     MONITORINFOEXW monitorInfo;
     HMONITOR hMonitor;
-    int wndX, wndY, wndCX, wndCY;
+    int cx, cy;
     BOOL userSpecifiedDisplayMode;
     WNDPROC wndProc;
 } game = {
@@ -49,10 +49,10 @@ LRESULT WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     case WM_WINDOWPOSCHANGING:
         WINDOWPOS *wndPos = (WINDOWPOS *)lParam;
         wndPos->hwndInsertAfter = HWND_TOPMOST;
-        wndPos->x = game.wndX;
-        wndPos->y = game.wndY;
-        wndPos->cx = game.wndCX;
-        wndPos->cy = game.wndCY;
+        wndPos->x = game.monitorInfo.rcMonitor.left;
+        wndPos->y = game.monitorInfo.rcMonitor.top;
+        wndPos->cx = game.cx;
+        wndPos->cy = game.cy;
         break;
 
     case WM_STYLECHANGING:
@@ -177,14 +177,12 @@ void WinEventProc(
             game.userSpecifiedDisplayMode = !ChangeDisplaySettingsExW(game.monitorInfo.szDevice, &game.devMode, 0, CDS_FULLSCREEN, NULL);
 
         GetMonitorInfoW(game.hMonitor, (MONITORINFO *)(&game.monitorInfo));
-        game.wndX = game.monitorInfo.rcMonitor.left;
-        game.wndY = game.monitorInfo.rcMonitor.top;
-        game.wndCX = game.monitorInfo.rcMonitor.right - game.monitorInfo.rcMonitor.left;
-        game.wndCY = game.monitorInfo.rcMonitor.bottom - game.monitorInfo.rcMonitor.top;
+        game.cx = game.monitorInfo.rcMonitor.right - game.monitorInfo.rcMonitor.left;
+        game.cy = game.monitorInfo.rcMonitor.bottom - game.monitorInfo.rcMonitor.top;
 
         SetWindowLongPtrW(hWnd, GWL_STYLE, WS_VISIBLE | WS_POPUP);
         SetWindowLongPtrW(hWnd, GWL_EXSTYLE, WS_EX_APPWINDOW);
-        SetWindowPos(hWnd, HWND_TOPMOST, game.wndX, game.wndY, game.wndCX, game.wndCY, SWP_NOSENDCHANGING);
+        SetWindowPos(hWnd, HWND_TOPMOST, game.monitorInfo.rcMonitor.left, game.monitorInfo.rcMonitor.top, game.cx, game.cy, SWP_NOSENDCHANGING);
         SetWindowLongPtrW(hWnd, GWLP_WNDPROC, (LONG_PTR)(WndProc));
     };
 
