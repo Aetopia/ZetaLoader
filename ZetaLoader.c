@@ -2,7 +2,7 @@
 #include <getopt.h>
 #include <dwmapi.h>
 
-struct
+struct GAME
 {
     DEVMODEW devMode;
     MONITORINFOEXW monitorInfo;
@@ -97,13 +97,13 @@ void WinEventProc(
     game.wndProc = (WNDPROC)GetWindowLongPtr(hWnd, GWLP_WNDPROC);
     game.hMonitor = MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST);
 
-    ULONG min, max, cur;
-    int opt, argc;
     size_t size;
+    int opt, argc;
+    ULONG min, max, cur;
+    DEVMODEW currentDevMode;
     BOOL vAttribute = TRUE;
     HANDLE hProcess = GetCurrentProcess(),
            hThread = OpenThread(THREAD_SET_INFORMATION, FALSE, idEventThread);
-    DEVMODEW currentDevMode = {.dmSize = sizeof(DEVMODEW)};
     WCHAR **wArgv = CommandLineToArgvW(GetCommandLineW(), &argc);
     char **aArgv = alloca(sizeof(char *) * argc);
     static struct option options[] = {
