@@ -193,7 +193,7 @@ DWORD MainThread()
 {
     MSG msg;
     opterr = 0;
-    WM_SHELLHOOKMESSAGE = RegisterWindowMessage("SHELLHOOK");
+    WM_SHELLHOOKMESSAGE = RegisterWindowMessageW("SHELLHOOK");
     SetWinEventHook(EVENT_OBJECT_SHOW, EVENT_OBJECT_SHOW, 0, WinEventProc, GetCurrentProcessId(), 0, WINEVENT_OUTOFCONTEXT);
     while (GetMessageW(&msg, 0, 0, 0))
     {
