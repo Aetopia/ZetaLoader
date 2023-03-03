@@ -176,14 +176,14 @@ void WinEventProc(
         if (game.userSpecifiedDisplayMode)
             game.userSpecifiedDisplayMode = !ChangeDisplaySettingsExW(game.monitorInfo.szDevice, &game.devMode, 0, CDS_FULLSCREEN, NULL);
 
-        GetMonitorInfoW(game.hMonitor, (MONITORINFO *)(&game.monitorInfo));
+        GetMonitorInfoW(game.hMonitor, (MONITORINFO *)&game.monitorInfo);
         game.cx = game.monitorInfo.rcMonitor.right - game.monitorInfo.rcMonitor.left;
         game.cy = game.monitorInfo.rcMonitor.bottom - game.monitorInfo.rcMonitor.top;
 
         SetWindowLongPtrW(hWnd, GWL_STYLE, WS_VISIBLE | WS_POPUP);
         SetWindowLongPtrW(hWnd, GWL_EXSTYLE, WS_EX_APPWINDOW);
         SetWindowPos(hWnd, HWND_TOPMOST, game.monitorInfo.rcMonitor.left, game.monitorInfo.rcMonitor.top, game.cx, game.cy, SWP_NOSENDCHANGING);
-        SetWindowLongPtrW(hWnd, GWLP_WNDPROC, (LONG_PTR)(WndProc));
+        SetWindowLongPtrW(hWnd, GWLP_WNDPROC, (LONG_PTR)WndProc);
     };
 
     PostQuitMessage(0);
