@@ -42,9 +42,9 @@ A modification to fix technical issues with Halo Infinite on PC.
     > 2. https://www.overclock.net/threads/if-you-play-non-fullscreen-exclusive-games-you-might-get-a-boost-in-performance-with-dwmenablemmcss.1775433/
     > 3. https://learn.microsoft.com/en-us/windows/win32/procthread/multimedia-class-scheduler-service
 
-4. Above Normal Process Priority      
+4. High Process Priority      
 
-    This feature makes Halo Infinite automatically have `Above Normal Process Priority`, this will make Windows give Halo Infinite more processor time whenever possible.
+    This feature makes Halo Infinite automatically have `High Process Priority`, this will make Windows give Halo Infinite more processor time whenever possible.
 
 5. User Specified DLLs Support             
     This feature allows one to load any 3rd party DLL into Halo Infinite.
