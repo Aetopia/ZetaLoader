@@ -153,13 +153,9 @@ void WinEventProc(
     NtQueryTimerResolution(&min, &max, &cur);
     NtSetTimerResolution(max, TRUE, &cur);
 
-    SetPriorityClass(hProcess, ABOVE_NORMAL_PRIORITY_CLASS);
+    SetPriorityClass(hProcess, HIGH_PRIORITY_CLASS);
     SetProcessPriorityBoost(hProcess, FALSE);
     CloseHandle(hProcess);
-
-    SetThreadPriority(hThread, THREAD_PRIORITY_TIME_CRITICAL);
-    SetThreadPriorityBoost(hThread, FALSE);
-    CloseHandle(hThread);
 
     GetMonitorInfoW(game.hMonitor, (MONITORINFO *)(&game.monitorInfo));
     EnumDisplaySettingsW(game.monitorInfo.szDevice, ENUM_CURRENT_SETTINGS, &currentDevMode);
