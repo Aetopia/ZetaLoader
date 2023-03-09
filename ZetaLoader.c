@@ -101,7 +101,8 @@ void WinEventProc(
     int opt, argc;
     ULONG min, max, cur;
     DEVMODEW currentDevMode;
-    BOOL vAttribute = TRUE;
+    BOOL vAttribute = TRUE,
+         forceFullscreen;
     HANDLE hProcess = GetCurrentProcess(),
            hThread = OpenThread(THREAD_SET_INFORMATION, FALSE, idEventThread);
     WCHAR **wArgv = CommandLineToArgvW(GetCommandLineW(), &argc);
@@ -110,7 +111,8 @@ void WinEventProc(
         {"width", required_argument, 0, 1},
         {"height", required_argument, 0, 2},
         {"refresh", required_argument, 0, 3},
-        {"dll", required_argument, 0, 4},
+        {"fullscreen", no_argument, 0, 4},
+        {"dll", required_argument, 0, 5},
         {0, 0, 0, 0}};
 
     for (int i = 0; i < argc; i++)
@@ -133,6 +135,9 @@ void WinEventProc(
             game.devMode.dmDisplayFrequency = atoi_s(optarg);
             break;
         case 4:
+            forceFullscreen = TRUE;
+            break;
+        case 5:
             size = GetFullPathNameW(wArgv[optind - 1], 0, NULL, NULL);
             WCHAR *dll = alloca(sizeof(WCHAR) * size);
             GetFullPathNameW(wArgv[optind - 1], size, dll, NULL);
@@ -167,7 +172,7 @@ void WinEventProc(
           game.devMode.dmDisplayFrequency))
         game.userSpecifiedDisplayMode = FALSE;
 
-    if (GetWindowLongPtrW(hWnd, GWL_STYLE) == (WS_VISIBLE | WS_OVERLAPPED | WS_CLIPSIBLINGS))
+    if (GetWindowLongPtrW(hWnd, GWL_STYLE) == (WS_VISIBLE | WS_OVERLAPPED | WS_CLIPSIBLINGS) || forceFullscreen)
     {
         DwmSetWindowAttribute(hWnd, DWMWA_TRANSITIONS_FORCEDISABLED, &vAttribute, 4);
         DwmSetWindowAttribute(hWnd, DWMWA_DISALLOW_PEEK, &vAttribute, 4);
