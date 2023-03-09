@@ -85,7 +85,7 @@ Result Video: https://www.youtube.com/watch?v=o9u0oAyv3dc
     |`-width` `<width>`|Sets the display mode's width.<br>**📝 Borderless Fullscreen must be enabled.**|
     |`-height` `<height>`|Sets the display mode's height.<br>**📝 Borderless Fullscreen must be enabled.**|
     |`-refresh` `<rate>`|Sets the display mode's refresh rate.<br>**📝 Borderless Fullscreen must be enabled.**|
-    |`-fullscreen`|Forces the game to use Borderless Fullscreen regardless of the ingame setting.|
+    |`-fullscreen`|Forces the game to use Borderless Fullscreen regardless of the in game setting.|
     |`-dll` `<name.dll>`|Loads the specified DLL.|
 
 ## Installation
