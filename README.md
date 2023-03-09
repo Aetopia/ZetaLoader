@@ -3,26 +3,7 @@
 A modification to fix technical issues with Halo Infinite on PC.
 
 ## Fixes
-
-1. External Framerate Limiter Game Window Thread Mitigation.
-
-    > References: 
-    > 1. https://learn.microsoft.com/en-us/windows/win32/procthread/scheduling-priorities  
-    > 2. https://forums.guru3d.com/threads/msi-ab-rtss-development-news-thread.412822/page-161#post-5949434
-    > 3. https://www.reddit.com/r/halo/comments/puq7ks/psa_rtss_causes_excessive_screen_tearing_in_halo/
-
-    This fix simply resolves the following when an External Framerate Limiter is being used:
-    1. Intense Screen Tearing.
-    2. Jittery/Stuttery Mouse Input.    
-    **Note: Using high process priority with Halo Infinite, makes this mitigation useless!**  
-
-    Setting the window thread priority to `THREAD_PRIORITY_HIGHEST` resolves the mentioned issues by giving the window thread enough of a timeslice. 
-
-    > ZetaLoader sets the window thread priority to `THREAD_PRIORITY_TIME_CRITICAL` just to assign a higher priority over threads that use `THREAD_PRIORITY_HIGHEST`.    
-
-    You can verify if this works by using a lower thread priority set it using the function `SetThreadPriority` in the source code or setting the game's process priority to `High` via Task Manager.   
-
-2. Borderless Fullscreen
+- Borderless Fullscreen
 
     > **Available with Borderless Fullscreen only at game startup.**
 
