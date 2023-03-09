@@ -170,6 +170,8 @@ void WinEventProc(
 
     if (GetWindowLongPtrW(hWnd, GWL_STYLE) == (WS_VISIBLE | WS_OVERLAPPED | WS_CLIPSIBLINGS) || forceFullscreen)
     {
+        SetWindowPos(FindWindowW(L"Shell_TrayWnd", NULL), HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+
         DwmSetWindowAttribute(hWnd, DWMWA_TRANSITIONS_FORCEDISABLED, &vAttribute, 4);
         DwmSetWindowAttribute(hWnd, DWMWA_DISALLOW_PEEK, &vAttribute, 4);
         DwmSetWindowAttribute(hWnd, DWMWA_FORCE_ICONIC_REPRESENTATION, &vAttribute, 4);
