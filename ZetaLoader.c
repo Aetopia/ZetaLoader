@@ -184,6 +184,7 @@ void WinEventProc(
         SetWindowLongPtrW(hWnd, GWL_EXSTYLE, WS_EX_APPWINDOW);
         SetWindowPos(hWnd, HWND_TOPMOST, game.monitorInfo.rcMonitor.left, game.monitorInfo.rcMonitor.top, game.cx, game.cy, SWP_NOSENDCHANGING);
         SetWindowLongPtrW(hWnd, GWLP_WNDPROC, (LONG_PTR)WndProc);
+        SetWindowPos(FindWindowW(L"Shell_TrayWnd", NULL), HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
     };
 
     PostQuitMessage(0);
