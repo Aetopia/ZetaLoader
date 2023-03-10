@@ -102,7 +102,7 @@ void WinEventProc(
     ULONG min, max, cur;
     DEVMODEW currentDevMode;
     BOOL vAttribute = TRUE,
-         forceFullscreen;
+         fullscreen;
     HANDLE hProcess = GetCurrentProcess(),
            hThread = OpenThread(THREAD_SET_INFORMATION, FALSE, idEventThread);
     WCHAR **wArgv = CommandLineToArgvW(GetCommandLineW(), &argc);
@@ -135,7 +135,7 @@ void WinEventProc(
             game.devMode.dmDisplayFrequency = atoi_s(optarg);
             break;
         case 4:
-            forceFullscreen = TRUE;
+            fullscreen = TRUE;
             break;
         case 5:
             size = GetFullPathNameW(wArgv[optind - 1], 0, NULL, NULL);
@@ -168,7 +168,7 @@ void WinEventProc(
           game.devMode.dmDisplayFrequency))
         game.userSpecifiedDisplayMode = FALSE;
 
-    if (GetWindowLongPtrW(hWnd, GWL_STYLE) == (WS_VISIBLE | WS_OVERLAPPED | WS_CLIPSIBLINGS) || forceFullscreen)
+    if (fullscreen)
     {
         SetWindowPos(FindWindowW(L"Shell_TrayWnd", NULL), HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
 

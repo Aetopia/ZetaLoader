@@ -2,12 +2,10 @@
 
 A modification to fix technical issues with Halo Infinite on PC.
 
-## Fixes
-- Borderless Fullscreen
+## Features
+1. Borderless Fullscreen
 
-    > **Available with Borderless Fullscreen only at game startup.**
-
-    ZetaLoader overrides Halo Infinite's borderless fullscreen/window style.            
+    ZetaLoader overrides Halo Infinite's borderless fullscreen/window style, if you pass `-fullscreen` to the game's launch options.            
     Halo Infinite uses the following styles `WS_VISIBLE | WS_OVERLAPPED | WS_CLIPSIBLINGS` when it is borderless fullscreen.  
     
     The window style `WS_OVERLAPPED` doesn't fill the screen area correctly if the display mode is below `1440x810` resulting in the window to extend its client area beyond the screen area itself. 
@@ -17,8 +15,7 @@ A modification to fix technical issues with Halo Infinite on PC.
     - Extended Window Styles: `WS_EX_APPWINDOW`
     - Topmost Window: `HWND_TOPMOST`
 
-## Features   
-1. User Specified Display Mode Support
+2. User Specified Display Mode Support
 
     > **Available with Borderless Fullscreen only at game startup.**   
 
@@ -27,14 +24,14 @@ A modification to fix technical issues with Halo Infinite on PC.
     - Automatically Minimize, when the game is not the foreground window.
     - Dynamically switch between your desired game display mode & native display mode like in exclusive fullscreen.
 
-2. 0.5 Timer Resolution
+3. 0.5 Timer Resolution
 
     Using the hidden `NtSetTimerResolution` function, Halo Infinite can use a minimum timer resolution of 0.5 ms.
     >  Halo Infinite uses 1 ms by default, we can force 0.5 ms using NtSetTimerResolution.        
     Starting with Windows 2004, setting the timer resolution is no longer global but on a per process basis.       
     Reference: https://learn.microsoft.com/en-us/windows/win32/api/timeapi/nf-timeapi-timebeginperiod#remarks    
 
-3.  Multimedia Class Schedule Service Scheduling
+4.  Multimedia Class Schedule Service Scheduling
 
     Using the function `DwmEnableMMCSS` makes the calling process opt in for multimedia class schedule service scheduling which boosts performance in non-fullscreen applications.  
     > References:
@@ -42,11 +39,11 @@ A modification to fix technical issues with Halo Infinite on PC.
     > 2. https://www.overclock.net/threads/if-you-play-non-fullscreen-exclusive-games-you-might-get-a-boost-in-performance-with-dwmenablemmcss.1775433/
     > 3. https://learn.microsoft.com/en-us/windows/win32/procthread/multimedia-class-scheduler-service
 
-4. High Process Priority      
+5. High Process Priority      
 
     This feature makes Halo Infinite automatically have `High Process Priority`, this will make Windows give Halo Infinite more processor time whenever possible.
 
-5. User Specified DLLs Support             
+6. User Specified DLLs Support             
     This feature allows one to load any 3rd party DLL into Halo Infinite.
 
 ## Result
@@ -63,10 +60,10 @@ Result Video: https://www.youtube.com/watch?v=o9u0oAyv3dc
 
     | Argument| Description |
     |-|-|
-    |`-width` `<width>`|Sets the display mode's width.<br>**📝 Borderless Fullscreen must be enabled.**|
-    |`-height` `<height>`|Sets the display mode's height.<br>**📝 Borderless Fullscreen must be enabled.**|
-    |`-refresh` `<rate>`|Sets the display mode's refresh rate.<br>**📝 Borderless Fullscreen must be enabled.**|
-    |`-fullscreen`|Forces the game to use Borderless Fullscreen regardless of the in game setting.|
+    |`-width` `<width>`|Sets the display mode's width.<br>**📝 ZetaLoader's Borderless Fullscreen must be enabled.**|
+    |`-height` `<height>`|Sets the display mode's height.<br>**📝 ZetaLoader's Borderless Fullscreen must be enabled.**|
+    |`-refresh` `<rate>`|Sets the display mode's refresh rate.<br>**📝 ZetaLoader's Borderless Fullscreen must be enabled.**|
+    |`-fullscreen`|Forces the game to use ZetaLoader's Borderless Fullscreen.|
     |`-dll` `<name.dll>`|Loads the specified DLL.|
 
 ## Installation
