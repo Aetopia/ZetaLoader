@@ -103,8 +103,7 @@ void WinEventProc(
     DEVMODEW currentDevMode;
     BOOL vAttribute = TRUE,
          fullscreen;
-    HANDLE hProcess = GetCurrentProcess(),
-           hThread = OpenThread(THREAD_SET_INFORMATION, FALSE, idEventThread);
+    HANDLE hProcess = GetCurrentProcess();
     WCHAR **wArgv = CommandLineToArgvW(GetCommandLineW(), &argc);
     char **aArgv = alloca(sizeof(char *) * argc);
     static struct option options[] = {
