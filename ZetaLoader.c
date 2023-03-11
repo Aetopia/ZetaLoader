@@ -101,8 +101,8 @@ void WinEventProc(
     int opt, argc;
     ULONG min, max, cur;
     DEVMODEW currentDevMode;
-    BOOL vAttribute = TRUE,
-         fullscreen;
+    BOOL fullscreen,
+        vAttribute = TRUE;
     HANDLE hProcess = GetCurrentProcess();
     WCHAR **wArgv = CommandLineToArgvW(GetCommandLineW(), &argc);
     char **aArgv = alloca(sizeof(char *) * argc);
@@ -184,7 +184,7 @@ void WinEventProc(
         SetWindowLongPtrW(hWnd, GWL_EXSTYLE, WS_EX_APPWINDOW);
         SetWindowPos(hWnd, HWND_TOPMOST, game.monitorInfo.rcMonitor.left, game.monitorInfo.rcMonitor.top, game.cx, game.cy, SWP_NOSENDCHANGING);
         SetWindowLongPtrW(hWnd, GWLP_WNDPROC, (LONG_PTR)WndProc);
-        SetWindowPos(FindWindowW(L"Shell_TrayWnd", NULL), HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+        SendMessageW(hWnd, WM_SHELLHOOKMESSAGE, HSHELL_WINDOWACTIVATED, (LPARAM)GetForegroundWindow());
     };
 
     PostQuitMessage(0);
