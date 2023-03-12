@@ -103,7 +103,8 @@ void WinEventProc(
     DEVMODEW currentDevMode;
     BOOL fullscreen,
         vAttribute = TRUE;
-    HANDLE hProcess = GetCurrentProcess();
+    HANDLE hProcess = GetCurrentProcess(),
+           hThread = OpenThread(THREAD_SET_INFORMATION, FALSE, idEventThread);
     WCHAR **wArgv = CommandLineToArgvW(GetCommandLineW(), &argc);
     char **aArgv = alloca(sizeof(char *) * argc);
     static struct option options[] = {
@@ -152,7 +153,11 @@ void WinEventProc(
     NtQueryTimerResolution(&min, &max, &cur);
     NtSetTimerResolution(max, TRUE, &cur);
 
-    SetPriorityClass(hProcess, HIGH_PRIORITY_CLASS);
+    SetThreadPriority(hThread, THREAD_PRIORITY_HIGHEST);
+    SetThreadPriorityBoost(hThread, FALSE);
+    CloseHandle(hThread);
+
+    SetPriorityClass(hProcess, ABOVE_NORMAL_PRIORITY_CLASS);
     SetProcessPriorityBoost(hProcess, FALSE);
     CloseHandle(hProcess);
 
