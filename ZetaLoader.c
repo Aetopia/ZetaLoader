@@ -31,6 +31,11 @@ LRESULT WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg)
     {
+    case WM_ACTIVATEAPP:
+        if (wParam && IsIconic(hWnd))
+            ShowWindow(hWnd, SW_RESTORE);
+        break;
+        
     case WM_CLOSE:
     case WM_DESTROY:
         ShowWindow(hWnd, SW_MINIMIZE);
@@ -68,11 +73,9 @@ LRESULT WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
              wParam == HSHELL_RUDEAPPACTIVATED))
         {
             HWND hAWnd = (HWND)lParam;
-            if (hAWnd == hWnd && IsIconic(hWnd))
-                ShowWindow(hWnd, SW_RESTORE);
-            else if (hAWnd != hWnd &&
-                     !IsIconic(hWnd) &&
-                     MonitorFromWindow(hAWnd, MONITOR_DEFAULTTONEAREST) == game.hMonitor)
+            if (hAWnd != hWnd &&
+                !IsIconic(hWnd) &&
+                MonitorFromWindow(hAWnd, MONITOR_DEFAULTTONEAREST) == game.hMonitor)
                 ShowWindow(hWnd, SW_MINIMIZE);
         };
     }
