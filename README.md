@@ -2,7 +2,7 @@
 
 A modification to fix technical issues with Halo Infinite on PC.
 
-## Features
+## Fixes
 1. Borderless Fullscreen
 
     ZetaLoader overrides Halo Infinite's borderless fullscreen/window style, if you pass `-fullscreen` to the game's launch options.            
@@ -15,7 +15,7 @@ A modification to fix technical issues with Halo Infinite on PC.
     - Extended Window Styles: `WS_EX_APPWINDOW`
     - Topmost Window: `HWND_TOPMOST`
 
-2. External Framerate Limiter Game Window Thread Mitigation.
+2. External Framerate Limiter Game Window Thread Mitigation
     > References: 
     > 1. https://learn.microsoft.com/en-us/windows/win32/procthread/scheduling-priorities  
     > 2. https://forums.guru3d.com/threads/msi-ab-rtss-development-news-thread.412822/page-161#post-5949434
@@ -32,7 +32,9 @@ A modification to fix technical issues with Halo Infinite on PC.
 
     You can verify if this works by using a lower thread priority set it using the function `SetThreadPriority` in the source code or setting the game's process priority to `High` via Task Manager.   
 
-3. User Specified Display Mode Support
+## Features
+
+1. User Specified Display Mode Support
 
     > **Available with Borderless Fullscreen only at game startup.**   
 
@@ -41,14 +43,14 @@ A modification to fix technical issues with Halo Infinite on PC.
     - Automatically Minimize, when the game is not the foreground window.
     - Dynamically switch between your desired game display mode & native display mode like in exclusive fullscreen.
 
-4. 0.5 Timer Resolution
+2. 0.5 Timer Resolution
 
     Using the hidden `NtSetTimerResolution` function, Halo Infinite can use a minimum timer resolution of 0.5 ms.
     >  Halo Infinite uses 1 ms by default, we can force 0.5 ms using NtSetTimerResolution.        
     Starting with Windows 2004, setting the timer resolution is no longer global but on a per process basis.       
     Reference: https://learn.microsoft.com/en-us/windows/win32/api/timeapi/nf-timeapi-timebeginperiod#remarks    
 
-5.  Multimedia Class Schedule Service Scheduling
+3.  Multimedia Class Schedule Service Scheduling
 
     Using the function `DwmEnableMMCSS` makes the calling process opt in for multimedia class schedule service scheduling which boosts performance in non-fullscreen applications.  
     > References:
@@ -56,11 +58,11 @@ A modification to fix technical issues with Halo Infinite on PC.
     > 2. https://www.overclock.net/threads/if-you-play-non-fullscreen-exclusive-games-you-might-get-a-boost-in-performance-with-dwmenablemmcss.1775433/
     > 3. https://learn.microsoft.com/en-us/windows/win32/procthread/multimedia-class-scheduler-service
 
-6. `Above Normal` Process Priority    
+4. `Above Normal` Process Priority    
 
     This feature makes Halo Infinite automatically have `Above Normal Process Priority`, this will make Windows give Halo Infinite more processor time whenever possible.
 
-6. User Specified DLLs Support             
+5. User Specified DLLs Support             
     This feature allows one to load any 3rd party DLL into Halo Infinite.
 
 ## Result
