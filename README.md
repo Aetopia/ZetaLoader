@@ -1,5 +1,5 @@
-> [!IMPORTANT]
-> Only compatible with the Steam release of Halo Infinite.
+> [!WARNING]
+> ZetaLoader will be archived since [CU31](https://support.halowaypoint.com/hc/en-us/articles/24540901669780-Halo-Infinite-Content-Update-31-Patch-Notes) introduces Easy Anticheat which blocks the modification from loading.
 
 # ZetaLoader
 
